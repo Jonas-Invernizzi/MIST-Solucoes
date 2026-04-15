@@ -1,6 +1,6 @@
 # MIST-Soluções
 Plataforma de Conexão para Trabalhos Informais
-Este projeto é uma solução digital desenvolvida para facilitar o encontro entre prestadores de serviços informais e contratantes. O objetivo é centralizar oportunidades, oferecendo uma interface intuitiva e segura para a negociação de "bicos" e serviços autônomos.
+Este projeto, realizado durante o curso técnico do Instituto Federal de Bento Gonçalves, é uma solução digital desenvolvida para facilitar o encontro entre prestadores de serviços informais e contratantes. O objetivo é centralizar oportunidades, oferecendo uma interface intuitiva e segura para a negociação de "bicos" e serviços autônomos.
 
 Funcionalidades Principais:
 Cadastro de Perfis: Espaço para prestadores detalharem suas habilidades e contratantes descreverem suas necessidades.
@@ -14,7 +14,7 @@ Back-end: PHP (Arquitetura MVC).
 Banco de Dados: MySQL.
 
 Equipe de Desenvolvimento
-Felipe Trevisan
 Jonas Invernizzi
-Lucas Bortoloto Sangali
-Miguel Augusto Korbes Mendiburro
+Felipe Trevisan
+Lucas Bortolotto Sangali
+Miguel Augusto Korbes Mendiburo

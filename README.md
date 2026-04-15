@@ -1,5 +1,6 @@
 # MIST-Soluções
 Plataforma de Conexão para Trabalhos Informais
+
 Este projeto, realizado durante o curso técnico do Instituto Federal de Bento Gonçalves, é uma solução digital desenvolvida para facilitar o encontro entre prestadores de serviços informais e contratantes. O objetivo é centralizar oportunidades, oferecendo uma interface intuitiva e segura para a negociação de "bicos" e serviços autônomos.
 
 Funcionalidades Principais:

@@ -13,7 +13,7 @@ Front-end: HTML5, CSS3, JavaScript.
 Back-end: PHP (Arquitetura MVC).
 Banco de Dados: MySQL.
 
-Equipe de Desenvolvimento:
+Equipe de Desenvolvimento
 Felipe Trevisan
 Jonas Invernizzi
 Lucas Bortoloto Sangali

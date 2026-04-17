@@ -69,3 +69,233 @@ body {
   padding: 14px 8px;
   font-size: 0.94rem;
 }
+
+/* =========================================
+   ESTILOS ADICIONAIS PARA PÁGINA DE REGISTRO
+   ========================================= */
+
+/* Cabeçalho Branco com Menu */
+.topo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 16px 32px;
+}
+.menu-usuario {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.links-acesso {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+  font-size: 0.9rem;
+}
+.links-acesso a {
+  text-decoration: none;
+  color: #1a1a1a;
+  font-weight: 500;
+  line-height: 1.2;
+}
+.icone-pequeno {
+  width: 45px;
+  height: 45px;
+}
+
+/* Layout Duplo (Foto + Formulário) */
+.layout-duplo {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 80px;
+  flex-wrap: wrap; /* Garante que fique responsivo no celular */
+  padding: 2rem;
+}
+
+/* Área da Foto de Perfil */
+.perfil-foto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+.btn-escuro {
+  background: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* Ajustes no Card do Formulário */
+.form-registro {
+  width: min(100%, 550px);
+  padding: 32px 40px;
+}
+.linha-inputs {
+  display: flex;
+  gap: 24px;
+}
+.linha-inputs .form-group {
+  flex: 1;
+}
+
+/* Ocultando a label do input base (usando placeholders no layout) */
+.form-registro .form-group label {
+  display: none; 
+}
+.form-registro .form-group input {
+  padding: 8px 0;
+  font-size: 0.95rem;
+  color: #555;
+  border-bottom: 1px solid #7d8ea6;
+}
+
+/* Área de Tags (Textarea) */
+.form-group-caixa {
+  margin-top: 24px;
+}
+.form-group-caixa textarea {
+  width: 100%;
+  height: 90px;
+  border: 1px solid #d3dbe8;
+  border-radius: 12px;
+  padding: 12px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  background: #ffffff;
+  color: #555;
+}
+.form-group-caixa textarea:focus {
+  outline: none;
+  border-color: #3f7cff;
+}
+
+/* Botão de Salvar e Link */
+.rodape-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+}
+.btn-salvar {
+  width: 160px;
+  background: #5a85ff;
+  font-weight: 500;
+  padding: 10px;
+}
+.link-conta {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: #000;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* Rodapé mais escuro como no mockup */
+.rodape-escuro {
+  background: #364e6f;
+  color: #8da4c4;
+  padding: 20px;
+  font-size: 1rem;
+}
+
+/* =========================================
+   ESTILOS DO MODAL (ESQUECI MINHA SENHA)
+   ========================================= */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  /* Fundo escuro leve e desfoque do fundo */
+  background: rgba(31, 62, 101, 0.4);
+  backdrop-filter: blur(6px); /* Efeito blur de fundo */
+  -webkit-backdrop-filter: blur(6px); /* Para navegadores safari */
+  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  
+  /* Estados invisíveis padrões para o fade */
+  opacity: 0;
+  visibility: hidden;
+  
+  /* Transição: velocidade de 0.4s dá o "lento, mas nem tanto" */
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+/* Quando o modal ganha a classe ativo via Javascript */
+.modal-overlay.ativo {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* O card dentro do modal (herda as configurações padrões de .card) */
+.modal-card {
+  /* Faz um leve movimento de deslizar de cima para baixo junto com o fade */
+  transform: translateY(-20px);
+  transition: transform 0.4s ease;
+}
+
+.modal-overlay.ativo .modal-card {
+  transform: translateY(0);
+}
+
+/* Botão de cancelar apenas para dar a opção de sair sem salvar */
+.btn-cancelar {
+  background: transparent;
+  color: #1f3e65;
+  border: 1px solid #bbcbe6;
+  margin-top: 10px;
+}
+
+.btn-cancelar:hover {
+  background: #f1f6fd;
+}
+
+/* Container para o input e o botão de ver senha */
+.senha-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.senha-container input {
+  padding-right: 40px; /* Abre espaço para o ícone não atropelar o texto */
+}
+
+.toggle-password {
+  position: absolute;
+  right: 8px;
+  bottom: 8px; /* Alinha com o campo de input */
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1f3e65;
+  transition: opacity 0.2s;
+}
+
+.toggle-password:hover {
+  opacity: 0.7;
+}
+
+/* Garante que o foco no botão não estrague o design */
+.toggle-password:focus {
+  outline: none;
+}

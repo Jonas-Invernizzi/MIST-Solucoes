@@ -1,10 +1,29 @@
-DROP TABLE IF EXISTS Usuarios;
-CREATE TABLE Usuarios (
+CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
+    email VARCHAR(191) UNIQUE NOT NULL,
     senha VARCHAR(255) NOT NULL,
-    ativo BOOLEAN DEFAULT 1,
-    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-)
+    tipo_base ENUM('cliente', 'contratante') DEFAULT 'cliente',
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE clientes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT UNIQUE NOT NULL, 
+    nome VARCHAR(255) NOT NULL,
+    endereco VARCHAR(255) NOT NULL,
+    telefone VARCHAR(20) NOT NULL,
+    data_nascimento DATE NOT NULL,
+    descricao TEXT NOT NULL
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);
+CREATE TABLE contratantes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT UNIQUE NOT NULL, 
+    cpf VARCHAR(14),
+    data_nascimento DATE NOT NULL,
+    endereco VARCHAR(255) NOT NULL,
+    endereco_trabalho VARCHAR(255) NOT NULL, 
+    telefone VARCHAR(20) NOT NULL,
+    descricao TEXT NOT NULL,
+    trabalho TEXT NOT NULL, 
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);

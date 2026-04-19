@@ -1,0 +1,61 @@
+{% extends "_base.html" %}
+{% block conteudo %}
+<div class="layout-duplo">
+  <aside class="perfil-foto">
+    <svg width="280" height="280" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M50 100C77.6142 100 100 77.6142 100 50C100 22.3858 77.6142 0 50 0C22.3858 0 0 22.3858 0 50C0 77.6142 22.3858 100 50 100ZM50 24C41.1634 24 34 31.1634 34 40C34 48.8366 41.1634 56 50 56C58.8366 56 66 48.8366 66 40C66 31.1634 58.8366 24 50 24ZM26.6343 82.684C30.6552 73.1818 40.0988 66 50 66C59.9012 66 69.3448 73.1818 73.3657 82.684C67.1478 89.1558 58.9803 93 50 93C41.0197 93 32.8522 89.1558 26.6343 82.684Z" fill="#1e1e1e"/>
+    </svg>
+    <label class="btn-escuro" style="cursor: pointer;">
+      Adicionar foto de perfil
+      <input type="file" style="display: none;">
+    </label>
+  </aside>
+
+  <section class="card form-registro">
+    <h2 style="font-size: 1.1rem; color: #000; font-weight: 500;">Criar Perfil</h2>
+    <form id="form-cadastro">
+      <div class="linha-inputs">
+        <div class="form-group"><input id="nome" type="text" placeholder="Nome" required /></div>
+        <div class="form-group"><input id="nascimento" type="date" required /></div>
+      </div>
+      <div class="linha-inputs">
+        <div class="form-group"><input id="telefone" type="tel" placeholder="Telefone" required /></div>
+        <div class="form-group"><input id="email-input" type="email" placeholder="E-mail" required /></div>
+      </div>
+      <div class="linha-inputs">
+        <div class="form-group"><input id="endereco" type="text" placeholder="Endereço" required /></div>
+        <div class="form-group"><input id="descricao" type="text" placeholder="Descrição" required /></div>
+      </div>
+      <div class="form-group" style="margin-top: 10px;">
+        <input id="senha" type="password" placeholder="Senha" required />
+      </div>
+      <div class="form-group-caixa">
+        <textarea id="tags" placeholder="Tags"></textarea>
+      </div>
+      <div class="rodape-form">
+        <button type="button" id="btn-abrir-verificacao" class="btn btn-salvar">Salvar</button>
+        <a href="Login.html" class="link-conta">Já tem uma conta?</a>
+      </div>
+    </form>
+  </section>
+</div>
+
+<div id="modal-verificacao" class="modal-overlay">
+  <div class="card modal-card">
+    <h2>Verifique seu E-mail</h2>
+    <p style="font-size: 0.9rem; color: #666; margin: 15px 0;">
+      Enviamos um código para o e-mail: <br>
+      <strong id="exibir-email" style="color: #1f3e65;"></strong>
+    </p>
+    
+    <form action="confirmar_registro.php" method="POST">
+      <div class="form-group">
+        <input name="codigo" type="text" placeholder="000000" 
+               style="text-align: center; font-size: 1.6rem; letter-spacing: 5px;" required />
+      </div>
+      <button type="submit" class="btn">Confirmar Cadastro</button>
+      <button type="button" id="btn-fechar-verificacao" class="btn btn-cancelar">Corrigir E-mail</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

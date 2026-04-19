@@ -1,0 +1,44 @@
+{% extends "_base.html" %}
+{% block extra_css %}{% endblock %}
+
+{% block conteudo %}
+  <section class="card">
+    <h2>Fazer Login</h2>
+    {{ erro }}
+    <form method="post" action="tela_login.php">
+      <div class="form-group">
+        <label for="email">E-mail</label>
+        <input id="email" name="email" type="email" placeholder="seu@email.com" required />
+      </div>
+
+      <div class="form-group">
+        <label for="senha">Senha</label>
+        <input id="senha" name="senha" type="password" placeholder="********" required />
+      </div>
+
+      <div class="actions">
+        <a href="#" id="link-esqueci-senha">Esqueceu sua senha?</a>
+        <a href="tela_registro.php">Cadastrar-se</a>
+      </div>
+      <button type="submit" class="btn">Entrar</button>
+    </form>
+  </section>
+
+  <div id="modal-senha" class="modal-overlay">
+    <div class="card modal-card">
+      <h2>Redefinir Senha</h2>
+      <form id="form-redefinir">
+        <div class="form-group">
+          <label for="nova-senha">Nova Senha</label>
+          <input id="nova-senha" type="password" placeholder="Digite a nova senha" required />
+        </div>
+        <div class="form-group">
+          <label for="confirma-senha">Confirme sua nova senha</label>
+          <input id="confirma-senha" type="password" placeholder="Confirme a nova senha" required />
+        </div>
+        <button type="submit" class="btn">Salvar</button>
+        <button type="button" class="btn btn-cancelar" id="btn-cancelar">Cancelar</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

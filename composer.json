@@ -3,9 +3,10 @@
   "description": "Plataforma para unir trabalhos informais",
   "type": "project",
   "require": {
-    "php": "^8.0"
+    "php": "^8.0",
+    "twig/twig": "^3.0",
+    "phpmailer/phpmailer": "^7.0"
   },
-  "require-dev": {},
   "autoload": {
     "psr-4": {
       "App\\": "app/",

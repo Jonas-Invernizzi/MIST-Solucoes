@@ -1,21 +1,28 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(180deg, #f1f6fd 0%, #e8eff9 100%);
   color: #1f3e65;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
+
 .page-wrap {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
+
 .topo {
-  padding: 24px;
+  padding: 12px 24px; /* Reduzido para diminuir a altura */
 }
+
 .logo {
-  max-width: 180px;
+  max-width: 140px; /* Reduzido para encaixar melhor no cabeçalho mais fino */
 }
+
 .centered {
   flex: 1;
   display: flex;
@@ -23,6 +30,7 @@ body {
   align-items: center;
   padding: 1rem;
 }
+
 .card {
   width: min(95vw, 540px);
   background: white;
@@ -31,7 +39,9 @@ body {
   padding: 32px 24px 26px;
   text-align: center;
 }
+
 .card h2 { margin-bottom: 18px; color: #1f3e65; }
+
 .form-group { margin: 12px 0; text-align: left; }
 .form-group label { font-size: 0.9rem; color: #29416d; margin-bottom: 6px; display: block; }
 .form-group input {
@@ -44,6 +54,7 @@ body {
   background: transparent;
 }
 .form-group input:focus { outline: none; border-color: #2f7fff; }
+
 .actions {
   margin-top: 16px;
   display: flex;
@@ -51,6 +62,7 @@ body {
   font-size: 0.9rem;
 }
 .actions a { color: #2673ff; text-decoration: none; }
+
 .btn {
   margin-top: 20px;
   width: 100%;
@@ -62,31 +74,34 @@ body {
   font-size: 1.03rem;
   cursor: pointer;
 }
+
 .rodape {
   background: #26476f;
   color: #d6e7ff;
   text-align: center;
   padding: 14px 8px;
   font-size: 0.94rem;
+  margin-top: auto;
 }
 
 /* =========================================
    ESTILOS ADICIONAIS PARA PÁGINA DE REGISTRO
    ========================================= */
-
 /* Cabeçalho Branco com Menu */
 .topo-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   background-color: #ffffff;
-  padding: 16px 32px;
+  padding: 8px 32px; /* Padding vertical reduzido de 16px para 8px */
 }
+
 .menu-usuario {
   display: flex;
   align-items: center;
   gap: 12px;
 }
+
 .links-acesso {
   display: flex;
   flex-direction: column;
@@ -99,29 +114,29 @@ body {
   font-weight: 500;
   line-height: 1.2;
 }
+
 .icone-pequeno {
-  width: 45px;
-  height: 45px;
+  width: 35px; /* Reduzido de 45px para não esticar o cabeçalho */
+  height: 35px; /* Reduzido de 45px para não esticar o cabeçalho */
 }
 
-/* Layout Duplo (Foto + Formulário) */
 .layout-duplo {
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
   gap: 80px;
-  flex-wrap: wrap; /* Garante que fique responsivo no celular */
+  flex-wrap: wrap;
   padding: 2rem;
 }
 
-/* Área da Foto de Perfil */
 .perfil-foto {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 20px;
 }
+
 .btn-escuro {
   background: #000000;
   color: #ffffff;
@@ -133,11 +148,11 @@ body {
   cursor: pointer;
 }
 
-/* Ajustes no Card do Formulário */
 .form-registro {
   width: min(100%, 550px);
   padding: 32px 40px;
 }
+
 .linha-inputs {
   display: flex;
   gap: 24px;
@@ -146,7 +161,6 @@ body {
   flex: 1;
 }
 
-/* Ocultando a label do input base (usando placeholders no layout) */
 .form-registro .form-group label {
   display: none; 
 }
@@ -157,7 +171,6 @@ body {
   border-bottom: 1px solid #7d8ea6;
 }
 
-/* Área de Tags (Textarea) */
 .form-group-caixa {
   margin-top: 24px;
 }
@@ -178,7 +191,6 @@ body {
   border-color: #3f7cff;
 }
 
-/* Botão de Salvar e Link */
 .rodape-form {
   display: flex;
   flex-direction: column;
@@ -199,12 +211,12 @@ body {
   font-weight: 600;
 }
 
-/* Rodapé mais escuro como no mockup */
 .rodape-escuro {
   background: #364e6f;
   color: #8da4c4;
   padding: 20px;
   font-size: 1rem;
+  margin-top: auto;
 }
 
 /* =========================================
@@ -217,33 +229,27 @@ body {
   left: 0;
   width: 100vw;
   height: 100vh;
-  /* Fundo escuro leve e desfoque do fundo */
   background: rgba(31, 62, 101, 0.4);
-  backdrop-filter: blur(6px); /* Efeito blur de fundo */
-  -webkit-backdrop-filter: blur(6px); /* Para navegadores safari */
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px); 
   
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
   
-  /* Estados invisíveis padrões para o fade */
   opacity: 0;
   visibility: hidden;
   
-  /* Transição: velocidade de 0.4s dá o "lento, mas nem tanto" */
   transition: opacity 0.4s ease, visibility 0.4s ease;
 }
 
-/* Quando o modal ganha a classe ativo via Javascript */
 .modal-overlay.ativo {
   opacity: 1;
   visibility: visible;
 }
 
-/* O card dentro do modal (herda as configurações padrões de .card) */
 .modal-card {
-  /* Faz um leve movimento de deslizar de cima para baixo junto com o fade */
   transform: translateY(-20px);
   transition: transform 0.4s ease;
 }
@@ -252,7 +258,6 @@ body {
   transform: translateY(0);
 }
 
-/* Botão de cancelar apenas para dar a opção de sair sem salvar */
 .btn-cancelar {
   background: transparent;
   color: #1f3e65;
@@ -264,7 +269,6 @@ body {
   background: #f1f6fd;
 }
 
-/* Container para o input e o botão de ver senha */
 .senha-container {
   position: relative;
   display: flex;
@@ -272,13 +276,13 @@ body {
 }
 
 .senha-container input {
-  padding-right: 40px; /* Abre espaço para o ícone não atropelar o texto */
+  padding-right: 40px; 
 }
 
 .toggle-password {
   position: absolute;
   right: 8px;
-  bottom: 8px; /* Alinha com o campo de input */
+  bottom: 8px;
   background: none;
   border: none;
   cursor: pointer;
@@ -295,7 +299,14 @@ body {
   opacity: 0.7;
 }
 
-/* Garante que o foco no botão não estrague o design */
 .toggle-password:focus {
   outline: none;
+}
+main {
+  flex: 1; 
+  display: flex;
+  align-items: center; 
+  justify-content: center;
+  margin: 40px 20px; 
+  min-height: auto; 
 }

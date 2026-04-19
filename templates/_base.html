@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MIST Soluções</title>
+    
+    <link rel="stylesheet" href="templates/css/styles.css" />
+    
+    {% block extra_css %}{% endblock %}
+
+    <script src="templates/script/login.js" defer></script>
+  </head>
+  <body>
+    <header class="topo topo-header">
+      <img class="logo" src="img/logo.jpg" alt="MIST Soluções" />
+      <div class="menu-usuario">
+        <div class="links-acesso">
+          <a href="Registrar.html">Bem-vindo(a)</a>
+        </div>
+        <svg class="icone-pequeno" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M50 100C77.6142 100 100 77.6142 100 50C100 22.3858 77.6142 0 50 0C22.3858 0 0 22.3858 0 50C0 77.6142 22.3858 100 50 100ZM50 24C41.1634 24 34 31.1634 34 40C34 48.8366 41.1634 56 50 56C58.8366 56 66 48.8366 66 40C66 31.1634 58.8366 24 50 24ZM26.6343 82.684C30.6552 73.1818 40.0988 66 50 66C59.9012 66 69.3448 73.1818 73.3657 82.684C67.1478 89.1558 58.9803 93 50 93C41.0197 93 32.8522 89.1558 26.6343 82.684Z" fill="#1e1e1e"/>
+        </svg>
+      </div>
+    </header>
+
+    <main>
+      {% block conteudo %}{% endblock %}
+    </main>
+
+    <footer class="rodape">
+      &copy; 2026 Conexão Informal. Todos os direitos reservados.
+    </footer>
+  </body>
+</html>

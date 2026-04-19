@@ -15,7 +15,7 @@ CREATE TABLE clientes (
     endereco VARCHAR(255) NOT NULL,
     telefone VARCHAR(20) NOT NULL,
     data_nascimento DATE NOT NULL,
-    descricao TEXT NOT NULL
+    descricao TEXT NOT NULL,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 CREATE TABLE contratantes (

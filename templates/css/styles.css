@@ -121,20 +121,23 @@ body {
 }
 
 .layout-duplo {
-  display: flex;
+ display: flex;
   flex-direction: row;
   justify-content: center;
-  align-items: center;
-  gap: 80px;
-  flex-wrap: wrap;
+  align-items: flex-start; /* Alinha pelo topo para ficar profissional */
+  gap: 40px;               /* Reduzido de 80px para caber melhor */
+  flex-wrap: nowrap;       /* ISSO impede que um fique embaixo do outro */
   padding: 2rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .perfil-foto {
+  flex: 0 0 300px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
 }
 
 .btn-escuro {
@@ -149,8 +152,9 @@ body {
 }
 
 .form-registro {
-  width: min(100%, 550px);
-  padding: 32px 40px;
+  flex: 1;          /* O formulário ocupa o restante do espaço */
+  max-width: 600px; 
+  width: 100%;
 }
 
 .linha-inputs {
@@ -304,9 +308,48 @@ body {
 }
 main {
   flex: 1; 
-  display: flex;
-  align-items: center; 
-  justify-content: center;
   margin: 40px 20px; 
-  min-height: auto; 
+}
+
+/*responsivo*/
+@media (max-width: 850px) {
+  /* Faz a foto ficar em cima do formulário */
+  .layout-duplo {
+    flex-direction: column;
+    flex-wrap: wrap; /* Permite quebrar linha */
+    align-items: center;
+    gap: 30px;
+    padding: 1rem;
+  }
+
+  /* Ajusta a largura da foto e do form para ocupar quase tudo no mobile */
+  .perfil-foto, 
+  .form-registro {
+    flex: none;
+    width: 100%;
+    max-width: 450px;
+  }
+
+  /* Faz os inputs que estão lado a lado (ex: nome e data) ficarem um embaixo do outro */
+  .linha-inputs {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* Diminui o tamanho da imagem do perfil no celular se necessário */
+  .perfil-foto svg {
+    width: 180px;
+    height: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Ajustes finos para telas muito pequenas */
+  .topo-header {
+    padding: 8px 16px;
+  }
+  
+  .form-registro {
+    padding: 24px 20px;
+  }
 }

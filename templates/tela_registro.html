@@ -13,27 +13,27 @@
 
   <section class="card form-registro">
     <h2 style="font-size: 1.1rem; color: #000; font-weight: 500;">Criar Perfil</h2>
-    <form id="form-cadastro">
+    <form id="form-cadastro" method="POST" action="tela_registro.php">
       <div class="linha-inputs">
-        <div class="form-group"><input id="nome" type="text" placeholder="Nome" required /></div>
-        <div class="form-group"><input id="nascimento" type="date" required /></div>
+        <div class="form-group"><input id="nome" name="nome" type="text" placeholder="Nome" required /></div>
+        <div class="form-group"><input id="nascimento" name="nascimento" type="date" required /></div>
       </div>
       <div class="linha-inputs">
-        <div class="form-group"><input id="telefone" type="tel" placeholder="Telefone" required /></div>
-        <div class="form-group"><input id="email-input" type="email" placeholder="E-mail" required /></div>
+        <div class="form-group"><input id="telefone" name="telefone" type="tel" placeholder="Telefone" required /></div>
+        <div class="form-group"><input id="email-input" name="email" type="email" placeholder="E-mail" required /></div>
       </div>
       <div class="linha-inputs">
-        <div class="form-group"><input id="endereco" type="text" placeholder="Endereço" required /></div>
-        <div class="form-group"><input id="descricao" type="text" placeholder="Descrição" required /></div>
+        <div class="form-group"><input id="endereco" name="endereco" type="text" placeholder="Endereço" required /></div>
+        <div class="form-group"><input id="descricao" name="descricao" type="text" placeholder="Descrição" required /></div>
       </div>
       <div class="form-group" style="margin-top: 10px;">
-        <input id="senha" type="password" placeholder="Senha" required />
+        <input id="senha" name="senha" type="password" placeholder="Senha" required />
       </div>
       <div class="form-group-caixa">
-        <textarea id="tags" placeholder="Tags"></textarea>
+        <textarea id="tags" name="tags" placeholder="Tags"></textarea>
       </div>
       <div class="rodape-form">
-        <button type="button" id="btn-abrir-verificacao" class="btn btn-salvar">Salvar</button>
+        <button type="submit" id="btn-abrir-verificacao" class="btn btn-salvar">Salvar</button>
         <a href="Login.html" class="link-conta">Já tem uma conta?</a>
       </div>
     </form>

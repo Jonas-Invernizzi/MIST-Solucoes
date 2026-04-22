@@ -23,6 +23,14 @@ body {
   max-width: 140px; /* Reduzido para encaixar melhor no cabeçalho mais fino */
 }
 
+.modal-overlay {
+  display: none; 
+ }
+
+.modal-overlay.ativo {
+  display: flex; 
+}
+
 .centered {
   flex: 1;
   display: flex;

@@ -1,44 +1,105 @@
-{% extends "_base.html" %}
-{% block extra_css %}{% endblock %}
-
-{% block conteudo %}
-  <section class="card">
-    <h2>Fazer Login</h2>
-    {{ erro }}
-    <form method="post" action="tela_login.php">
-      <div class="form-group">
-        <label for="email">E-mail</label>
-        <input id="email" name="email" type="email" placeholder="seu@email.com" required />
-      </div>
-
-      <div class="form-group">
-        <label for="senha">Senha</label>
-        <input id="senha" name="senha" type="password" placeholder="********" required />
-      </div>
-
-      <div class="actions">
-        <a href="#" id="link-esqueci-senha">Esqueceu sua senha?</a>
-        <a href="tela_registro.php">Cadastrar-se</a>
-      </div>
-      <button type="submit" class="btn">Entrar</button>
-    </form>
-  </section>
-
-  <div id="modal-senha" class="modal-overlay">
-    <div class="card modal-card">
-      <h2>Redefinir Senha</h2>
-      <form id="form-redefinir">
-        <div class="form-group">
-          <label for="nova-senha">Nova Senha</label>
-          <input id="nova-senha" type="password" placeholder="Digite a nova senha" required />
-        </div>
-        <div class="form-group">
-          <label for="confirma-senha">Confirme sua nova senha</label>
-          <input id="confirma-senha" type="password" placeholder="Confirme a nova senha" required />
-        </div>
-        <button type="submit" class="btn">Salvar</button>
-        <button type="button" class="btn btn-cancelar" id="btn-cancelar">Cancelar</button>
-      </form>
+{% extends "_base.html" %} {% block extra_css %}{% endblock %} {% block conteudo
+%}
+<section class="card">
+  <h2>Fazer Login</h2>
+  {{ erro }}
+  <form method="post" action="tela_login.php">
+    <div class="form-group">
+      <label for="email">E-mail</label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        placeholder="seu@email.com"
+        required
+      />
     </div>
+
+    <div class="form-group">
+      <label for="senha">Senha</label>
+      <input
+        id="senha"
+        name="senha"
+        type="password"
+        placeholder="********"
+        required
+      />
+    </div>
+
+    <div class="actions">
+      <a href="#" id="link-esqueci-senha">Esqueceu sua senha?</a>
+      <a href="tela_registro.php">Cadastrar-se</a>
+    </div>
+    <button type="submit" class="btn">Entrar</button>
+  </form>
+</section>
+
+<div id="modal-senha" class="modal-overlay">
+  <div class="card modal-card">
+    <h2>Redefinir Senha</h2>
+    <form id="form-redefinir">
+      <div class="form-group">
+        <label for="nova-email">E-Mail</label>
+        <input
+          id="novo-email"
+          type="email"
+          placeholder="Digite o e-mail cadastrado"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label for="nova-senha">senha</label>
+        <input
+          id="nova-senha"
+          type="password"
+          placeholder="Digite a nova senha"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label for="confirma-senha">Confirme sua nova senha</label>
+        <input
+          id="confirma-senha"
+          type="password"
+          placeholder="Confirme a nova senha"
+          required
+        />
+      </div>
+      <button type="submit" class="btn" id = "troca-senha">Salvar</button>
+      <button type="button" class="btn btn-cancelar" id="btn-cancelar">
+        Cancelar
+      </button>
+    </form>
   </div>
+</div>
+<div id="modal-verificacao" class="modal-overlay">
+  <div class="card modal-card">
+    <h2>Verifique seu E-mail</h2>
+    <p style="font-size: 0.9rem; color: #666; margin: 15px 0">
+      Enviamos um código para o e-mail: <br />
+      <strong id="exibir-email" style="color: #1f3e65"></strong>
+    </p>
+
+    <form action="confirmar_registro.php" method="POST">
+      <div class="form-group">
+        <input
+          name="codigo"
+          type="text"
+          placeholder="000000"
+          style="text-align: center; font-size: 1.6rem; letter-spacing: 5px"
+          required
+        />
+      </div>
+      <button type="submit" class="btn">Confirmar Cadastro</button>
+      <button
+        type="button"
+        id="btn-fechar-verificacao"
+        class="btn btn-cancelar"
+      >
+        Corrigir E-mail
+      </button>
+    </form>
+  </div>
+</div>
+<script src="templates/script/login.js" defer></script>
 {% endblock %}

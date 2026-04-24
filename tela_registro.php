@@ -21,11 +21,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     } else {
         $stmt = $pdo->prepare("INSERT INTO usuarios (email, senha, token) VALUES (:email, :senha, :token)");
 
-        $hashedSenha = password_hash($senha, PASSWORD_DEFAULT);
         $token = md5(uniqid(rand(), true));
 
         $stmt->bindValue(':email', $email);
-        $stmt->bindValue(':senha', $hashedSenha);
+        $stmt->bindValue(':senha', $senha);
         $stmt->bindValue(':token', $token);
 
         $stmt->execute();
@@ -37,8 +36,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         // Envio via PHPMailer (SMTP) - configure abaixo
         // Substitua os valores de SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_PORT conforme seu provedor
-        $smtpHost = 'smtp.example.com';
-        $smtpUser = 'seu_usuario@example.com';
+        $smtpHost = 'smtp.gmail.com';
+        $smtpUser = 'seu_usuario@gmail.com';
         $smtpPass = 'sua_senha';
         $smtpPort = 587; // 587 para STARTTLS, 465 para SMTPS
 

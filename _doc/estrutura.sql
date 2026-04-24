@@ -6,7 +6,9 @@ CREATE TABLE usuarios (
     email VARCHAR(191) UNIQUE NOT NULL,
     senha VARCHAR(255) NOT NULL,
     tipo_base ENUM('cliente', 'contratante') DEFAULT 'cliente',
-    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('ativo', 'inativo') DEFAULT 'inativo',
+    token VARCHAR(255) DEFAULT NULL
 );
 CREATE TABLE clientes (
     id INT AUTO_INCREMENT PRIMARY KEY,

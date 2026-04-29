@@ -311,6 +311,11 @@ main {
   margin: 40px 20px; 
 }
 
+.hidden {
+  display: none !important;
+}
+
+
 /*responsivo*/
 @media (max-width: 850px) {
   /* Faz a foto ficar em cima do formulário */

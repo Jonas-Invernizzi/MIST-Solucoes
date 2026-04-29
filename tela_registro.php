@@ -64,4 +64,31 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
     }
 }
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    // TESTE: remova isso depois de funcionar
+    // var_dump($_FILES['foto_perfil']); 
+
+    $foto_caminho = "uploads/default.png"; // valor inicial
+
+    if (isset($_FILES['foto_perfil']) && $_FILES['foto_perfil']['error'] === 0) {
+        $diretorio = "uploads/";
+        
+        // Cria a pasta se ela não existir
+        if (!is_dir($diretorio)) {
+            mkdir($diretorio, 0777, true);
+        }
+
+        $extensao = pathinfo($_FILES['foto_perfil']['name'], PATHINFO_EXTENSION);
+        $nome_arquivo = uniqid() . "." . $extensao;
+        $destino = $diretorio . $nome_arquivo;
+
+        if (move_uploaded_file($_FILES['foto_perfil']['tmp_name'], $destino)) {
+            $foto_caminho = $destino;
+        }
+    }
+    
+    // Na sua query SQL, certifique-se de salvar a variável $foto_caminho
+    // $stmt = $pdo->prepare("INSERT INTO usuarios (..., foto) VALUES (..., :foto)");
+    // $stmt->bindValue(':foto', $foto_caminho);
+}
 echo $twig->render('tela_registro.html', ['erro' => $erro]);

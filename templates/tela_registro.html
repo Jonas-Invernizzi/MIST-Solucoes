@@ -1,25 +1,30 @@
 {% extends "_base.html" %}
 {% block conteudo %}
 <div class="layout-duplo">
-  <aside class="perfil-foto">
-    <svg width="280" height="280" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path fill-rule="evenodd" clip-rule="evenodd" d="M50 100C77.6142 100 100 77.6142 100 50C100 22.3858 77.6142 0 50 0C22.3858 0 0 22.3858 0 50C0 77.6142 22.3858 100 50 100ZM50 24C41.1634 24 34 31.1634 34 40C34 48.8366 41.1634 56 50 56C58.8366 56 66 48.8366 66 40C66 31.1634 58.8366 24 50 24ZM26.6343 82.684C30.6552 73.1818 40.0988 66 50 66C59.9012 66 69.3448 73.1818 73.3657 82.684C67.1478 89.1558 58.9803 93 50 93C41.0197 93 32.8522 89.1558 26.6343 82.684Z" fill="#1e1e1e"/>
-    </svg>
-    <label class="btn-escuro" style="cursor: pointer;">
-      Adicionar foto de perfil
-      <input type="file" style="display: none;">
-    </label>
-  </aside>
+
+ 
+<aside class="perfil-foto">
+  <div id="container-foto" style="width: 280px; height: 280px; border-radius: 50%; overflow: hidden; background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+    <svg id="placeholder-svg" width="280" height="280" viewBox="0 0 100 100" ...> </svg>
+    <img id="img-preview" src="" style="display: none; width: 100%; height: 100%; object-fit: cover;" />
+  </div>
+
+  <label class="btn-escuro" style="cursor: pointer; margin-top: 10px; display: inline-block;">
+    Adicionar foto de perfil
+    <input type="file" id="input-foto" name="foto_perfil" accept="image/*" style="display: none;">
+  </label>
+</aside>
+
 
   <section class="card form-registro">
     <h2 style="font-size: 1.1rem; color: #000; font-weight: 500;">Criar Perfil</h2>
-    <form id="form-cadastro" method="POST" action="tela_registro.php">
+    <form id="form-cadastro" method="POST" action="tela_registro.php" enctype="multipart/form-data">
       <div class="linha-inputs">
         <div class="form-group"><input id="nome" name="nome" type="text" placeholder="Nome" required /></div>
         <div class="form-group"><input id="nascimento" name="nascimento" type="date" required /></div>
       </div>
       <div class="linha-inputs">
-        <div class="form-group"><input id="telefone" name="telefone" type="tel" placeholder="Telefone" required /></div>
+        <div class="form-group"><input id="telefone" name="telefone" type="tel" maxlength="19" placeholder="Telefone:" required /></div>
         <div class="form-group"><input id="email-input" name="email" type="email" placeholder="E-mail" required /></div>
       </div>
       <div class="linha-inputs">
@@ -58,4 +63,47 @@
     </form>
   </div>
 </div>
+<script>
+document.getElementById('input-foto').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const imgPreview = document.getElementById('img-preview');
+      const svgPlaceholder = document.getElementById('placeholder-svg');
+      
+      imgPreview.src = event.target.result;
+      imgPreview.style.display = 'block'; // Mostra a imagem
+      svgPlaceholder.style.display = 'none'; // Esconde o ícone preto
+    }
+    reader.readAsDataURL(file);
+  }
+});
+
+const telInput = document.getElementById('telefone');
+
+telInput.addEventListener('input', (e) => {
+  let value = e.target.value;
+  
+  // Remove tudo que não for número
+  value = value.replace(/\D/g, "");
+
+  // Se não começar com 55, podemos forçar ou deixar o usuário digitar
+  // Aqui vamos aplicar a máscara: +55 (00) 00000-0000
+  value = value.replace(/^(\d{2})(\d{2})(\d{5})(\d{4}).*/, "+$1 ($2) $3-$4");
+  
+  // Formatação progressiva (para o usuário ver enquanto digita)
+  if (value.length <= 11) {
+      value = value.replace(/^(\d{2})(\d{2})(\d{5})(\d{0,4})/, "+$1 ($2) $3-$4");
+  }
+
+  e.target.value = value;
+});
+
+var element = document.getElementById('telefone');
+var maskOptions = {
+  mask: '+{55} (00) 00000-0000'
+};
+var mask = IMask(element, maskOptions);
+</script>
 {% endblock %}

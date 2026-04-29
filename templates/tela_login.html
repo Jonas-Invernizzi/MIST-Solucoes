@@ -4,7 +4,18 @@
 {% block conteudo %}
   <section class="card">
     <h2>Fazer Login</h2>
-    {{ erro }}
+    
+    {% if sucesso %}
+    <div style="padding: 12px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 6px; margin-bottom: 20px; font-size: 14px;">
+      {{ sucesso }}
+    </div>
+    {% endif %}
+    
+    {% if erro %}
+    <div style="padding: 12px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 6px; margin-bottom: 20px; font-size: 14px;">
+      {{ erro }}
+    </div>
+    {% endif %}
     <form method="post" action="tela_login.php">
       <div class="form-group">
         <label for="email">E-mail</label>

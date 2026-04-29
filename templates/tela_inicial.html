@@ -1,6 +1,141 @@
-{% extends "_base.html" %}
+{% extends '_base.html' %}
+
+{% block extra_css %}
+<style>
+    /* Estilos específicos para a Home que complementam o styles.css */
+    .hero-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 1200px;
+        margin: 0 auto 60px auto;
+        padding: 0 20px;
+    }
+
+    .hero-text { flex: 1; }
+    .hero-text h1 { font-size: 2.8rem; line-height: 1.2; margin-bottom: 15px; color: #1a1a1a; }
+    .hero-text p { font-size: 1.1rem; color: #555; margin-bottom: 30px; }
+
+    .search-container {
+        display: flex;
+        background: #fff;
+        border-radius: 12px;
+        padding: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        max-width: 500px;
+    }
+
+    .search-container input {
+        flex: 1;
+        border: none;
+        padding: 12px 15px;
+        outline: none;
+        font-size: 1rem;
+    }
+
+    .btn-busca {
+        background: #5a85ff;
+        color: white;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .hero-img-container img {
+        max-width: 450px;
+        height: auto;
+    }
+
+    /* Grid de Profissionais */
+    .titulo-vitrine { text-align: center; margin-bottom: 40px; font-size: 1.8rem; }
+
+    .profissionais-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 25px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .card-profissional {
+        background: white;
+        border-radius: 20px;
+        padding: 30px 20px;
+        text-align: center;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+        transition: transform 0.3s ease;
+    }
+
+    .card-profissional:hover { transform: translateY(-5px); }
+
+    .avatar-circular {
+        width: 120px;
+        height: 120px;
+        background: #f0f4f8;
+        border-radius: 50%;
+        margin: 0 auto 15px auto;
+        overflow: hidden;
+    }
+
+    .avatar-circular img { width: 100%; height: 100%; object-fit: cover; }
+
+    .stars { color: #ffc107; margin: 10px 0; font-size: 0.9rem; }
+    .stars span { color: #888; margin-left: 5px; }
+
+    @media (max-width: 768px) {
+        .hero-section { flex-direction: column; text-align: center; }
+        .hero-img-container { order: -1; margin-bottom: 30px; }
+        .hero-img-container img { max-width: 280px; }
+        .search-container { margin: 0 auto; }
+    }
+</style>
+{% endblock %}
 
 {% block conteudo %}
+<section class="hero-section">
+    <div class="hero-text">
+        <h1>Encontre pessoas para serviços manuais</h1>
+        <p>Conecte-se com profissionais para trabalhos manuais que você precisa</p>
+        
+        <div class="search-container">
+            <input type="text" placeholder="Pesquisar por Serviço ou Pessoa">
+            <button class="btn-busca">Buscar</button>
+        </div>
+    </div>
+    
+    <div class="hero-img-container">
+        <img src="img/imagemPadrao.png" alt="Ilustração de serviço">
+    </div>
+</section>
+
+<h2 class="titulo-vitrine">Profissionais Disponíveis</h2>
+
+<div class="profissionais-grid">
+    <div class="card-profissional">
+        <div class="avatar-circular"><img src="img/miguel.png" alt="Miguel"></div>
+        <h3>Miguel Augustinho</h3>
+        <p>Programador</p>
+        <div class="stars">★★★★★ <span>(52)</span></div>
+        <button class="btn btn-salvar" style="width: 100%;">Ver Perfil</button>
+    </div>
+
+    <div class="card-profissional">
+        <div class="avatar-circular"><img src="img/carlos.png" alt="Carlos"></div>
+        <h3>Carlos Pinheiro</h3>
+        <p>Faxineiro</p>
+        <div class="stars">★★★★★ <span>(31)</span></div>
+        <button class="btn btn-salvar" style="width: 100%;">Ver Perfil</button>
+    </div>
+
+    <div class="card-profissional">
+        <div class="avatar-circular"><img src="img/joao.png" alt="João"></div>
+        <h3>João dos Santos</h3>
+        <p>Produtor</p>
+        <div class="stars">★★★★★ <span>(35)</span></div>
+        <button class="btn btn-salvar" style="width: 100%;">Ver Perfil</button>
+    </div>
 
   <section class="centered">
     <h1>Bem-vindo à MIST Soluções!</h1>

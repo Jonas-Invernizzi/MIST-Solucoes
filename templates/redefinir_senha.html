@@ -1,0 +1,75 @@
+{% extends "_base.html" %} {% block extra_css %}{% endblock %} {% block conteudo
+%}
+<section class="card">
+  <h2>Redefinir Senha</h2>
+
+  {% if sucesso %}
+  <div
+    style="
+      padding: 12px;
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    "
+  >
+    {{ sucesso }}
+  </div>
+  {% endif %} {% if erro %}
+  <div
+    style="
+      padding: 12px;
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    "
+  >
+    {{ erro }}
+  </div>
+  {% endif %} {% if show_reset_form %}
+  <form method="post" action="redefinir_senha.php">
+    <input type="hidden" name="email" value="{{ email }}" />
+    <input type="hidden" name="token" value="{{ token }}" />
+
+    <div class="form-group">
+      <label for="nova-senha">Nova Senha</label>
+      <input
+        id="nova-senha"
+        name="nova_senha"
+        type="password"
+        placeholder="Digite a nova senha"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="confirma-senha">Confirme sua nova senha</label>
+      <input
+        id="confirma-senha"
+        name="confirma_senha"
+        type="password"
+        placeholder="Confirme a nova senha"
+        required
+      />
+    </div>
+
+    <button type="submit" class="btn">Redefinir Senha</button>
+  </form>
+  {% else %}
+  <p>
+    Por favor, verifique seu e-mail para o link de redefinição de senha ou
+    solicite um novo.
+  </p>
+  <div class="actions" style="justify-content: center">
+    <a href="tela_login.php" class="btn btn-cancelar" style="width: auto"
+      >Voltar para o Login</a
+    >
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

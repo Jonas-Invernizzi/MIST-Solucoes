@@ -1,12 +1,19 @@
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(180deg, #f1f6fd 0%, #e8eff9 100%);
   color: #1f3e65;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 .page-wrap {
@@ -32,7 +39,7 @@ body {
 }
 
 .card {
-  width: min(95vw, 540px);
+  width: min(95vw, 600px);
   background: white;
   border-radius: 24px;
   box-shadow: 0 16px 40px rgba(21, 49, 90, 0.17);
@@ -40,10 +47,21 @@ body {
   text-align: center;
 }
 
-.card h2 { margin-bottom: 18px; color: #1f3e65; }
+.card h2 {
+  margin-bottom: 18px;
+  color: #1f3e65;
+}
 
-.form-group { margin: 12px 0; text-align: left; }
-.form-group label { font-size: 0.9rem; color: #29416d; margin-bottom: 6px; display: block; }
+.form-group {
+  margin: 12px 0;
+  text-align: left;
+}
+.form-group label {
+  font-size: 0.9rem;
+  color: #29416d;
+  margin-bottom: 6px;
+  display: block;
+}
 .form-group input {
   width: 100%;
   border: 0;
@@ -53,7 +71,10 @@ body {
   color: #1e3760;
   background: transparent;
 }
-.form-group input:focus { outline: none; border-color: #2f7fff; }
+.form-group input:focus {
+  outline: none;
+  border-color: #2f7fff;
+}
 
 .actions {
   margin-top: 16px;
@@ -61,7 +82,10 @@ body {
   justify-content: space-between;
   font-size: 0.9rem;
 }
-.actions a { color: #2673ff; text-decoration: none; }
+.actions a {
+  color: #2673ff;
+  text-decoration: none;
+}
 
 .btn {
   margin-top: 20px;
@@ -93,7 +117,7 @@ body {
   justify-content: space-between;
   align-items: center;
   background-color: #ffffff;
-  padding: 8px 32px; /* Padding vertical reduzido de 16px para 8px */
+  padding: 8px 20px; /* Reduzido o padding lateral para evitar estouro em tablets */
 }
 
 .menu-usuario {
@@ -121,12 +145,12 @@ body {
 }
 
 .layout-duplo {
- display: flex;
+  display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: flex-start; /* Alinha pelo topo para ficar profissional */
-  gap: 40px;               /* Reduzido de 80px para caber melhor */
-  flex-wrap: nowrap;       /* ISSO impede que um fique embaixo do outro */
+  gap: 40px; /* Reduzido de 80px para caber melhor */
+  flex-wrap: nowrap; /* ISSO impede que um fique embaixo do outro */
   padding: 2rem;
   width: 100%;
   max-width: 1200px;
@@ -152,8 +176,8 @@ body {
 }
 
 .form-registro {
-  flex: 1;          /* O formulário ocupa o restante do espaço */
-  max-width: 600px; 
+  flex: 1; /* O formulário ocupa o restante do espaço */
+  max-width: 600px;
   width: 100%;
 }
 
@@ -166,7 +190,7 @@ body {
 }
 
 .form-registro .form-group label {
-  display: none; 
+  display: none;
 }
 .form-registro .form-group input {
   padding: 8px 0;
@@ -235,17 +259,19 @@ body {
   height: 100vh;
   background: rgba(31, 62, 101, 0.4);
   backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px); 
-  
+  -webkit-backdrop-filter: blur(6px);
+
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  
+
   opacity: 0;
   visibility: hidden;
-  
-  transition: opacity 0.4s ease, visibility 0.4s ease;
+
+  transition:
+    opacity 0.4s ease,
+    visibility 0.4s ease;
 }
 
 .modal-overlay.ativo {
@@ -280,7 +306,7 @@ body {
 }
 
 .senha-container input {
-  padding-right: 40px; 
+  padding-right: 40px;
 }
 
 .toggle-password {
@@ -307,28 +333,31 @@ body {
   outline: none;
 }
 main {
-  flex: 1; 
-  margin: 40px 20px; 
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 40px 0;
+  padding: 0 20px;
 }
 
 .hidden {
   display: none !important;
 }
 
-
 /*responsivo*/
 @media (max-width: 850px) {
   /* Faz a foto ficar em cima do formulário */
   .layout-duplo {
     flex-direction: column;
-    flex-wrap: wrap; /* Permite quebrar linha */
     align-items: center;
     gap: 30px;
     padding: 1rem;
+    margin-top: 0;
   }
 
   /* Ajusta a largura da foto e do form para ocupar quase tudo no mobile */
-  .perfil-foto, 
+  .perfil-foto,
   .form-registro {
     flex: none;
     width: 100%;
@@ -342,19 +371,23 @@ main {
   }
 
   /* Diminui o tamanho da imagem do perfil no celular se necessário */
-  .perfil-foto svg {
-    width: 180px;
-    height: 180px;
+  .perfil-foto svg,
+  #previewImagem {
+    width: 200px !important;
+    height: 200px !important;
+  }
+
+  .btn-salvar {
+    width: 100%;
   }
 }
 
 @media (max-width: 480px) {
   /* Ajustes finos para telas muito pequenas */
-  .topo-header {
-    padding: 8px 16px;
-  }
-  
   .form-registro {
     padding: 24px 20px;
+  }
+  .card {
+    padding: 24px 16px;
   }
 }

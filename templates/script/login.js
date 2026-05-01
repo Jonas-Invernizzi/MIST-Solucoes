@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- LÓGICA DO MODAL (Esqueci Senha) ---
   const linkEsqueci = document.getElementById('link-esqueci-senha');
   const modal = document.getElementById('modal-senha');
-  const formRedefinir = document.getElementById('form-redefinir');
+  const formRedefinirEmail = document.getElementById('form-redefinir-email'); // ID alterado
   const btnCancelar = document.getElementById('btn-cancelar');
 
   if (linkEsqueci && modal) {
@@ -13,18 +13,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnCancelar.addEventListener('click', () => {
       modal.classList.remove('ativo');
+      if (formRedefinirEmail) formRedefinirEmail.reset(); // Limpa o formulário ao cancelar
     });
 
     modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.classList.remove('ativo');
-    });
-  }
-
-  if (formRedefinir) {
-    formRedefinir.addEventListener('submit', (e) => {
-      e.preventDefault();
-      modal.classList.remove('ativo');
-      setTimeout(() => formRedefinir.reset(), 400);
+      if (e.target === modal) {
+        modal.classList.remove('ativo');
+        if (formRedefinirEmail) formRedefinirEmail.reset(); // Limpa o formulário ao clicar fora
+      }
     });
   }
 

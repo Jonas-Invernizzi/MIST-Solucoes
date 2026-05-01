@@ -1,137 +1,297 @@
-{% extends "_base.html" %}
-{% block conteudo %}
-{# Esconde o formulário de registro se o modal de verificação estiver ativo #}
-  <div class="layout-duplo {% if mostra_modal_codigo %}hidden{% endif %}">
-    <aside class="perfil-foto" style="text-align: center;">
-      <svg id="defaultUserIcon" width="280" height="280" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M50 100C77.6142 100 100 77.6142 100 50C100 22.3858 77.6142 0 50 0C22.3858 0 0 22.3858 0 50C0 77.6142 22.3858 100 50 100ZM50 24C41.1634 24 34 31.1634 34 40C34 48.8366 41.1634 56 50 56C58.8366 56 66 48.8366 66 40C66 31.1634 58.8366 24 50 24ZM26.6343 82.684C30.6552 73.1818 40.0988 66 50 66C59.9012 66 69.3448 73.1818 73.3657 82.684C67.1478 89.1558 58.9803 93 50 93C41.0197 93 32.8522 89.1558 26.6343 82.684Z" fill="#1e1e1e" />
+{% extends "_base.html" %} {% block conteudo %} {# Esconde o formulário de
+registro se o modal de verificação estiver ativo #}
+<div class="layout-duplo {% if mostra_modal_codigo %}hidden{% endif %}">
+  <form
+    id="form-cadastro"
+    method="POST"
+    action="tela_registro.php"
+    enctype="multipart/form-data"
+    style="display: contents"
+  >
+    <aside class="perfil-foto" style="text-align: center">
+      <svg
+        id="defaultUserIcon"
+        width="280"
+        height="280"
+        viewBox="0 0 100 100"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        style="{% if user.foto_perfil %}display:none;{% endif %}"
+      >
+        <path
+          fill-rule="evenodd"
+          clip-rule="evenodd"
+          d="M50 100C77.6142 100 100 77.6142 100 50C100 22.3858 77.6142 0 50 0C22.3858 0 0 22.3858 0 50C0 77.6142 22.3858 100 50 100ZM50 24C41.1634 24 34 31.1634 34 40C34 48.8366 41.1634 56 50 56C58.8366 56 66 48.8366 66 40C66 31.1634 58.8366 24 50 24ZM26.6343 82.684C30.6552 73.1818 40.0988 66 50 66C59.9012 66 69.3448 73.1818 73.3657 82.684C67.1478 89.1558 58.9803 93 50 93C41.0197 93 32.8522 89.1558 26.6343 82.684Z"
+          fill="#1e1e1e"
+        />
       </svg>
-      <img id="previewImagem" src="" alt="Foto de Perfil" style="width: 280px; height: 280px; border-radius: 50%; object-fit: cover; margin: 0 auto; display: none;">
-      <label class="btn-escuro" style="cursor: pointer;">
-        Adicionar foto de perfil
-        <input type="file" id="foto_perfil" name="foto_perfil" accept="image/*" style="display: none;">
+      <img
+        id="previewImagem"
+        src="{% if user.foto_perfil %}img/{{ user.foto_perfil }}{% endif %}"
+        alt="Foto de Perfil"
+        style="width: 280px; height: 280px; border-radius: 50%; object-fit: cover; margin: 0 auto; {% if not user.foto_perfil %}display: none;{% endif %}"
+      />
+      <label class="btn-escuro" style="cursor: pointer">
+        {% if is_edicao %}Alterar foto{% else %}Adicionar foto de perfil{% endif
+        %}
+        <input
+          type="file"
+          id="foto_perfil"
+          name="foto_perfil"
+          accept="image/*"
+          style="display: none"
+        />
       </label>
+      {% if is_edicao %}
+      <a
+        href="logout.php"
+        class="btn btn-cancelar"
+        style="
+          margin-top: 20px;
+          text-decoration: none;
+          display: inline-block;
+          width: 100%;
+        "
+        >Sair da Conta</a
+      >
+      {% endif %}
     </aside>
 
     <section class="card form-registro">
-      <h2 style="font-size: 1.1rem; color: #000; font-weight: 500;">Criar Perfil</h2>
+      <h2 style="font-size: 1.1rem; color: #000; font-weight: 500">
+        {% if is_edicao %}Editar Perfil{% else %}Criar Perfil{% endif %}
+      </h2>
 
       {% if erro %}
-        <div style="padding: 12px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 6px; margin-bottom: 20px;">
-          {{ erro }}
-        </div>
+      <div
+        style="
+          padding: 12px;
+          background-color: #f8d7da;
+          color: #721c24;
+          border: 1px solid #f5c6cb;
+          border-radius: 6px;
+          margin-bottom: 20px;
+        "
+      >
+        {{ erro }}
+      </div>
       {% endif %}
 
-      <form id="form-cadastro" method="POST" action="tela_registro.php" enctype="multipart/form-data">
-        <div class="linha-inputs">
-          <div class="form-group"><input id="nome" name="nome" type="text" placeholder="Nome" required /></div>
-          <div class="form-group"><input id="nascimento" name="nascimento" type="date" required /></div>
+      <div class="linha-inputs">
+        <div class="form-group">
+          <input
+            id="nome"
+            name="nome"
+            type="text"
+            placeholder="Nome"
+            value="{{ user.nome }}"
+            required
+          />
         </div>
-        <div class="linha-inputs">
-          <div class="form-group"><input id="telefone" name="telefone" type="tel" placeholder="Telefone" required /></div>
-          <div class="form-group"><input id="email-input" name="email" type="email" placeholder="E-mail" required /></div>
+        <div class="form-group">
+          <input
+            id="nascimento"
+            name="nascimento"
+            type="date"
+            value="{{ user.data_nascimento }}"
+            required
+          />
         </div>
-        <div class="linha-inputs">
-          <div class="form-group"><input id="endereco" name="endereco" type="text" placeholder="Endereço" required /></div>
-          <div class="form-group"><input id="descricao" name="descricao" type="text" placeholder="Descrição" required /></div>
+      </div>
+      <div class="linha-inputs">
+        <div class="form-group">
+          <input
+            id="telefone"
+            name="telefone"
+            type="tel"
+            placeholder="Telefone"
+            value="{{ user.telefone }}"
+            required
+          />
         </div>
-        <div class="form-group" style="margin-top: 10px;">
-          <input id="senha" name="senha" type="password" placeholder="Senha" required />
+        <div class="form-group">
+          <input
+            id="email-input"
+            name="email"
+            type="email"
+            placeholder="E-mail"
+            value="{{ user.email }}"
+            required
+          />
         </div>
-        <div class="form-group-caixa">
-          <textarea id="tags" name="tags" placeholder="Tags"></textarea>
+      </div>
+      <div class="linha-inputs">
+        <div class="form-group">
+          <input
+            id="endereco"
+            name="endereco"
+            type="text"
+            placeholder="Endereço"
+            value="{{ user.endereco }}"
+            required
+          />
         </div>
-        <div class="rodape-form">
-          <button type="submit" id="btn-abrir-verificacao" class="btn btn-salvar">Salvar</button>
-          <a href="tela_login.php" class="link-conta">Já tem uma conta?</a>
+        <div class="form-group">
+          <input
+            id="descricao"
+            name="descricao"
+            type="text"
+            placeholder="Descrição"
+            value="{{ user.descricao }}"
+            required
+          />
         </div>
-      </form>
-    </section>
-  </div>
+      </div>
+      <div class="form-group" style="margin-top: 10px">
+        <input
+          id="senha"
+          name="senha"
+          type="password"
+          placeholder="{% if is_edicao %}Nova Senha (deixe em branco para manter){% else %}Senha{% endif %}"
+          {%
+          if
+          not
+          is_edicao
+          %}required{%
+          endif
+          %}
+        />
+      </div>
+      <div class="form-group-caixa">
+        <textarea id="tags" name="tags" placeholder="Tags">
+{{ user.tags }}</textarea
+        >
+      </div>
 
-<div id="modal-verificacao" class="modal-overlay {% if mostra_modal_codigo %}ativo{% endif %}">
+      {# Campo oculto para tipo_base se não for edição, para garantir que o PHP
+      receba o valor #} {% if not is_edicao %}
+      <input type="hidden" name="tipo_base" value="cliente" />
+      {% endif %}
+
+      <div class="rodape-form">
+        <button type="submit" class="btn btn-salvar">Salvar</button>
+        {% if not is_edicao %}
+        <a href="tela_login.php" class="link-conta">Já tem uma conta?</a>
+        {% endif %}
+      </div>
+    </section>
+  </form>
+</div>
+
+<div
+  id="modal-verificacao"
+  class="modal-overlay {% if mostra_modal_codigo %}ativo{% endif %}"
+>
   <div class="card modal-card">
     <h2>Verifique seu E-mail</h2>
-    <p style="font-size: 0.9rem; color: #667; margin: 15px 0;">
-      Enviamos um código para o e-mail: <br>
-      <strong id="exibir-email" style="color: #1f3e65;">{{ email_modal }}</strong>
+    <p style="font-size: 0.9rem; color: #667; margin: 15px 0">
+      Enviamos um código para o e-mail: <br />
+      <strong id="exibir-email" style="color: #1f3e65"
+        >{{ email_modal }}</strong
+      >
     </p>
-    
+
     {% if erro %}
-    <div style="padding: 10px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 6px; margin-bottom: 15px; font-size: 13px;">
+    <div
+      style="
+        padding: 10px;
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        font-size: 13px;
+      "
+    >
       {{ erro }}
     </div>
     {% endif %}
-    
+
     <form method="POST" action="tela_registro.php">
       <input type="hidden" name="email_hidden" value="{{ email_modal }}" />
       <div class="form-group">
-        <input name="codigo" type="text" placeholder="000000" 
-               style="text-align: center; font-size: 1.6rem; letter-spacing: 5px;" 
-               maxlength="6"
-               inputmode="numeric"
-               autocomplete="off"
-               required />
+        <input
+          name="codigo"
+          type="text"
+          placeholder="000000"
+          style="text-align: center; font-size: 1.6rem; letter-spacing: 5px"
+          maxlength="6"
+          inputmode="numeric"
+          autocomplete="off"
+          required
+        />
       </div>
-      <button type="submit" name="verificar_codigo" value="1" class="btn">Confirmar Cadastro</button>
-      <button type="button" id="btn-fechar-verificacao" class="btn btn-cancelar">Corrigir E-mail</button>
+      <button type="submit" name="verificar_codigo" value="1" class="btn">
+        Confirmar Cadastro
+      </button>
+      <button
+        type="button"
+        id="btn-fechar-verificacao"
+        class="btn btn-cancelar"
+      >
+        Corrigir E-mail
+      </button>
     </form>
   </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const modalVerificacao = document.getElementById('modal-verificacao');
-  const btnFechar = document.getElementById('btn-fechar-verificacao');
-  const inputCodigo = document.querySelector('input[name="codigo"]');
+  document.addEventListener("DOMContentLoaded", () => {
+    const modalVerificacao = document.getElementById("modal-verificacao");
+    const btnFechar = document.getElementById("btn-fechar-verificacao");
+    const inputCodigo = document.querySelector('input[name="codigo"]');
 
-  // Fechar modal ao clicar em "Corrigir E-mail"
-  if (btnFechar) {
-    btnFechar.addEventListener('click', () => {
-      // Recarregar a página para voltar ao formulário
-      window.location.reload();
-    });
-  }
-
-  // Permitir apenas números no campo de código
-  if (inputCodigo) {
-    inputCodigo.addEventListener('input', (e) => {
-      e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
-    });
-
-    inputCodigo.addEventListener('keypress', (e) => {
-      if (!/[0-9]/.test(e.key)) {
-        e.preventDefault();
-      }
-    });
-  }
-
-  // Script para pré-visualização da imagem
-  const inputFotoPerfil = document.getElementById('foto_perfil');
-  const previewImagem = document.getElementById('previewImagem');
-  const defaultUserIcon = document.getElementById('defaultUserIcon');
-
-  if (inputFotoPerfil && previewImagem && defaultUserIcon) {
-    inputFotoPerfil.addEventListener('change', function(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function() {
-          previewImagem.src = reader.result;
-          // Mostra a imagem e esconde o ícone SVG
-          previewImagem.style.display = 'block';
-          defaultUserIcon.style.display = 'none';
+    // Fechar modal ao clicar em "Corrigir E-mail"
+    if (btnFechar) {
+      btnFechar.addEventListener("click", () => {
+        modalVerificacao.classList.remove("ativo");
+        // Reexibe o formulário que foi escondido pelo Twig ao ativar o modal
+        const layout = document.querySelector(".layout-duplo");
+        if (layout) {
+          layout.classList.remove("hidden");
         }
-        reader.readAsDataURL(file);
-      } else {
-        // Caso o usuário cancele a seleção, volta ao estado inicial
-        previewImagem.src = '';
-        previewImagem.style.display = 'none';
-        defaultUserIcon.style.display = 'block';
-      }
-    });
-  }
-});
+      });
+    }
+
+    // Permitir apenas números no campo de código
+    if (inputCodigo) {
+      inputCodigo.addEventListener("input", (e) => {
+        e.target.value = e.target.value.replace(/[^0-9]/g, "").slice(0, 6);
+      });
+
+      inputCodigo.addEventListener("keypress", (e) => {
+        if (!/[0-9]/.test(e.key)) {
+          e.preventDefault();
+        }
+      });
+    }
+
+    // Script para pré-visualização da imagem
+    const inputFotoPerfil = document.getElementById("foto_perfil");
+    const previewImagem = document.getElementById("previewImagem");
+    const defaultUserIcon = document.getElementById("defaultUserIcon");
+
+    if (inputFotoPerfil && previewImagem && defaultUserIcon) {
+      inputFotoPerfil.addEventListener("change", function (event) {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function () {
+            previewImagem.src = reader.result;
+            // Mostra a imagem e esconde o ícone SVG
+            previewImagem.style.display = "block";
+            defaultUserIcon.style.display = "none";
+          };
+          reader.readAsDataURL(file);
+        } else {
+          // Caso o usuário cancele a seleção, volta ao estado inicial
+          previewImagem.src = "";
+          previewImagem.style.display = "none";
+          defaultUserIcon.style.display = "block";
+        }
+      });
+    }
+  });
 </script>
 
 {% endblock %}

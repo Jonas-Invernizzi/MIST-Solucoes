@@ -8,7 +8,9 @@ CREATE TABLE usuarios (
     tipo_base ENUM('cliente', 'contratante') DEFAULT 'cliente',
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status ENUM('ativo', 'inativo') DEFAULT 'inativo',
-    token VARCHAR(255) DEFAULT NULL
+    token VARCHAR(255) DEFAULT NULL,
+    reset_token VARCHAR(255) DEFAULT NULL,
+    reset_token_expires_at DATETIME DEFAULT NULL
 );
 CREATE TABLE clientes (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -18,6 +20,7 @@ CREATE TABLE clientes (
     telefone VARCHAR(20) NOT NULL,
     data_nascimento DATE NOT NULL,
     descricao TEXT NOT NULL,
+    foto_perfil VARCHAR(255) DEFAULT NULL,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 CREATE TABLE contratantes (
@@ -30,5 +33,6 @@ CREATE TABLE contratantes (
     telefone VARCHAR(20) NOT NULL,
     descricao TEXT NOT NULL,
     trabalho TEXT NOT NULL, 
+    foto_perfil VARCHAR(255) DEFAULT NULL,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );

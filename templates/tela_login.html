@@ -1,55 +1,236 @@
-{% extends "_base.html" %}
-{% block extra_css %}{% endblock %}
+{% extends "_base.html" %} {% block extra_css %}
+<style>
+  .modal-card.maior {
+    max-width: 550px;
+    width: 90%;
+    padding: 30px;
+  }
+  .token-input {
+    text-align: center;
+    font-size: 2rem;
+    letter-spacing: 10px;
+    font-weight: bold;
+  }
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-overlay.ativo {
+    display: flex;
+  }
 
-{% block conteudo %}
-  <section class="card">
-    <h2>Fazer Login</h2>
-    
-    {% if sucesso %}
-    <div style="padding: 12px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 6px; margin-bottom: 20px; font-size: 14px;">
-      {{ sucesso }}
+  @media (max-width: 480px) {
+    .modal-card.maior {
+      padding: 20px 15px;
+    }
+    .token-input { font-size: 1.5rem; letter-spacing: 5px; }
+  }
+</style>
+{% endblock %} {% block conteudo %}
+<section class="card">
+  <h2>Fazer Login</h2>
+
+  {% if sucesso %}
+  <div
+    style="
+      padding: 12px;
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    "
+  >
+    {{ sucesso }}
+  </div>
+  {% endif %} {% if erro %}
+  <div
+    style="
+      padding: 12px;
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    "
+  >
+    {{ erro }}
+  </div>
+  {% endif %}
+  <form method="post" action="tela_login.php">
+    <div class="form-group">
+      <label for="email">E-mail</label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        placeholder="seu@email.com"
+        required
+      />
     </div>
-    {% endif %}
-    
-    {% if erro %}
-    <div style="padding: 12px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 6px; margin-bottom: 20px; font-size: 14px;">
+
+    <div class="form-group">
+      <label for="senha">Senha</label>
+      <input
+        id="senha"
+        name="senha"
+        type="password"
+        placeholder="********"
+        required
+      />
+    </div>
+
+    <div class="actions">
+      <a href="javascript:void(0)" id="link-esqueci-senha"
+        >Esqueceu sua senha?</a
+      >
+      <a href="tela_registro.php">Cadastrar-se</a>
+    </div>
+    <button type="submit" class="btn">Entrar</button>
+  </form>
+</section>
+
+{# Passo 1: Solicitar o código por e-mail #}
+<div id="modal-senha" class="modal-overlay">
+  <div class="card modal-card maior">
+    <h2>Recuperar Senha</h2>
+    <p style="margin-bottom: 20px; color: #555">
+      Informe seu e-mail cadastrado para enviarmos um código de verificação de 6
+      dígitos.
+    </p>
+    <form id="form-redefinir-email" method="POST" action="tela_login.php">
+      <input type="hidden" name="action" value="request_password_reset" />
+      <div class="form-group">
+        <label for="reset-email">E-mail Cadastrado</label>
+        <input
+          id="reset-email"
+          name="email"
+          type="email"
+          placeholder="seu@email.com"
+          required
+        />
+      </div>
+      <button type="submit" class="btn">Enviar Código</button>
+      <button
+        type="button"
+        class="btn btn-cancelar btn-fechar-modal"
+        style="margin-top: 10px"
+      >
+        Cancelar
+      </button>
+    </form>
+  </div>
+</div>
+
+{# Passo 2: Digitar o código e as novas senhas #}
+<div
+  id="modal-redefinir-final"
+  class="modal-overlay {% if mostra_modal_redefinir_senha %}ativo{% endif %}"
+>
+  <div class="card modal-card maior">
+    <h2>Redefinir Senha</h2>
+    <p style="font-size: 0.9rem; color: #667; margin-bottom: 20px">
+      Um código foi enviado para:<br />
+      <strong style="color: #1f3e65">{{ email_redefinir_modal }}</strong>
+    </p>
+
+    {% if erro and mostra_modal_redefinir_senha %}
+    <div
+      style="
+        padding: 10px;
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        font-size: 13px;
+      "
+    >
       {{ erro }}
     </div>
     {% endif %}
-    <form method="post" action="tela_login.php">
-      <div class="form-group">
-        <label for="email">E-mail</label>
-        <input id="email" name="email" type="email" placeholder="seu@email.com" required />
-      </div>
+
+    <form method="POST" action="tela_login.php">
+      <input type="hidden" name="action" value="redefinir_senha_final" />
+      <input
+        type="hidden"
+        name="email_hidden"
+        value="{{ email_redefinir_modal }}"
+      />
 
       <div class="form-group">
-        <label for="senha">Senha</label>
-        <input id="senha" name="senha" type="password" placeholder="********" required />
+        <label>Código de Verificação (6 dígitos)</label>
+        <input
+          name="token_digitado"
+          type="text"
+          class="token-input"
+          placeholder="000000"
+          maxlength="6"
+          inputmode="numeric"
+          required
+        />
       </div>
 
-      <div class="actions">
-        <a href="#" id="link-esqueci-senha">Esqueceu sua senha?</a>
-        <a href="tela_registro.php">Cadastrar-se</a>
+      <div class="linha-inputs" style="display: flex; gap: 15px">
+        <div class="form-group" style="flex: 1">
+          <label>Nova Senha</label>
+          <input
+            name="nova_senha"
+            type="password"
+            placeholder="Mínimo 6 caracteres"
+            required
+          />
+        </div>
+        <div class="form-group" style="flex: 1">
+          <label>Confirmar Senha</label>
+          <input
+            name="confirmar_nova_senha"
+            type="password"
+            placeholder="Repita a senha"
+            required
+          />
+        </div>
       </div>
-      <button type="submit" class="btn">Entrar</button>
+
+      <button type="submit" class="btn">Redefinir Senha</button>
+      <button
+        type="button"
+        class="btn btn-cancelar btn-fechar-modal"
+        style="margin-top: 10px"
+      >
+        Cancelar
+      </button>
     </form>
-  </section>
-
-  <div id="modal-senha" class="modal-overlay">
-    <div class="card modal-card">
-      <h2>Redefinir Senha</h2>
-      <form id="form-redefinir">
-        <div class="form-group">
-          <label for="nova-senha">Nova Senha</label>
-          <input id="nova-senha" type="password" placeholder="Digite a nova senha" required />
-        </div>
-        <div class="form-group">
-          <label for="confirma-senha">Confirme sua nova senha</label>
-          <input id="confirma-senha" type="password" placeholder="Confirme a nova senha" required />
-        </div>
-        <button type="submit" class="btn">Salvar</button>
-        <button type="button" class="btn btn-cancelar" id="btn-cancelar">Cancelar</button>
-      </form>
-    </div>
   </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const linkEsqueci = document.getElementById("link-esqueci-senha");
+    const modalPasso1 = document.getElementById("modal-senha");
+    const botoesFechar = document.querySelectorAll(".btn-fechar-modal");
+
+    if (linkEsqueci) {
+      linkEsqueci.addEventListener("click", () => {
+        modalPasso1.classList.add("ativo");
+      });
+    }
+
+    botoesFechar.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        btn.closest(".modal-overlay").classList.remove("ativo");
+      });
+    });
+  });
+</script>
 {% endblock %}

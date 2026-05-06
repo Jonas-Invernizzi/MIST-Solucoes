@@ -8,50 +8,37 @@ registro se o modal de verificação estiver ativo #}
     enctype="multipart/form-data"
     style="display: contents"
   >
-    <aside class="perfil-foto" style="text-align: center">
+    <aside class="perfil-foto">
       <svg
         id="defaultUserIcon"
-        width="280"
-        height="280"
         viewBox="0 0 100 100"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         style="{% if user.foto_perfil %}display:none;{% endif %}"
       >
-        <path
-          fill-rule="evenodd"
-          clip-rule="evenodd"
-          d="M50 100C77.6142 100 100 77.6142 100 50C100 22.3858 77.6142 0 50 0C22.3858 0 0 22.3858 0 50C0 77.6142 22.3858 100 50 100ZM50 24C41.1634 24 34 31.1634 34 40C34 48.8366 41.1634 56 50 56C58.8366 56 66 48.8366 66 40C66 31.1634 58.8366 24 50 24ZM26.6343 82.684C30.6552 73.1818 40.0988 66 50 66C59.9012 66 69.3448 73.1818 73.3657 82.684C67.1478 89.1558 58.9803 93 50 93C41.0197 93 32.8522 89.1558 26.6343 82.684Z"
-          fill="#1e1e1e"
-        />
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M50 100C77.6142 100 100 77.6142 100 50C100 22.3858 77.6142 0 50 0C22.3858 0 0 22.3858 0 50C0 77.6142 22.3858 100 50 100ZM50 24C41.1634 24 34 31.1634 34 40C34 48.8366 41.1634 56 50 56C58.8366 56 66 48.8366 66 40C66 31.1634 58.8366 24 50 24ZM26.6343 82.684C30.6552 73.1818 40.0988 66 50 66C59.9012 66 69.3448 73.1818 73.3657 82.684C67.1478 89.1558 58.9803 93 50 93C41.0197 93 32.8522 89.1558 26.6343 82.684Z" fill="#1e1e1e"/>
       </svg>
       <img
         id="previewImagem"
         src="{% if user.foto_perfil %}img/{{ user.foto_perfil }}{% endif %}"
         alt="Foto de Perfil"
-        style="width: 280px; height: 280px; border-radius: 50%; object-fit: cover; margin: 0 auto; {% if not user.foto_perfil %}display: none;{% endif %}"
+        style="{% if not user.foto_perfil %}display: none;{% endif %}"
       />
-      <label class="btn-escuro" style="cursor: pointer">
-        {% if is_edicao %}Alterar foto{% else %}Adicionar foto de perfil{% endif
-        %}
-        <input
-          type="file"
-          id="foto_perfil"
-          name="foto_perfil"
-          accept="image/*"
-          style="display: none"
-        />
+      <label for="foto_perfil" class="btn-escuro">
+        {% if is_edicao %}Alterar foto{% else %}Adicionar foto de perfil{% endif %}
       </label>
+      <input
+        type="file"
+        id="foto_perfil"
+        name="foto_perfil"
+        accept="image/*"
+        style="display: none"
+      />
+
       {% if is_edicao %}
       <a
         href="logout.php"
-        class="btn btn-cancelar"
-        style="
-          margin-top: 20px;
-          text-decoration: none;
-          display: inline-block;
-          width: 100%;
-        "
+        class="btn btn-cancelar btn-logout"
         >Sair da Conta</a
       >
       {% endif %}

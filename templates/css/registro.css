@@ -1,0 +1,198 @@
+/* =========================================
+   LAYOUT DE REGISTRO / PERFIL
+   ========================================= */
+
+.registro-wrapper {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.layout-duplo {
+  display: flex;
+  flex-direction: row;
+  justify-content: center; /* Centraliza o conjunto na tela */
+  align-items: flex-start; /* Alinha pelo topo para ficar profissional */
+  gap: 40px;
+  flex-wrap: wrap; /* Permite quebrar linha em telas médias antes do breakpoint mobile */
+  width: 100%;
+  max-width: 1200px;
+}
+
+.perfil-foto {
+  flex: 0 1 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+#previewImagem,
+#defaultUserIcon {
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: block;
+  border: 3px solid #fff;
+}
+
+.btn-escuro {
+  background: #1a1a1a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.btn-escuro:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.form-registro {
+  flex: 1;
+  max-width: 600px;
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(31, 62, 101, 0.05);
+}
+
+.linha-inputs {
+  display: flex;
+  gap: 20px;
+}
+
+.linha-inputs .form-group {
+  flex: 1;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-registro .form-group input {
+    width: 100%;
+    padding: 10px 0;
+    border: none;
+    border-bottom: 1px solid #bbcbe6;
+    background: transparent;
+    font-size: 1rem;
+    color: #1f3e65;
+    transition: border-color 0.2s;
+}
+
+.form-registro .form-group input:focus {
+    outline: none;
+    border-color: #3f7cff;
+}
+
+.form-group-caixa {
+  margin-top: 24px;
+}
+.form-group-caixa textarea {
+  width: 100%;
+  height: 90px;
+  border: 1px solid #d3dbe8;
+  border-radius: 12px;
+  padding: 12px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  background: #ffffff;
+  color: #555;
+}
+.form-group-caixa textarea:focus {
+  outline: none;
+  border-color: #3f7cff;
+}
+
+.rodape-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+}
+.btn-salvar {
+    width: 100%;
+    max-width: 200px;
+    padding: 12px;
+    background-color: #3f7cff;
+    color: #fff;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.link-conta {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: #3f7cff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* =========================================
+   MODAL DE VERIFICAÇÃO
+   ========================================= */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(31, 62, 101, 0.6);
+    backdrop-filter: blur(4px);
+    display: none; /* Escondido por padrão */
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    padding: 20px;
+}
+
+.modal-overlay.ativo {
+    display: flex; /* Exibe o modal quando a classe 'ativo' é inserida pelo PHP/Twig */
+}
+
+.modal-card {
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    max-width: 450px;
+    width: 100%;
+    text-align: center;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Responsividade */
+@media (max-width: 850px) {
+    .layout-duplo {
+        flex-direction: column;
+        align-items: center;
+    }
+    .linha-inputs {
+        flex-direction: column;
+        gap: 0;
+    }
+}

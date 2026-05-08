@@ -1,0 +1,146 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(180deg, #f1f6fd 0%, #e8eff9 100%);
+    color: #1f3e65;
+    min-height: 100vh;
+    display: flex !important;
+    flex-direction: column;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+main {
+    flex: 1;
+    display: flex !important;
+    flex-direction: column;
+    width: 100%;
+}
+
+/* =========================================
+   CABEÇALHO (HEADER)
+   ========================================= */
+.topo-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+    padding: 10px 40px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.logo {
+    max-width: 130px;
+    transition: transform 0.2s;
+}
+
+.logo:hover {
+    transform: scale(1.02);
+}
+
+/* Novo grupo para alinhar barra de pesquisa e menu do usuário */
+.header-right-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex: 1;
+    justify-content: flex-end;
+    gap: 25px; /* Espaçamento entre a barra de pesquisa e o menu do usuário */
+}
+
+/* Barra de Pesquisa no Header */
+.topo-header .search-container {
+    max-width: 380px;
+    width: 100%;
+    display: flex;
+    background-color: #f1f6fd;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 2px 12px;
+    transition: border-color 0.2s;
+}
+
+.topo-header .search-container input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 8px;
+    outline: none;
+    font-size: 0.85rem;
+    color: #1f3e65;
+}
+
+.menu-usuario {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+    flex-shrink: 0; /* Impede que a foto esprema o texto */
+}
+
+.links-acesso {
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+    font-size: 0.9rem;
+}
+
+.links-acesso a {
+    text-decoration: none;
+    color: #1a1a1a;
+    font-weight: 600;
+}
+
+/* Botões básicos (Estilo Global) */
+.btn {
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+/* Foto e Ícone do Header */
+.profile-pic-header,
+.icone-pequeno {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #f0f4f8;
+    border: 1px solid #ddd;
+}
+
+/* =========================================
+   RODAPÉ (FOOTER)
+   ========================================= */
+.rodape {
+    background: #26476f;
+    color: #d6e7ff;
+    text-align: center;
+    padding: 15px;
+    font-size: 0.9rem;
+}
+
+/* =========================================
+   RESPONSIVIDADE BASE (HEADER/FOOTER)
+   ========================================= */
+@media (max-width: 768px) {
+    .topo-header { padding: 10px 20px; }
+    .logo { max-width: 110px; }
+    .links-acesso { font-size: 0.8rem; }
+    .topo-header .search-container { display: none; } /* Esconde no mobile para não amontoar */
+}

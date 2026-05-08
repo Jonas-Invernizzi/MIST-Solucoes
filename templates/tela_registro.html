@@ -1,12 +1,17 @@
-{% extends "_base.html" %} {% block conteudo %} {# Esconde o formulário de
-registro se o modal de verificação estiver ativo #}
-<div class="layout-duplo {% if mostra_modal_codigo %}hidden{% endif %}">
+{% extends "_base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="templates/css/registro.css" />
+{% endblock %}
+
+{% block conteudo %}
+<div class="registro-wrapper">
   <form
     id="form-cadastro"
     method="POST"
     action="tela_registro.php"
     enctype="multipart/form-data"
-    style="display: contents"
+    class="layout-duplo {% if mostra_modal_codigo %}hidden{% endif %}"
   >
     <aside class="perfil-foto">
       <svg
@@ -23,7 +28,7 @@ registro se o modal de verificação estiver ativo #}
         src="{% if user.foto_perfil %}img/{{ user.foto_perfil }}{% endif %}"
         alt="Foto de Perfil"
         style="{% if not user.foto_perfil %}display: none;{% endif %}"
-      />
+        />
       <label for="foto_perfil" class="btn-escuro">
         {% if is_edicao %}Alterar foto{% else %}Adicionar foto de perfil{% endif %}
       </label>
@@ -145,9 +150,7 @@ registro se o modal de verificação estiver ativo #}
         />
       </div>
       <div class="form-group-caixa">
-        <textarea id="tags" name="tags" placeholder="Tags">
-{{ user.tags }}</textarea
-        >
+        <textarea id="tags" name="tags" placeholder="Tags">{{ user.tags }}</textarea>
       </div>
 
       {# Campo oculto para tipo_base se não for edição, para garantir que o PHP

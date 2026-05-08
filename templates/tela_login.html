@@ -1,40 +1,11 @@
-{% extends "_base.html" %} {% block extra_css %}
-<style>
-  .modal-card.maior {
-    max-width: 550px;
-    width: 90%;
-    padding: 30px;
-  }
-  .token-input {
-    text-align: center;
-    font-size: 2rem;
-    letter-spacing: 10px;
-    font-weight: bold;
-  }
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-  }
-  .modal-overlay.ativo {
-    display: flex;
-  }
+{% extends "_base.html" %}
 
-  @media (max-width: 480px) {
-    .modal-card.maior {
-      padding: 20px 15px;
-    }
-    .token-input { font-size: 1.5rem; letter-spacing: 5px; }
-  }
-</style>
-{% endblock %} {% block conteudo %}
+{% block extra_css %}
+<link rel="stylesheet" href="templates/css/login.css" />
+{% endblock %}
+
+{% block conteudo %}
+<div class="login-wrapper">
 <section class="card">
   <h2>Fazer Login</h2>
 
@@ -99,6 +70,7 @@
     <button type="submit" class="btn">Entrar</button>
   </form>
 </section>
+</div>
 
 {# Passo 1: Solicitar o código por e-mail #}
 <div id="modal-senha" class="modal-overlay">

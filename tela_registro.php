@@ -308,13 +308,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             // Configuração de e-mail
                             $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
                             try {
+                                // Habilite a depuração para ver o log de conexão (descomente a linha abaixo se necessário)
+                                // $mail->SMTPDebug = \PHPMailer\PHPMailer\SMTP::DEBUG_SERVER;
+
                                 $mail->isSMTP();
                                 $mail->Host = 'smtp.gmail.com';
                                 $mail->SMTPAuth = true;
                                 $mail->Username = 'dominandoenem0@gmail.com';
                                 $mail->Password = 'xgzj qtbt bzdt arfl';
-                                $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-                                $mail->Port = 587;
+                                // $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+                                // $mail->Port = 587;
+                                // Alternativa: Tente usar SSL na porta 465 se a 587 falhar (descomente as 2 linhas abaixo e comente as 2 acima)
+                                $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+                                $mail->Port = 465;
                                 $mail->CharSet = 'UTF-8';
 
                                 $mail->setFrom('dominandoenem0@gmail.com', 'Mist Soluções');
@@ -327,9 +333,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                                 $mostra_modal_codigo = true;
                                 $email_modal = $email;
                             } catch (Exception $e) {
-                                // O registro já foi salvo, mas avisamos sobre o erro no e-mail
-                                $erro = "⚠️ Cadastro realizado, mas houve um erro ao enviar o e-mail: " . $mail->ErrorInfo;
-                                $mostra_modal_codigo = true; // Permite que o usuário tente validar se já tiver o código ou souber como proceder
+                                // O registro já foi salvo. Como falhou o envio (ex: bloqueio de rede na escola),
+                                // mostramos o código na tela para permitir a continuação dos testes.
+                                $erro = "⚠️ Aviso de Rede: O e-mail não pôde ser enviado. (Modo Acadêmico) Seu código de verificação é: <strong>" . $token . "</strong>";
+                                $mostra_modal_codigo = true; 
                                 $email_modal = $email;
                             }
                         }

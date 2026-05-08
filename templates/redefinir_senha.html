@@ -1,5 +1,11 @@
-{% extends "_base.html" %} {% block extra_css %}{% endblock %} {% block conteudo
-%}
+{% extends "_base.html" %} 
+
+{% block extra_css %}
+<link rel="stylesheet" href="templates/css/redefinir_senha.css" />
+{% endblock %} 
+
+{% block conteudo %}
+<div class="redefinir-wrapper">
 <section class="card">
   <h2>Redefinir Senha</h2>
 
@@ -72,4 +78,5 @@
   </div>
   {% endif %}
 </section>
+</div>
 {% endblock %}

@@ -1,0 +1,65 @@
+.redefinir-wrapper {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+.card {
+    width: 100%;
+    max-width: 450px;
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(31, 62, 101, 0.1);
+}
+
+.card h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #1f3e65;
+    font-size: 1.8rem;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #29416d;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #bbcbe6;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+    background-color: #fcfdfe;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #3f7cff;
+}
+
+.btn-redefinir {
+    width: 100%;
+    padding: 14px;
+    background-color: #3f7cff;
+    color: #fff;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-top: 10px;
+}
+
+.btn-redefinir:hover {
+    background-color: #2f6fff;
+}

@@ -125,13 +125,29 @@
   margin-top: 10px;
 }
 .btn-salvar {
-    width: 100%;
-    max-width: 200px;
-    padding: 12px;
-    background-color: #3f7cff;
-    color: #fff;
-    border-radius: 8px;
+    background: linear-gradient(135deg, #5a85ff 0%, #4a6fd8 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
     font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(90, 133, 255, 0.3);
+    margin-top: 15px;
+    width: 50%;
+}
+
+.btn-salvar:hover {
+    background: linear-gradient(135deg, #4a6fd8 0%, #3a5fb8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(90, 133, 255, 0.4);
+}
+
+.btn-salvar:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(90, 133, 255, 0.3);
 }
 
 .link-conta {
@@ -140,6 +156,11 @@
   color: #3f7cff;
   text-decoration: none;
   font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.link-conta:hover {
+  color: #4a6fd8;
 }
 
 /* =========================================

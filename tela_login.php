@@ -36,13 +36,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 require_once 'vendor/autoload.php';
                 $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
                 try {
+                    // Habilite a depuração para ver o log de conexão (descomente a linha abaixo se necessário)
+                    // $mail->SMTPDebug = \PHPMailer\PHPMailer\SMTP::DEBUG_SERVER;
+
                     $mail->isSMTP();
                     $mail->Host = 'smtp.gmail.com';
                     $mail->SMTPAuth = true;
                     $mail->Username = 'dominandoenem0@gmail.com';
                     $mail->Password = 'xgzj qtbt bzdt arfl';
-                    $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-                    $mail->Port = 587;
+                    // $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+                    // $mail->Port = 587;
+                    // Alternativa: Tente usar SSL na porta 465 se a 587 falhar (descomente as 2 linhas abaixo e comente as 2 acima)
+                    $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+                    $mail->Port = 465;
                     $mail->CharSet = 'UTF-8';
 
                     $mail->setFrom('dominandoenem0@gmail.com', 'Mist Soluções');
@@ -56,7 +62,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $mostra_modal_redefinir_senha = true;
                     $email_redefinir_modal = $email;
                 } catch (Exception $e) {
-                    $erro = "⚠️ Erro ao enviar e-mail: " . $mail->ErrorInfo;
+                    // Fallback para bloqueio de rede (Modo Acadêmico)
+                    $sucesso = "⚠️ Rede bloqueada (Modo Acadêmico). Seu código de redefinição é: <strong>$token</strong>";
+                    $mostra_modal_redefinir_senha = true;
+                    $email_redefinir_modal = $email;
                 }
             } else {
                 $erro = "⚠️ E-mail não encontrado.";

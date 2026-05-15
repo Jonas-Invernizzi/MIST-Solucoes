@@ -122,7 +122,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $_SESSION['usuario_id'] = $usuario['id'];
                     $foto = $usuario['foto_perfil'];
                     $_SESSION['usuario_foto'] = ($foto && file_exists(__DIR__ . "/img/$foto")) ? $foto : 'default_profile.png';
-                    header("Location: tela_index.php");
+                    header("Location: tela_inicial.php");
                     exit();
                 }
             } else {

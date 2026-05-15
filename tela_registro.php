@@ -270,7 +270,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                                 unlink($uploadDir . $oldFotoPerfil);
                             }
                             $_SESSION['usuario_foto'] = $fotoParaSalvar;
-                            header("Location: tela_index.php?sucesso=perfil_atualizado");
+                            header("Location: tela_inicial.php?sucesso=perfil_atualizado");
                             exit();
                         } else {
                             // Lógica de Novo Registro (INSERT)

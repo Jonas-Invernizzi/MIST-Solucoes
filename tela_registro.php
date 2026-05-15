@@ -11,24 +11,41 @@ $usuario_id_modal = '';
 $dados_usuario = [];
 $is_edicao = false;
 
-// Verificar se o usuário já está logado para modo de edição
-if (isset($_SESSION['usuario_id'])) {
-    $is_edicao = true;
+// --- Lógica de Edição ---
+$id_alvo = null; // ID do usuário a ser editado
+$is_admin = false;
 
-    // Primeiro, identificamos o tipo_base para saber qual tabela consultar
+// 1. Verificar se o usuário logado é admin
+if (isset($_SESSION['usuario_id'])) {
+    $stmtAdminCheck = $pdo->prepare("SELECT email FROM usuarios WHERE id = :id");
+    $stmtAdminCheck->execute(['id' => $_SESSION['usuario_id']]);
+    $currentUser = $stmtAdminCheck->fetch(PDO::FETCH_ASSOC);
+    if ($currentUser && $currentUser['email'] === 'admin@mist.com') {
+        $is_admin = true;
+    }
+}
+
+// 2. Determinar quem está sendo editado
+if ($is_admin && isset($_GET['id'])) {
+    // Admin editando outro usuário (ou a si mesmo via URL)
+    $id_alvo = $_GET['id'];
+    $is_edicao = true;
+} elseif (isset($_SESSION['usuario_id']) && !isset($_GET['id'])) {
+    // Usuário normal editando o próprio perfil
+    $id_alvo = $_SESSION['usuario_id'];
+    $is_edicao = true;
+}
+
+// 3. Se for edição, carregar os dados do usuário alvo
+if ($is_edicao && $id_alvo) {
     $stmtUser = $pdo->prepare("SELECT email, tipo_base FROM usuarios WHERE id = :id");
-    $stmtUser->execute(['id' => $_SESSION['usuario_id']]);
+    $stmtUser->execute(['id' => $id_alvo]);
     $uBase = $stmtUser->fetch(PDO::FETCH_ASSOC);
 
     if ($uBase) {
         $tabela = ($uBase['tipo_base'] === 'contratante') ? 'contratantes' : 'clientes';
-        $stmt = $pdo->prepare("
-            SELECT u.email, u.tipo_base, t.* 
-            FROM usuarios u 
-            LEFT JOIN $tabela t ON u.id = t.usuario_id 
-            WHERE u.id = :id
-        ");
-        $stmt->execute(['id' => $_SESSION['usuario_id']]);
+        $stmt = $pdo->prepare("SELECT u.email, u.tipo_base, t.* FROM usuarios u LEFT JOIN $tabela t ON u.id = t.usuario_id WHERE u.id = :id");
+        $stmt->execute(['id' => $id_alvo]);
         $dados_usuario = $stmt->fetch(PDO::FETCH_ASSOC);
     }
 }
@@ -104,6 +121,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
     $descricao = trim($_POST['descricao'] ?? '');
     $senha = $_POST['senha'] ?? '';
     $tags = trim($_POST['tags'] ?? '');
+
+    // ID do usuário sendo editado, vindo de um campo hidden no formulário
+    $id_sendo_editado = $_POST['id_sendo_editado'] ?? null;
 
     // Mantém o tipo_base original se estiver em modo edição (pois o campo não vai no POST)
     $tipo_base_post = $_POST['tipo_base'] ?? ($dados_usuario['tipo_base'] ?? 'cliente');
@@ -188,12 +208,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
         } else {
             // Verificar se email já existe (ignorando o ID atual se for edição)
             $sqlCheck = "SELECT id FROM usuarios WHERE email = :email";
-            if ($is_edicao) $sqlCheck .= " AND id != :id";
+            if ($is_edicao && $id_sendo_editado) $sqlCheck .= " AND id != :id";
 
 
             $checkStmt = $pdo->prepare($sqlCheck);
             $checkStmt->bindValue(':email', $email);
-            if ($is_edicao) $checkStmt->bindValue(':id', $_SESSION['usuario_id']);
+            if ($is_edicao && $id_sendo_editado) $checkStmt->bindValue(':id', $id_sendo_editado);
             $checkStmt->execute();
 
             if ($checkStmt->rowCount() > 0) {
@@ -224,7 +244,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                         $pdo->beginTransaction();
 
                         if ($is_edicao) {
-                            $usuarioId = $_SESSION['usuario_id'];
+                            $usuarioId = null;
+                            if ($is_admin) {
+                                $usuarioId = $id_sendo_editado;
+                            } else {
+                                // Usuário normal só pode editar a si mesmo.
+                                $usuarioId = $_SESSION['usuario_id'];
+                            }
+
+                            if (!$usuarioId) throw new Exception("ID do usuário a ser atualizado é inválido.");
 
                             $oldFotoPerfil = null;
                             $tabela = ($dados_usuario['tipo_base'] === 'contratante') ? 'contratantes' : 'clientes';
@@ -269,7 +297,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             if ($oldFotoPerfil && $oldFotoPerfil !== $imagemPadrao && file_exists($uploadDir . $oldFotoPerfil)) {
                                 unlink($uploadDir . $oldFotoPerfil);
                             }
-                            $_SESSION['usuario_foto'] = $fotoParaSalvar;
+                            // Atualiza a foto da sessão apenas se o usuário estiver editando o próprio perfil
+                            if ($usuarioId == $_SESSION['usuario_id']) {
+                                $_SESSION['usuario_foto'] = $fotoParaSalvar;
+                            }
+
                             header("Location: tela_inicial.php?sucesso=perfil_atualizado");
                             exit();
                         } else {
@@ -347,5 +379,6 @@ echo $twig->render('tela_registro.html', [
     'mostra_modal_codigo' => $mostra_modal_codigo,
     'email_modal' => $email_modal,
     'user' => $dados_usuario,
-    'is_edicao' => $is_edicao
+    'is_edicao' => $is_edicao,
+    'id_alvo' => $id_alvo // Passa o ID para o template (para o campo hidden)
 ]);

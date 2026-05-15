@@ -301,52 +301,40 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             $stmtCliente->bindValue(':foto_perfil', $fotoParaSalvar);
                             $stmtCliente->execute();
 
-                            // Efetuamos o commit aqui. Agora o usuário e a imagem 
-                            // estão oficialmente registrados no banco de dados.
-                            $pdo->commit();
-
                             // Configuração de e-mail
                             $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
-                            try {
-                                // Habilite a depuração para ver o log de conexão (descomente a linha abaixo se necessário)
-                                // $mail->SMTPDebug = \PHPMailer\PHPMailer\SMTP::DEBUG_SERVER;
+                            // Habilite a depuração para ver o log de conexão (descomente a linha abaixo se necessário)
+                            // $mail->SMTPDebug = \PHPMailer\PHPMailer\SMTP::DEBUG_SERVER;
 
-                                $mail->isSMTP();
-                                $mail->Host = 'smtp.gmail.com';
-                                $mail->SMTPAuth = true;
-                                $mail->Username = 'dominandoenem0@gmail.com';
-                                $mail->Password = 'xgzj qtbt bzdt arfl';
-                                // $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-                                // $mail->Port = 587;
-                                // Alternativa: Tente usar SSL na porta 465 se a 587 falhar (descomente as 2 linhas abaixo e comente as 2 acima)
-                                $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
-                                $mail->Port = 465;
-                                $mail->CharSet = 'UTF-8';
+                            $mail->isSMTP();
+                            $mail->Host = 'smtp.gmail.com';
+                            $mail->SMTPAuth = true;
+                            $mail->Username = 'dominandoenem0@gmail.com';
+                            $mail->Password = 'xgzj qtbt bzdt arfl';
+                            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+                            $mail->Port = 465;
+                            $mail->CharSet = 'UTF-8';
 
-                                $mail->setFrom('dominandoenem0@gmail.com', 'Mist Soluções');
-                                $mail->addAddress($email, $nome);
-                                $mail->Subject = "Confirme seu cadastro - Código de Verificação";
-                                $mail->Body = "Seu código de verificação é: $token";
-                                $mail->isHTML(false);
+                            $mail->setFrom('dominandoenem0@gmail.com', 'Mist Soluções');
+                            $mail->addAddress($email, $nome);
+                            $mail->Subject = "Confirme seu cadastro - Código de Verificação";
+                            $mail->Body = "Seu código de verificação é: $token";
+                            $mail->isHTML(false);
 
-                                $mail->send();
-                                $mostra_modal_codigo = true;
-                                $email_modal = $email;
-                            } catch (Exception $e) {
-                                // O registro já foi salvo. Como falhou o envio (ex: bloqueio de rede na escola),
-                                // mostramos o código na tela para permitir a continuação dos testes.
-                                $erro = "⚠️ Aviso de Rede: O e-mail não pôde ser enviado. (Modo Acadêmico) Seu código de verificação é: <strong>" . $token . "</strong>";
-                                $mostra_modal_codigo = true; 
-                                $email_modal = $email;
-                            }
+                            $mail->send();
+
+                            // Se o e-mail foi enviado com sucesso, commit a transação
+                            $pdo->commit();
+
+                            $mostra_modal_codigo = true;
+                            $email_modal = $email;
                         }
-                    } catch (\PHPMailer\PHPMailer\Exception $e) {
-                        $erro = "⚠️ Erro PHPMailer: " . $mail->ErrorInfo;
                     } catch (Exception $e) {
                         if ($pdo->inTransaction()) {
                             $pdo->rollBack();
                         }
-                        $erro = "⚠️ Erro ao processar seu registro: " . $e->getMessage();
+                        // Se falhou o envio de e-mail ou o banco, o usuário não foi criado.
+                        $erro = "⚠️ Não foi possível concluir o seu registro. Verifique seu e-mail ou tente novamente mais tarde.";
                     }
                 }
             }

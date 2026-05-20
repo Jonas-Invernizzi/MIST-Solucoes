@@ -25,15 +25,17 @@ if (isset($_SESSION['usuario_id'])) {
     }
 }
 
-// 2. Determinar quem está sendo editado
-if ($is_admin && isset($_GET['id'])) {
-    // Admin editando outro usuário (ou a si mesmo via URL)
-    $id_alvo = $_GET['id'];
+// 2. Determinar se é edição e quem está sendo editado
+if (isset($_SESSION['usuario_id'])) { // Apenas usuários logados podem editar
     $is_edicao = true;
-} elseif (isset($_SESSION['usuario_id']) && !isset($_GET['id'])) {
-    // Usuário normal editando o próprio perfil
-    $id_alvo = $_SESSION['usuario_id'];
-    $is_edicao = true;
+
+    if ($is_admin && isset($_GET['id'])) {
+        // Se o usuário é admin e está acessando com um ID na URL, ele está editando outro perfil.
+        $id_alvo = $_GET['id'];
+    } else {
+        // Caso contrário, qualquer usuário logado (admin ou não) está editando o próprio perfil.
+        $id_alvo = $_SESSION['usuario_id'];
+    }
 }
 
 // 3. Se for edição, carregar os dados do usuário alvo
@@ -122,9 +124,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
     $senha = $_POST['senha'] ?? '';
     $tags = trim($_POST['tags'] ?? '');
 
-    // ID do usuário sendo editado, vindo de um campo hidden no formulário
-    $id_sendo_editado = $_POST['id_sendo_editado'] ?? null;
-
     // Mantém o tipo_base original se estiver em modo edição (pois o campo não vai no POST)
     $tipo_base_post = $_POST['tipo_base'] ?? ($dados_usuario['tipo_base'] ?? 'cliente');
 
@@ -206,14 +205,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $erro = "⚠️ Informe um e-mail válido.";
         } else {
+            // Em modo de edição, $id_alvo contém o ID do usuário que está sendo editado.
+            $id_a_ignorar = $is_edicao ? $id_alvo : null;
+
             // Verificar se email já existe (ignorando o ID atual se for edição)
             $sqlCheck = "SELECT id FROM usuarios WHERE email = :email";
-            if ($is_edicao && $id_sendo_editado) $sqlCheck .= " AND id != :id";
-
+            if ($id_a_ignorar) {
+                $sqlCheck .= " AND id != :id";
+            }
 
             $checkStmt = $pdo->prepare($sqlCheck);
             $checkStmt->bindValue(':email', $email);
-            if ($is_edicao && $id_sendo_editado) $checkStmt->bindValue(':id', $id_sendo_editado);
+            if ($id_a_ignorar) $checkStmt->bindValue(':id', $id_a_ignorar);
             $checkStmt->execute();
 
             if ($checkStmt->rowCount() > 0) {
@@ -244,13 +247,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                         $pdo->beginTransaction();
 
                         if ($is_edicao) {
-                            $usuarioId = null;
-                            if ($is_admin) {
-                                $usuarioId = $id_sendo_editado;
-                            } else {
-                                // Usuário normal só pode editar a si mesmo.
-                                $usuarioId = $_SESSION['usuario_id'];
-                            }
+                            // A variável $id_alvo já contém o ID correto do usuário a ser editado (seja o próprio usuário ou outro, editado pelo admin).
+                            $usuarioId = $id_alvo;
 
                             if (!$usuarioId) throw new Exception("ID do usuário a ser atualizado é inválido.");
 

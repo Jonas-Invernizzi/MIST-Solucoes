@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil - Mist Soluções</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="templates/css/base.css">
+    <style>
+        .perfil-container { margin-top: 50px; margin-bottom: 50px; }
+        .foto-perfil-detalhe { 
+            width: 100%; 
+            max-width: 300px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .info-card { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 20px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .badge-profissao {
+            background-color: #e8eff9;
+            color: #4a6fd8;
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <main class="container perfil-container">
+        {% if erro %}
+            <div class="alert alert-warning text-center">
+                <h4>{{ erro }}</h4>
+                <a href="tela_index.php" class="btn btn-primary mt-3">Voltar para a Busca</a>
+            </div>
+        {% elseif perfil %}
+            <div class="row g-5">
+                <!-- Coluna da Foto -->
+                <div class="col-md-4 text-center">
+                    <img src="img/{{ perfil.foto_perfil }}" alt="{{ perfil.nome }}" class="foto-perfil-detalhe mb-3">
+                    <h3 class="fw-bold">{{ perfil.nome }}</h3>
+                    <p class="text-muted">{{ perfil.idade }} anos</p>
+                    
+                    <div class="mt-4">
+                        <a href="https://wa.me/{{ perfil.telefone|replace({ ' ': '', '(': '', ')': '', '-': '' }) }}" target="_blank" class="btn btn-success w-100 mb-2">
+                            Conversar no WhatsApp
+                        </a>
+                        <a href="tela_index.php" class="btn btn-outline-secondary w-100">Voltar</a>
+                    </div>
+                </div>
+
+                <!-- Coluna das Informações -->
+                <div class="col-md-8">
+                    <div class="info-card">
+                        <span class="badge-profissao">{{ perfil.profissao }}</span>
+                        
+                        <h4 class="mb-3">Sobre</h4>
+                        <p class="text-secondary" style="white-space: pre-line;">
+                            {{ perfil.descricao }}
+                        </p>
+
+                        <hr class="my-4">
+
+                        <div class="row">
+                            <div class="col-sm-6 mb-3">
+                                <h6 class="fw-bold">Telefone</h6>
+                                <p>{{ perfil.telefone }}</p>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <h6 class="fw-bold">E-mail</h6>
+                                <p>{{ perfil.email }}</p>
+                            </div>
+                            <div class="col-sm-12">
+                                <h6 class="fw-bold">Endereço</h6>
+                                <p>{{ perfil.endereco }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </main>
+
+</body>
+</html>

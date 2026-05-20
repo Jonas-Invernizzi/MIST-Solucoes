@@ -10,10 +10,10 @@
         <h1>Encontre pessoas para serviços manuais</h1>
         <p>Conecte-se com profissionais para trabalhos manuais que você precisa</p>
         
-        <div class="search-container">
-            <input type="text" placeholder="Pesquisar por Serviço ou Pessoa">
-            <button class="btn-busca">Buscar</button>
-        </div>
+        <form action="tela_inicial.php" method="GET" class="search-container">
+            <input type="text" name="q" placeholder="Pesquisar por Serviço ou Pessoa" value="{{ search_query }}">
+            <button type="submit" class="btn-busca">Buscar</button>
+        </form>
     </div>
     
     <div class="hero-img-container">
@@ -24,36 +24,27 @@
 <h2 class="titulo-vitrine">Profissionais Disponíveis</h2>
 
 <div class="profissionais-grid">
-    <div class="card-profissional">
-        <div class="avatar-circular"><img src="img/miguel.png" alt="Miguel"></div>
-        <h3>Miguel Augustinho</h3>
-        <p>Programador</p>
-        <div class="stars">★★★★★ <span>(52)</span></div>
-        <button class="btn btn-salvar" style="width: 100%;">Ver Perfil</button>
-    </div>
-
-    <div class="card-profissional">
-        <div class="avatar-circular"><img src="img/carlos.png" alt="Carlos"></div>
-        <h3>Carlos Pinheiro</h3>
-        <p>Faxineiro</p>
-        <div class="stars">★★★★★ <span>(31)</span></div>
-        <button class="btn btn-salvar" style="width: 100%;">Ver Perfil</button>
-    </div>
-
-    <div class="card-profissional">
-        <div class="avatar-circular"><img src="img/joao.png" alt="João"></div>
-        <h3>João dos Santos</h3>
-        <p>Produtor</p>
-        <div class="stars">★★★★★ <span>(35)</span></div>
-        <button class="btn btn-salvar" style="width: 100%;">Ver Perfil</button>
-    </div>
-
-    <div class="card-profissional">
-        <div class="avatar-circular"><img src="img/pedro.png" alt="Pedro"></div>
-        <h3>Pedro da Silva</h3>
-        <p>Cuidador de Idosos</p>
-        <div class="stars">★★★★★ <span>(12)</span></div>
-        <button class="btn btn-salvar" style="width: 100%;">Ver Perfil</button>
-    </div>
+    {% for pro in profissionais %}
+        <div class="card-profissional">
+            <div class="avatar-circular">
+                {# Verifica se existe foto, senão usa a padrão #}
+                <img src="img/{{ pro.foto_perfil ?: 'default_profile.png' }}" alt="{{ pro.nome }}">
+            </div>
+            <h3>{{ pro.nome }}</h3>
+            <p class="text-muted fw-bold">{{ pro.trabalho }}</p>
+            
+            {# Limita a descrição para 80 caracteres para não quebrar o layout #}
+            <p style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">
+                {{ pro.descricao|slice(0, 80) }}{% if pro.descricao|length > 80 %}...{% endif %}
+            </p>
+            
+            <div class="stars">★★★★★</div>
+            <a href="perfil.php?id={{ pro.usuario_id }}" class="btn-salvar">Ver Perfil</a>
+        </div>
+    {% else %}
+        <div class="col-12 text-center py-5">
+            <p class="text-muted">Nenhum profissional disponível no momento.</p>
+        </div>
+    {% endfor %}
 </div>
 {% endblock %}

@@ -26,6 +26,7 @@ CREATE TABLE clientes (
 CREATE TABLE contratantes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     usuario_id INT UNIQUE NOT NULL, 
+    nome VARCHAR(255) NOT NULL,
     cpf VARCHAR(14),
     data_nascimento DATE NOT NULL,
     endereco VARCHAR(255) NOT NULL,

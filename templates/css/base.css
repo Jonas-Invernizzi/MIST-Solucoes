@@ -44,45 +44,78 @@ main {
     z-index: 1000;
 }
 
+.header-left, .header-right {
+    flex: 1;
+    display: flex;
+}
+
+.header-center {
+    flex: 2;
+    display: flex;
+    justify-content: center;
+}
+
+.header-right {
+    justify-content: flex-end;
+}
+
 .logo {
     max-width: 130px;
     transition: transform 0.2s;
 }
 
-.logo:hover {
-    transform: scale(1.02);
-}
-
-/* Novo grupo para alinhar barra de pesquisa e menu do usuário */
-.header-right-group {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    flex: 1;
-    justify-content: flex-end;
-    gap: 25px; /* Espaçamento entre a barra de pesquisa e o menu do usuário */
-}
-
 /* Barra de Pesquisa no Header */
-.topo-header .search-container {
-    max-width: 380px;
+.search-container-header {
+    max-width: 500px;
     width: 100%;
     display: flex;
     background-color: #f1f6fd;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #dbe3ed; /* Cor da borda mais suave */
     border-radius: 20px;
-    padding: 2px 12px;
+    padding: 4px 4px 4px 15px; /* Ajusta o padding para o ícone */
     transition: border-color 0.2s;
+    align-items: center; /* Alinha itens verticalmente */
 }
 
-.topo-header .search-container input {
+.search-container-header:focus-within {
+    border-color: #5a85ff; /* Borda azul ao focar */
+    box-shadow: 0 0 0 2px rgba(90, 133, 255, 0.2); /* Sombra suave ao focar */
+}
+
+.search-container-header input {
     width: 100%;
+    flex-grow: 1; /* Permite que o input ocupe o espaço disponível */
     border: none;
     background: transparent;
     padding: 8px;
     outline: none;
     font-size: 0.85rem;
     color: #1f3e65;
+}
+
+.search-icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    display: flex; /* Para centralizar o SVG */
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.search-icon-button:hover {
+    transform: scale(1.1);
+}
+
+.search-icon {
+    width: 20px;
+    height: 20px;
+    stroke: #667; /* Cor do ícone */
+}
+
+.search-icon path {
+    stroke-width: 2; /* Garante a espessura da linha do SVG */
 }
 
 .menu-usuario {
@@ -142,5 +175,7 @@ main {
     .topo-header { padding: 10px 20px; }
     .logo { max-width: 110px; }
     .links-acesso { font-size: 0.8rem; }
-    .topo-header .search-container { display: none; } /* Esconde no mobile para não amontoar */
+    .header-center { display: none; } /* Esconde a busca no mobile para não amontoar */
+    .header-left, .header-right { flex: auto; }
+}
 }

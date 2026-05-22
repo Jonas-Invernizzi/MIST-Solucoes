@@ -12,20 +12,29 @@
   </head>
   <body>
     <header class="topo topo-header">
-      <a
-        href="{% if session.usuario_id %}tela_inicial.php{% else %}tela_login.php{% endif %}"
-      >
-        <img class="logo" src="img/logo.jpg" alt="MIST Soluções" />
-      </a>
+      <div class="header-left">
+        <a
+          href="{% if session.usuario_id %}tela_inicial.php{% else %}tela_login.php{% endif %}"
+        >
+          <img class="logo" src="img/logo.jpg" alt="MIST Soluções" />
+        </a>
+      </div>
 
-      <div class="header-right-group">
-        {% if session.usuario_id %} 
-        {# Barra de pesquisa ao lado da foto #}
-        <div class="search-container">
-          <input type="text" placeholder="O que você está procurando?" />
-        </div>
-        {% endif %} 
+      {% if session.usuario_id %} 
+      <div class="header-center">
+        <form action="pesquisa.php" method="GET" class="search-container-header">
+          <input type="text" name="q" placeholder="O que você está procurando?" value="{{ termo_buscado|default('') }}" aria-label="Pesquisar" />
+          <button type="submit" class="search-icon-button" aria-label="Confirmar Pesquisa">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="#1f3e65" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M21 21L16.65 16.65" stroke="#1f3e65" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+      {% endif %} 
 
+      <div class="header-right">
         <div class="menu-usuario">
           <div class="links-acesso">
             {% if session.usuario_id %}

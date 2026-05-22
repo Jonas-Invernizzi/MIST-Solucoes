@@ -2,27 +2,19 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="templates/css/telaInicial.css" />
+<style>
+    .results-info { margin: 20px 40px; color: #667; }
+</style>
 {% endblock %}
 
 {% block conteudo %}
-<section class="hero-section">
-    <div class="hero-text">
-        <p class="welcome-text">Bem-vindo, {{ nome_usuario }}!</p>
-        <h1>Encontre pessoas para serviços manuais</h1>
-        <p>Conecte-se com profissionais para trabalhos manuais que você precisa</p>
-        
-        <form action="pesquisa.php" method="GET" class="search-container">
-            <input type="text" name="q" placeholder="Pesquisar por nome ou tag (ex: encanador)">
-            <button type="submit" class="btn-busca">Buscar</button>
-        </form>
-    </div>
-    
-    <div class="hero-img-container">
-        <img src="img/imagemPadrao.png" alt="Ilustração de serviço">
-    </div>
-</section>
-
-<h2 class="titulo-vitrine">Profissionais Disponíveis</h2>
+<div class="results-info">
+    {% if termo_buscado %}
+        <p>Resultados para: <strong>"{{ termo_buscado }}"</strong> ({{ profissionais|length }} encontrados)</p>
+    {% else %}
+        <p>Mostrando todos os profissionais disponíveis ({{ profissionais|length }})</p>
+    {% endif %}
+</div>
 
 <div class="profissionais-grid">
     {% for prof in profissionais %}
@@ -40,8 +32,8 @@
             <button class="btn btn-salvar" style="width: 100%;">Ver Perfil</button>
         </div>
     {% else %}
-        <p style="grid-column: 1 / -1; text-align: center; color: #667; padding: 40px;">
-            ⚠️ Ainda não há profissionais registrados no momento.
+        <p style="grid-column: 1 / -1; text-align: center; color: #667; padding: 60px;">
+            🔍 Nenhum profissional encontrado para sua busca.
         </p>
     {% endfor %}
 </div>

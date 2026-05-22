@@ -124,7 +124,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $_SESSION['usuario_id'] = $usuario['id'];
                     $_SESSION['usuario_nome'] = $usuario['nome'];
                     $foto = $usuario['foto_perfil'];
-                    $_SESSION['usuario_foto'] = ($foto && file_exists(__DIR__ . "/img/$foto")) ? $foto : 'default_profile.png';
+                    // Se a foto for nula, 'default_profile.png', ou o arquivo não existir, usamos null.
+                    // O template irá então renderizar o ícone padrão.
+                    if ($foto && $foto !== 'default_profile.png' && file_exists(__DIR__ . "/img/$foto")) {
+                        $_SESSION['usuario_foto'] = $foto;
+                    } else {
+                        $_SESSION['usuario_foto'] = null;
+                    }
                     header("Location: tela_inicial.php");
                     exit();
                 }

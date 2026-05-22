@@ -127,6 +127,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
     $senha = $_POST['senha'] ?? '';
     $tags = trim($_POST['tags'] ?? '');
 
+    $remover_foto = isset($_POST['remover_foto']) && $_POST['remover_foto'] === '1';
+
     // Se for edição, e um campo do formulário vier vazio, mantém o valor que já estava no banco.
     // Isso permite que o usuário edite apenas um campo sem ter que preencher todos os outros novamente.
     if ($is_edicao) {
@@ -158,7 +160,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
     }
 
     // --- Validação de Upload de Imagem (SEM SALVAR AINDA) ---
-    $imagemPadrao = 'default_profile.png';
+    // O valor padrão para foto de perfil é NULL, para que o template possa exibir um ícone.
+    $imagemPadrao = null;
     $caminhoFotoPerfil = null; // Começa nulo para identificar se houve novo upload
     $erroUpload = '';
     $imagemTemporaria = null;
@@ -166,7 +169,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
     // Tenta capturar de 'foto_perfil' ou apenas 'foto' para evitar erros de digitação no HTML
     $fileKey = isset($_FILES['foto_perfil']) ? 'foto_perfil' : (isset($_FILES['foto']) ? 'foto' : null);
 
-    if ($fileKey && $_FILES[$fileKey]['error'] !== UPLOAD_ERR_NO_FILE) {
+    // Se a remoção for solicitada, não processamos o upload de um novo arquivo.
+    if (!$remover_foto && $fileKey && $_FILES[$fileKey]['error'] !== UPLOAD_ERR_NO_FILE) {
         if ($_FILES[$fileKey]['error'] === UPLOAD_ERR_OK) {
             $fileTmpPath = $_FILES[$fileKey]['tmp_name'];
 
@@ -281,7 +285,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             $resultOldPhoto = $stmtOldPhoto->fetch(PDO::FETCH_ASSOC);
                             $fotoAtualNoBanco = $resultOldPhoto['foto_perfil'] ?? null;
 
-                            if ($caminhoFotoPerfil) {
+                            // Se uma nova foto foi enviada ou a remoção foi solicitada, a foto antiga é marcada para exclusão.
+                            if ($caminhoFotoPerfil || $remover_foto) {
                                 $oldFotoPerfil = $fotoAtualNoBanco;
                             }
 
@@ -303,8 +308,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             $stmt->execute();
 
                             // 2. Atualizar dados do cliente (detecta se é cliente ou contratante)
-                            // Se não houve upload novo e o banco está vazio, coloca a padrão. Se já tem, mantém a atual.
-                            $fotoParaSalvar = $caminhoFotoPerfil ?: ($fotoAtualNoBanco ?: $imagemPadrao);
+                            if ($remover_foto) {
+                                $fotoParaSalvar = $imagemPadrao; // null
+                            } else {
+                                // Usa a nova foto se houver, senão a atual, senão a padrão (null).
+                                $fotoParaSalvar = $caminhoFotoPerfil ?: ($fotoAtualNoBanco ?: $imagemPadrao);
+                            }
                             
                             $update_fields = [
                                 "nome = :nome",
@@ -336,7 +345,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
 
                             $pdo->commit();
                             // Delete old photo after successful update and commit
-                            if ($oldFotoPerfil && $oldFotoPerfil !== $imagemPadrao && file_exists($uploadDir . $oldFotoPerfil)) {
+                            if ($oldFotoPerfil && $oldFotoPerfil !== 'default_profile.png' && file_exists($uploadDir . $oldFotoPerfil)) {
                                 unlink($uploadDir . $oldFotoPerfil);
                             }
                             // Atualiza a foto da sessão apenas se o usuário estiver editando o próprio perfil

@@ -47,7 +47,8 @@ try {
                 ':endereco' => 'Endereço do Admin',
                 ':telefone' => '(00) 00000-0000',
                 ':descricao' => 'Usuário administrador para desenvolvimento e testes.',
-                ':foto_perfil' => 'default_profile.png'
+                ':trabalho' => 'Gerenciamento',
+                ':foto_perfil' => null
             ]);
         }
         

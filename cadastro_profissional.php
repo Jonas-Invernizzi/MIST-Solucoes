@@ -94,16 +94,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                 }
 
                 // 3. Inserir em contratantes (incluindo campos específicos da estrutura.sql)
-                // Nota: Embora a estrutura.sql fornecida não tenha 'nome' em contratantes, 
-                // a tela_registro.php sugere que ele é esperado. Se falhar, remova o campo 'nome' abaixo.
                 $sqlContratante = "INSERT INTO contratantes 
-                    (usuario_id, cpf, data_nascimento, endereco, endereco_trabalho, telefone, descricao, trabalho, foto_perfil) 
+                    (usuario_id, nome, cpf, data_nascimento, endereco, endereco_trabalho, telefone, descricao, trabalho, foto_perfil) 
                     VALUES 
-                    (:uid, :cpf, :nasc, :end, :end_t, :tel, :desc, :trab, :foto)";
+                    (:uid, :nome, :cpf, :nasc, :end, :end_t, :tel, :desc, :trab, :foto)";
                 
                 $stmtProf = $pdo->prepare($sqlContratante);
                 $stmtProf->execute([
                     'uid'   => $usuarioId,
+                    'nome'  => $nome,
                     'cpf'   => $cpf,
                     'nasc'  => $nascimento,
                     'end'   => $endereco,

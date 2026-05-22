@@ -58,7 +58,7 @@
     }
 
     /* Grid de Profissionais */
-    .welcome-text { text-align: center; color: #4a6fd8; font-weight: 600; font-size: 1.2rem; margin: 20px 0; white-space: nowrap; }
+    .welcome-text { text-align: left; color: #4a6fd8; font-weight: 600; font-size: 1.1rem; margin-bottom: 5px; white-space: nowrap; }
     .titulo-vitrine { text-align: center; margin-top: 0; margin-bottom: 40px; font-size: 1.8rem; white-space: nowrap; }
 
     .profissionais-grid {
@@ -126,7 +126,7 @@
         .hero-img-container img { max-width: 280px; }
         .search-container { margin: 0 auto; }
         .hero-text h1 { font-size: 1.6rem; white-space: normal; }
-        .welcome-text { font-size: 1.1rem; white-space: normal; padding: 0 10px; }
+        .welcome-text { font-size: 1rem; white-space: normal; text-align: center; margin-bottom: 10px; }
         .titulo-vitrine { font-size: 1.4rem; white-space: normal; }
         .profissionais-grid {
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

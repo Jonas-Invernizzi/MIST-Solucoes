@@ -9,8 +9,24 @@ if (!isset($_SESSION['usuario_id'])) {
 }
 
 $profissionais = [];
+$nome_usuario = 'Usuário';
 
 try {
+    // Busca o nome do usuário logado (seja cliente ou contratante)
+    $stmtUser = $pdo->prepare("
+        SELECT COALESCE(c.nome, co.nome) as nome_real 
+        FROM usuarios u
+        LEFT JOIN clientes c ON u.id = c.usuario_id
+        LEFT JOIN contratantes co ON u.id = co.usuario_id
+        WHERE u.id = :id
+    ");
+    $stmtUser->execute(['id' => $_SESSION['usuario_id']]);
+    $userRow = $stmtUser->fetch(PDO::FETCH_ASSOC);
+    
+    if ($userRow && !empty($userRow['nome_real'])) {
+        $nome_usuario = $userRow['nome_real'];
+    }
+
     // Busca os 4 profissionais com melhor média de avaliação
     $query = "
         SELECT 

@@ -1,5 +1,5 @@
-<?php 
-session_start(); 
+<?php
+session_start();
 require_once('carregar_pdo.php');
 require_once('carregar_twig.php');
 
@@ -8,10 +8,11 @@ if (!isset($_SESSION['usuario_id'])) {
     exit();
 }
 
+$query_term = trim($_GET['q'] ?? '');
 $profissionais = [];
 
 try {
-    $query = "
+    $sql = "
         SELECT 
             c.nome, 
             c.trabalho, 
@@ -20,16 +21,23 @@ try {
             COUNT(a.id) as total_avaliacoes
         FROM contratantes c 
         LEFT JOIN avaliacoes a ON c.usuario_id = a.profissional_id
-        GROUP BY c.usuario_id, c.nome, c.trabalho, c.foto_perfil 
-        ORDER BY nota_media DESC, total_avaliacoes DESC 
-        LIMIT 4
     ";
 
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
+    if (!empty($query_term)) {
+        $sql .= " WHERE c.nome LIKE :q OR c.trabalho LIKE :q OR c.descricao LIKE :q";
+        $stmt = $pdo->prepare($sql . " GROUP BY c.usuario_id ORDER BY nota_media DESC");
+        $stmt->execute([':q' => '%' . $query_term . '%']);
+    } else {
+        $stmt = $pdo->prepare($sql . " GROUP BY c.usuario_id ORDER BY nota_media DESC");
+        $stmt->execute();
+    }
+
     $profissionais = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $profissionais = [];
 }
 
-echo $twig->render('tela_inicial.html', ['profissionais' => $profissionais]);
+echo $twig->render('pesquisa.html', [
+    'profissionais' => $profissionais,
+    'termo_buscado' => $query_term
+]);

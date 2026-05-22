@@ -115,6 +115,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['verificar_codigo'])) 
 
 // Processar novo registro
 if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo'])) {
+    // Guarda os dados atuais do banco para usar como fallback em modo de edição.
+    $dados_atuais = $dados_usuario;
+
     $nome = trim($_POST['nome'] ?? '');
     $nascimento = trim($_POST['nascimento'] ?? '');
     $telefone = trim($_POST['telefone'] ?? '');
@@ -124,21 +127,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
     $senha = $_POST['senha'] ?? '';
     $tags = trim($_POST['tags'] ?? '');
 
-    // Mantém o tipo_base original se estiver em modo edição (pois o campo não vai no POST)
-    $tipo_base_post = $_POST['tipo_base'] ?? ($dados_usuario['tipo_base'] ?? 'cliente');
+    // Se for edição, e um campo do formulário vier vazio, mantém o valor que já estava no banco.
+    // Isso permite que o usuário edite apenas um campo sem ter que preencher todos os outros novamente.
+    if ($is_edicao) {
+        $nome = $nome ?: ($dados_atuais['nome'] ?? '');
+        $nascimento = $nascimento ?: ($dados_atuais['data_nascimento'] ?? '');
+        $telefone = $telefone ?: ($dados_atuais['telefone'] ?? '');
+        $email = $email ?: ($dados_atuais['email'] ?? '');
+        $endereco = $endereco ?: ($dados_atuais['endereco'] ?? '');
+        $descricao = $descricao ?: ($dados_atuais['descricao'] ?? '');
+        $tags = $tags ?: ($dados_atuais['tags'] ?? '');
+    }
 
-    // Preservar os dados digitados para o formulário (em caso de erro ou retorno do modal)
-    $dados_usuario = [
-        'nome' => $nome,
-        'data_nascimento' => $nascimento,
-        'telefone' => $telefone,
-        'email' => $email,
-        'endereco' => $endereco,
-        'descricao' => $descricao,
-        'tags' => $tags,
-        'tipo_base' => $tipo_base_post,
-        'foto_perfil' => $dados_usuario['foto_perfil'] ?? null
-    ];
+    // Mantém o tipo_base original se estiver em modo edição (pois o campo não vai no POST)
+    $tipo_base_post = $_POST['tipo_base'] ?? ($dados_atuais['tipo_base'] ?? 'cliente');
+
+    // Atualiza $dados_usuario com os dados mesclados para que o formulário seja
+    // repreenchido corretamente em caso de erro e para a lógica de salvamento.
+    $dados_usuario = array_merge($dados_atuais, [
+        'nome' => $nome, 'data_nascimento' => $nascimento, 'telefone' => $telefone,
+        'email' => $email, 'endereco' => $endereco, 'descricao' => $descricao,
+        'tags' => $tags, 'tipo_base' => $tipo_base_post
+    ]);
 
     // 1. Definir caminho absoluto para a pasta img
     $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'img' . DIRECTORY_SEPARATOR;
@@ -200,7 +210,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
 
     // --- Validações e Registro ---
     if ($erro === '') {
-        if ($nome === '' || $nascimento === '' || $telefone === '' || $email === '' || $endereco === '' || $descricao === '' || (!$is_edicao && $senha === '')) {
+        $campos_obrigatorios_vazios = (
+            $nascimento === '' || $telefone === '' || $email === '' || $endereco === '' || $descricao === '' || (!$is_edicao && $senha === '')
+        );
+
+        // O campo 'nome' só é obrigatório para 'clientes'.
+        if ($tipo_base_post === 'cliente' && $nome === '') {
+            $campos_obrigatorios_vazios = true;
+        }
+
+        if ($campos_obrigatorios_vazios) {
             $erro = "⚠️ Preencha todos os campos obrigatórios.";
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $erro = "⚠️ Informe um e-mail válido.";
@@ -267,7 +286,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             }
 
                             // 1. Atualizar e-mail e senha (se fornecida)
-                            $sqlU = "UPDATE usuarios SET email = :email" . (!empty($senha) ? ", senha = :senha" : "") . " WHERE id = :id";
+                            $is_editing_self = ($usuarioId == ($_SESSION['usuario_id'] ?? null));
+                            $sql_update_parts = ["email = :email"];
+                            if (!empty($senha)) {
+                                $sql_update_parts[] = "senha = :senha";
+                            }
+                            // Se o admin estiver editando o próprio perfil, garantir que o status permaneça 'ativo'.
+                            if ($is_admin && $is_editing_self) {
+                                $sql_update_parts[] = "status = 'ativo'";
+                            }
+                            $sqlU = "UPDATE usuarios SET " . implode(', ', $sql_update_parts) . " WHERE id = :id";
                             $stmt = $pdo->prepare($sqlU);
                             $stmt->bindValue(':email', $email);
                             if (!empty($senha)) $stmt->bindValue(':senha', $senhaHash);
@@ -277,11 +305,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             // 2. Atualizar dados do cliente (detecta se é cliente ou contratante)
                             // Se não houve upload novo e o banco está vazio, coloca a padrão. Se já tem, mantém a atual.
                             $fotoParaSalvar = $caminhoFotoPerfil ?: ($fotoAtualNoBanco ?: $imagemPadrao);
+                            
+                            $update_fields = [
+                                "nome = :nome",
+                                "endereco = :endereco",
+                                "telefone = :telefone",
+                                "data_nascimento = :nascimento",
+                                "descricao = :descricao",
+                                "foto_perfil = :foto"
+                            ];
 
-                            $sqlC = "UPDATE $tabela SET nome = :nome, endereco = :endereco, telefone = :telefone, data_nascimento = :nascimento, descricao = :descricao, foto_perfil = :foto WHERE usuario_id = :id";
+                            // O campo 'trabalho' (tags) só existe para contratantes.
+                            if ($tipo_base_post === 'contratante') {
+                                $update_fields[] = "trabalho = :trabalho";
+                            }
 
+                            $sqlC = "UPDATE $tabela SET " . implode(', ', $update_fields) . " WHERE usuario_id = :id";
                             $stmtC = $pdo->prepare($sqlC);
                             $stmtC->bindValue(':nome', $nome);
+                            if ($tipo_base_post === 'contratante') {
+                                $stmtC->bindValue(':trabalho', $tags);
+                            }
                             $stmtC->bindValue(':endereco', $endereco);
                             $stmtC->bindValue(':telefone', $telefone);
                             $stmtC->bindValue(':nascimento', $nascimento);
@@ -320,51 +364,65 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
 
                             // Salva na tabela correta baseada na escolha do usuário
                             $tabelaDestino = ($tipo_base_post === 'contratante') ? 'contratantes' : 'clientes';
-                            $stmtCliente = $pdo->prepare("INSERT INTO $tabelaDestino (usuario_id, nome, endereco, telefone, data_nascimento, descricao, foto_perfil) 
-                                                     VALUES (:usuario_id, :nome, :endereco, :telefone, :nascimento, :descricao, :foto_perfil)");
+                            
+                            $sqlColumns = 'usuario_id, endereco, telefone, data_nascimento, descricao, foto_perfil';
+                            $sqlValues = ':usuario_id, :endereco, :telefone, :nascimento, :descricao, :foto_perfil';
+
+                            // O campo 'nome' só existe na tabela 'clientes'.
+                            if ($tipo_base_post === 'cliente') {
+                                $sqlColumns .= ', nome';
+                                $sqlValues .= ', :nome';
+                            }
+
+                            $stmtCliente = $pdo->prepare("INSERT INTO $tabelaDestino ($sqlColumns) VALUES ($sqlValues)");
                             $stmtCliente->bindValue(':usuario_id', $usuarioId);
-                            $stmtCliente->bindValue(':nome', $nome);
                             $stmtCliente->bindValue(':endereco', $endereco);
                             $stmtCliente->bindValue(':telefone', $telefone);
                             $stmtCliente->bindValue(':nascimento', $nascimento);
                             $stmtCliente->bindValue(':descricao', $descricao);
                             $stmtCliente->bindValue(':foto_perfil', $fotoParaSalvar);
+                            if ($tipo_base_post === 'cliente') {
+                                $stmtCliente->bindValue(':nome', $nome);
+                            }
                             $stmtCliente->execute();
-
-                            // Configuração de e-mail
-                            $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
-                            // Habilite a depuração para ver o log de conexão (descomente a linha abaixo se necessário)
-                            // $mail->SMTPDebug = \PHPMailer\PHPMailer\SMTP::DEBUG_SERVER;
-
-                            $mail->isSMTP();
-                            $mail->Host = 'smtp.gmail.com';
-                            $mail->SMTPAuth = true;
-                            $mail->Username = 'dominandoenem0@gmail.com';
-                            $mail->Password = 'xgzj qtbt bzdt arfl';
-                            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
-                            $mail->Port = 465;
-                            $mail->CharSet = 'UTF-8';
-
-                            $mail->setFrom('dominandoenem0@gmail.com', 'Mist Soluções');
-                            $mail->addAddress($email, $nome);
-                            $mail->Subject = "Confirme seu cadastro - Código de Verificação";
-                            $mail->Body = "Seu código de verificação é: $token";
-                            $mail->isHTML(false);
-
-                            $mail->send();
-
-                            // Se o e-mail foi enviado com sucesso, commit a transação
+                            
+                            // A transação do banco de dados é confirmada ANTES do envio de e-mail.
+                            // Isso garante que o usuário seja salvo mesmo se o e-mail falhar.
                             $pdo->commit();
+
+                            try {
+                                // Configuração de e-mail
+                                $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+                                // $mail->SMTPDebug = \PHPMailer\PHPMailer\SMTP::DEBUG_SERVER;
+
+                                $mail->isSMTP();
+                                $mail->Host = 'smtp.gmail.com';
+                                $mail->SMTPAuth = true;
+                                $mail->Username = 'dominandoenem0@gmail.com';
+                                $mail->Password = 'xgzj qtbt bzdt arfl';
+                                $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+                                $mail->Port = 465;
+                                $mail->CharSet = 'UTF-8';
+
+                                $mail->setFrom('dominandoenem0@gmail.com', 'Mist Soluções');
+                                $mail->addAddress($email, $nome);
+                                $mail->Subject = "Confirme seu cadastro - Código de Verificação";
+                                $mail->Body = "Seu código de verificação é: $token";
+                                $mail->isHTML(false);
+
+                                $mail->send();
+                            } catch (Exception $e) {
+                                // Fallback "Modo Acadêmico": se o e-mail falhar, mostra o código na tela.
+                                $erro = "⚠️ Modo Acadêmico: Registro salvo. Use o código para ativar: <strong>$token</strong>";
+                            }
 
                             $mostra_modal_codigo = true;
                             $email_modal = $email;
                         }
                     } catch (Exception $e) {
-                        if ($pdo->inTransaction()) {
-                            $pdo->rollBack();
-                        }
-                        // Se falhou o envio de e-mail ou o banco, o usuário não foi criado.
-                        $erro = "⚠️ Não foi possível concluir o seu registro. Verifique seu e-mail ou tente novamente mais tarde.";
+                        if ($pdo->inTransaction()) $pdo->rollBack();
+                        // Agora, este bloco captura principalmente erros de banco de dados, exibindo uma mensagem mais útil.
+                        $erro = "⚠️ Erro ao processar registro: " . $e->getMessage();
                     }
                 }
             }

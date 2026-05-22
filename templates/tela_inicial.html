@@ -24,36 +24,24 @@
 <h2 class="titulo-vitrine">Profissionais Disponíveis</h2>
 
 <div class="profissionais-grid">
-    <div class="card-profissional">
-        <div class="avatar-circular"><img src="img/miguel.png" alt="Miguel"></div>
-        <h3>Miguel Augustinho</h3>
-        <p>Programador</p>
-        <div class="stars">★★★★★ <span>(52)</span></div>
-        <button class="btn btn-salvar" style="width: 100%;">Ver Perfil</button>
-    </div>
-
-    <div class="card-profissional">
-        <div class="avatar-circular"><img src="img/carlos.png" alt="Carlos"></div>
-        <h3>Carlos Pinheiro</h3>
-        <p>Faxineiro</p>
-        <div class="stars">★★★★★ <span>(31)</span></div>
-        <button class="btn btn-salvar" style="width: 100%;">Ver Perfil</button>
-    </div>
-
-    <div class="card-profissional">
-        <div class="avatar-circular"><img src="img/joao.png" alt="João"></div>
-        <h3>João dos Santos</h3>
-        <p>Produtor</p>
-        <div class="stars">★★★★★ <span>(35)</span></div>
-        <button class="btn btn-salvar" style="width: 100%;">Ver Perfil</button>
-    </div>
-
-    <div class="card-profissional">
-        <div class="avatar-circular"><img src="img/pedro.png" alt="Pedro"></div>
-        <h3>Pedro da Silva</h3>
-        <p>Cuidador de Idosos</p>
-        <div class="stars">★★★★★ <span>(12)</span></div>
-        <button class="btn btn-salvar" style="width: 100%;">Ver Perfil</button>
-    </div>
+    {% for prof in profissionais %}
+        <div class="card-profissional">
+            <div class="avatar-circular">
+                <img src="img/{{ prof.foto_perfil|default('default_profile.png') }}" alt="{{ prof.nome }}">
+            </div>
+            <h3>{{ prof.nome }}</h3>
+            <p>{{ prof.trabalho }}</p>
+            <div class="stars">
+                {% set nota = prof.nota_media|round(0, 'floor') %}
+                {% for i in 1..5 %}{{ i <= nota ? '★' : '☆' }}{% endfor %}
+                <span>({{ prof.total_avaliacoes }})</span>
+            </div>
+            <button class="btn btn-salvar" style="width: 100%;">Ver Perfil</button>
+        </div>
+    {% else %}
+        <p style="grid-column: 1 / -1; text-align: center; color: #667; padding: 40px;">
+            ⚠️ Ainda não há profissionais registrados no momento.
+        </p>
+    {% endfor %}
 </div>
 {% endblock %}

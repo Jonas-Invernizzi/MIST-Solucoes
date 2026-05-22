@@ -106,7 +106,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $erro = "⚠️ Preencha e-mail e senha.";
         } else {
             $stmt = $pdo->prepare("
-                SELECT u.*, COALESCE(c.foto_perfil, co.foto_perfil) as foto_perfil
+                SELECT u.*, 
+                       COALESCE(c.nome, co.nome) as nome, 
+                       COALESCE(c.foto_perfil, co.foto_perfil) as foto_perfil
                 FROM usuarios u
                 LEFT JOIN clientes c ON u.id = c.usuario_id
                 LEFT JOIN contratantes co ON u.id = co.usuario_id
@@ -120,6 +122,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $erro = "⚠️ E-mail não confirmado.";
                 } else {
                     $_SESSION['usuario_id'] = $usuario['id'];
+                    $_SESSION['usuario_nome'] = $usuario['nome'];
                     $foto = $usuario['foto_perfil'];
                     $_SESSION['usuario_foto'] = ($foto && file_exists(__DIR__ . "/img/$foto")) ? $foto : 'default_profile.png';
                     header("Location: tela_inicial.php");

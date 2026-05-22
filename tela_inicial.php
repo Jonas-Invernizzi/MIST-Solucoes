@@ -11,6 +11,7 @@ if (!isset($_SESSION['usuario_id'])) {
 $profissionais = [];
 
 try {
+    // Busca os 4 profissionais com melhor média de avaliação
     $query = "
         SELECT 
             c.nome, 
@@ -32,4 +33,7 @@ try {
     $profissionais = [];
 }
 
-echo $twig->render('tela_inicial.html', ['profissionais' => $profissionais]);
+echo $twig->render('tela_inicial.html', [
+    'profissionais' => $profissionais,
+    'nome_usuario' => $nome_usuario
+]);

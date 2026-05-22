@@ -83,7 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                 $usuarioId = $pdo->lastInsertId();
 
                 // 2. Tratar imagem de perfil
-                $fotoParaSalvar = 'default_profile.png';
+                $fotoParaSalvar = null;
                 if (isset($_FILES['foto_perfil']) && $_FILES['foto_perfil']['error'] === UPLOAD_ERR_OK) {
                     $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'img' . DIRECTORY_SEPARATOR;
                     $ext = strtolower(pathinfo($_FILES['foto_perfil']['name'], PATHINFO_EXTENSION));

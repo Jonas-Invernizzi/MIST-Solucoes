@@ -40,10 +40,19 @@
         style="display: none"
       />
 
+      {% if is_edicao and user.foto_perfil %}
+      <div class="remover-foto-container">
+        <label>
+          <input type="checkbox" name="remover_foto" value="1" />
+          Remover foto de perfil
+        </label>
+      </div>
+      {% endif %}
+
       {% if is_edicao %}
       <a
         href="logout.php"
-        class="btn btn-cancelar btn-logout"
+        class="btn-logout"
         >Sair da Conta</a
       >
       {% endif %}

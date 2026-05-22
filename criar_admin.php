@@ -49,7 +49,7 @@ try {
                 ':telefone' => '(00) 00000-0000',
                 ':descricao' => 'Usuário administrador para desenvolvimento e testes.',
                 ':trabalho' => 'Gerenciamento',
-                ':foto_perfil' => 'default_profile.png'
+                ':foto_perfil' => null
             ]);
         }
         

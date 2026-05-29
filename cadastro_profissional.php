@@ -73,8 +73,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                 $token = sprintf("%06d", mt_rand(0, 999999));
                 $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
 
-                // 1. Criar usuário (tipo_base = contratante)
-                $stmtUser = $pdo->prepare("INSERT INTO usuarios (email, senha, token, status, tipo_base) VALUES (:email, :senha, :token, 'inativo', 'contratante')");
+                // 1. Criar usuário (tipo_base = profissional)
+                $stmtUser = $pdo->prepare("INSERT INTO usuarios (email, senha, token, status, tipo_base) VALUES (:email, :senha, :token, 'inativo', 'profissional')");
                 $stmtUser->execute([
                     'email' => $email,
                     'senha' => $senhaHash,
@@ -94,7 +94,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                 }
 
                 // 3. Inserir em contratantes (incluindo campos específicos da estrutura.sql)
-                $sqlContratante = "INSERT INTO contratantes 
+                $sqlContratante = "INSERT INTO profissionais 
                     (usuario_id, nome, cpf, data_nascimento, endereco, endereco_trabalho, telefone, descricao, trabalho, foto_perfil) 
                     VALUES 
                     (:uid, :nome, :cpf, :nasc, :end, :end_t, :tel, :desc, :trab, :foto)";
@@ -112,6 +112,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                     'trab'  => $trabalho,
                     'foto'  => $fotoParaSalvar
                 ]);
+
+                $profissionalId = $pdo->lastInsertId();
+
+                // Processar Tags (Estilo YouTube: string separada por vírgulas)
+                if (!empty($trabalho)) {
+                    $tagsArray = array_unique(array_filter(array_map('trim', explode(',', $trabalho))));
+                    foreach ($tagsArray as $tagNome) {
+                        // Insere a tag se não existir
+                        $stmtTag = $pdo->prepare("INSERT IGNORE INTO tags (nome) VALUES (:nome)");
+                        $stmtTag->execute(['nome' => $tagNome]);
+                        $tagId = $pdo->query("SELECT id FROM tags WHERE nome = " . $pdo->quote($tagNome))->fetchColumn();
+                        
+                        // Vincula ao profissional
+                        $pdo->prepare("INSERT IGNORE INTO profissional_tags (profissional_id, tag_id) VALUES (:pid, :tid)")
+                            ->execute(['pid' => $profissionalId, 'tid' => $tagId]);
+                    }
+                }
 
                 $pdo->commit();
 

@@ -1,11 +1,16 @@
-DROP TABLE IF EXISTS contratantes;
+-- Desativa a verificação para permitir o DROP de tabelas com dependências
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS profissional_tags;
+DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS clientes;
+DROP TABLE IF EXISTS profissionais;
 DROP TABLE IF EXISTS usuarios;
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(191) UNIQUE NOT NULL,
     senha VARCHAR(255) NOT NULL,
-    tipo_base ENUM('cliente', 'contratante') DEFAULT 'cliente',
+    tipo_base ENUM('cliente', 'profissional') DEFAULT 'cliente',
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status ENUM('ativo', 'inativo') DEFAULT 'inativo',
     token VARCHAR(255) DEFAULT NULL,
@@ -23,7 +28,8 @@ CREATE TABLE clientes (
     foto_perfil VARCHAR(255) DEFAULT NULL,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
-CREATE TABLE contratantes (
+
+CREATE TABLE profissionais (
     id INT AUTO_INCREMENT PRIMARY KEY,
     usuario_id INT UNIQUE NOT NULL, 
     nome VARCHAR(255) NOT NULL,
@@ -37,3 +43,19 @@ CREATE TABLE contratantes (
     foto_perfil VARCHAR(255) DEFAULT NULL,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
+
+CREATE TABLE tags (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) UNIQUE NOT NULL
+);
+
+CREATE TABLE profissional_tags (
+    profissional_id INT NOT NULL,
+    tag_id INT NOT NULL,
+    PRIMARY KEY (profissional_id, tag_id),
+    FOREIGN KEY (profissional_id) REFERENCES profissionais(id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+);
+
+-- Reativa a verificação de chaves estrangeiras
+SET FOREIGN_KEY_CHECKS = 1;

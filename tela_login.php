@@ -111,7 +111,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                        COALESCE(c.foto_perfil, co.foto_perfil) as foto_perfil
                 FROM usuarios u
                 LEFT JOIN clientes c ON u.id = c.usuario_id
-                LEFT JOIN contratantes co ON u.id = co.usuario_id
+                LEFT JOIN profissionais co ON u.id = co.usuario_id
                 WHERE u.email = :email
             ");
             $stmt->execute([':email' => $email]);

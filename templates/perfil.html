@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil - {{ usuario.nome|default('Usuário') }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="templates/css/base.css">
+    <style>
+        .profile-header {
+            background: linear-gradient(180deg, #1f3e65 0%, #26476f 100%);
+            color: white;
+            padding: 80px 0 120px 0;
+            border-radius: 0;
+        }
+        .profile-img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border: 5px solid white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .info-card {
+            margin-top: -70px;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .badge-prof {
+            background-color: #5a85ff;
+            font-size: 1rem;
+            padding: 8px 15px;
+        }
+        /* Estilo personalizado para manter a identidade visual do MIST */
+        .btn-acao-mist {
+            background: linear-gradient(135deg, #5a85ff 0%, #4a6fd8 100%);
+            color: white !important;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(90, 133, 255, 0.2);
+        }
+        .btn-acao-mist:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(90, 133, 255, 0.4);
+            filter: brightness(1.1);
+        }
+        /* Botão de contato em verde mantendo a identidade visual do MIST */
+        .btn-contato-verde {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            color: white !important;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+        }
+        .btn-contato-verde:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+            filter: brightness(1.1);
+        }
+    </style>
+</head>
+<body>
+
+    {% if erro %}
+        <div class="container mt-5">
+            <div class="alert alert-danger text-center">
+                {{ erro|raw }}
+                <br><br>
+                <a href="tela_inicial.php" class="btn btn-primary">Voltar ao Início</a>
+            </div>
+        </div>
+    {% else %}
+        <header class="profile-header text-center">
+            <div class="container">
+                <img src="{{ usuario.foto_perfil ? 'img/' ~ usuario.foto_perfil : 'img/default_profile.png' }}" 
+                     alt="Foto de {{ usuario.nome }}" class="rounded-circle profile-img mb-3">
+                <h1 class="fw-bold">{{ usuario.nome }}</h1>
+                {% if usuario.trabalho %}
+                    <span class="badge badge-prof">{{ usuario.trabalho }}</span>
+                {% else %}
+                    <span class="badge bg-secondary">Cliente</span>
+                {% endif %}
+            </div>
+        </header>
+
+        <main class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8 info-card">
+                    <div class="row mb-4">
+                        <div class="col-sm-6">
+                            <h5 class="text-muted small text-uppercase">E-mail</h5>
+                            <p class="fw-bold">{{ usuario.email }}</p>
+                        </div>
+                        <div class="col-sm-6">
+                            <h5 class="text-muted small text-uppercase">Telefone</h5>
+                            <p class="fw-bold">{{ usuario.telefone }}</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="text-muted small text-uppercase">Data de Nascimento</h5>
+                        <p class="fw-bold">{{ usuario.data_nascimento ? usuario.data_nascimento|date('d/m/Y') : 'Não informada' }}</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="text-muted small text-uppercase">Localização</h5>
+                        <p class="fw-bold">{{ usuario.endereco }}</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="text-muted small text-uppercase">Sobre / Biografia</h5>
+                        <p>{{ usuario.descricao|nl2br|default('Este profissional ainda não adicionou uma descrição.') }}</p>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-5">
+                        <a href="tela_inicial.php" class="btn btn-outline-secondary">Voltar</a>
+                        <button class="btn-contato-verde px-4">Entrar em Contato</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    {% endif %}
+
+</body>
+</html>

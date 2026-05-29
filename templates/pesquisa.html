@@ -29,7 +29,7 @@
                 {% for i in 1..5 %}{{ i <= nota ? '★' : '☆' }}{% endfor %}
                 <span>({{ prof.total_avaliacoes }})</span>
             </div>
-            <button class="btn btn-salvar" style="width: 100%;">Ver Perfil</button>
+            <a href="perfil.php?id={{ prof.usuario_id }}" class="btn-salvar">Ver Perfil</a>
         </div>
     {% else %}
         <p style="grid-column: 1 / -1; text-align: center; color: #667; padding: 60px;">

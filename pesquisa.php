@@ -15,6 +15,7 @@ $profissionais = [];
 try {
     $sql = "
         SELECT 
+            c.usuario_id,
             c.nome, 
             c.trabalho, 
             c.foto_perfil,
@@ -42,7 +43,8 @@ try {
         $sql .= " WHERE " . implode(' AND ', $conditions);
     }
 
-    $sql .= " GROUP BY c.usuario_id ORDER BY nota_media DESC";
+    // Agrupamento completo para evitar erro de 'ONLY_FULL_GROUP_BY'
+    $sql .= " GROUP BY c.usuario_id, c.nome, c.trabalho, c.foto_perfil, c.endereco ORDER BY nota_media DESC";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
@@ -54,5 +56,6 @@ try {
 echo $twig->render('pesquisa.html', [
     'profissionais' => $profissionais,
     'termo_buscado' => $query_term,
-    'local_buscado' => $location_term
+    'local_buscado' => $location_term,
+    'session' => $_SESSION
 ]);

@@ -30,5 +30,5 @@ $profissionais = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 echo $twig->render('tela_inicial.html', [
     'profissionais' => $profissionais,
-    'search_query'  => $search_query
+    'termo_buscado'  => $search_query
 ]);

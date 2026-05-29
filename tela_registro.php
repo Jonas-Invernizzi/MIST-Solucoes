@@ -351,6 +351,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             // Atualiza a foto da sessão apenas se o usuário estiver editando o próprio perfil
                             if ($usuarioId == $_SESSION['usuario_id']) {
                                 $_SESSION['usuario_foto'] = $fotoParaSalvar;
+                                $_SESSION['usuario_nome'] = $nome;
                             }
 
                             header("Location: tela_inicial.php?sucesso=perfil_atualizado");

@@ -13,29 +13,11 @@ $is_edicao = false;
 
 // --- Lógica de Edição ---
 $id_alvo = null; // ID do usuário a ser editado
-$is_admin = false;
 
-// 1. Verificar se o usuário logado é admin
+// 1. Determinar se é edição (apenas o próprio usuário logado)
 if (isset($_SESSION['usuario_id'])) {
-    $stmtAdminCheck = $pdo->prepare("SELECT email FROM usuarios WHERE id = :id");
-    $stmtAdminCheck->execute(['id' => $_SESSION['usuario_id']]);
-    $currentUser = $stmtAdminCheck->fetch(PDO::FETCH_ASSOC);
-    if ($currentUser && $currentUser['email'] === 'admin@mist.com') {
-        $is_admin = true;
-    }
-}
-
-// 2. Determinar se é edição e quem está sendo editado
-if (isset($_SESSION['usuario_id'])) { // Apenas usuários logados podem editar
     $is_edicao = true;
-
-    if ($is_admin && isset($_GET['id'])) {
-        // Se o usuário é admin e está acessando com um ID na URL, ele está editando outro perfil.
-        $id_alvo = $_GET['id'];
-    } else {
-        // Caso contrário, qualquer usuário logado (admin ou não) está editando o próprio perfil.
-        $id_alvo = $_SESSION['usuario_id'];
-    }
+    $id_alvo = $_SESSION['usuario_id'];
 }
 
 // 3. Se for edição, carregar os dados do usuário alvo
@@ -291,14 +273,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             }
 
                             // 1. Atualizar e-mail e senha (se fornecida)
-                            $is_editing_self = ($usuarioId == ($_SESSION['usuario_id'] ?? null));
                             $sql_update_parts = ["email = :email"];
                             if (!empty($senha)) {
                                 $sql_update_parts[] = "senha = :senha";
-                            }
-                            // Se o admin estiver editando o próprio perfil, garantir que o status permaneça 'ativo'.
-                            if ($is_admin && $is_editing_self) {
-                                $sql_update_parts[] = "status = 'ativo'";
                             }
                             $sqlU = "UPDATE usuarios SET " . implode(', ', $sql_update_parts) . " WHERE id = :id";
                             $stmt = $pdo->prepare($sqlU);
@@ -351,7 +328,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             // Atualiza a foto da sessão apenas se o usuário estiver editando o próprio perfil
                             if ($usuarioId == $_SESSION['usuario_id']) {
                                 $_SESSION['usuario_foto'] = $fotoParaSalvar;
-                                $_SESSION['usuario_nome'] = $nome;
                             }
 
                             header("Location: tela_inicial.php?sucesso=perfil_atualizado");

@@ -19,7 +19,34 @@
             object-fit: cover;
             border: 5px solid white;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: filter 0.3s ease;
+            display: block;
+            margin: 0 auto;
         }
+        {% if pode_editar %}
+        .profile-img-container {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .profile-img-container:hover .profile-img {
+            filter: brightness(0.7);
+        }
+        .profile-img-container::after {
+            content: 'Trocar Foto';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .profile-img-container:hover::after {
+            opacity: 1;
+        }
+        {% endif %}
         .info-card {
             margin-top: -70px;
             background: white;
@@ -49,6 +76,22 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(90, 133, 255, 0.4);
             filter: brightness(1.1);
+        }
+        /* Estilo para o botão de edição alinhado ao de contato */
+        .btn-editar-mist {
+            background: transparent;
+            color: #5a85ff !important;
+            border: 2px solid #5a85ff;
+            padding: 10px 24px; /* 10px + 2px de borda = 12px, igualando ao botão verde */
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-editar-mist:hover {
+            background: rgba(90, 133, 255, 0.05);
+            transform: translateY(-2px);
         }
         /* Botão de contato em verde mantendo a identidade visual do MIST */
         .btn-contato-verde {
@@ -82,8 +125,19 @@
     {% else %}
         <header class="profile-header text-center">
             <div class="container">
-                <img src="{{ usuario.foto_perfil ? 'img/' ~ usuario.foto_perfil : 'img/default_profile.png' }}" 
-                     alt="Foto de {{ usuario.nome }}" class="rounded-circle profile-img mb-3">
+                {% if pode_editar %}
+                <form id="form-foto" method="POST" enctype="multipart/form-data">
+                    <label for="foto_perfil" class="profile-img-container">
+                        <img src="{{ usuario.foto_perfil ? 'img/' ~ usuario.foto_perfil : 'img/default_profile.png' }}" 
+                             alt="Foto de {{ usuario.nome }}" class="rounded-circle profile-img mb-3">
+                        <input type="file" id="foto_perfil" name="foto_perfil" hidden onchange="document.getElementById('form-foto').submit()">
+                    </label>
+                </form>
+                {% else %}
+                    <img src="{{ usuario.foto_perfil ? 'img/' ~ usuario.foto_perfil : 'img/default_profile.png' }}" 
+                         alt="Foto de {{ usuario.nome }}" class="rounded-circle profile-img mb-3">
+                {% endif %}
+                
                 <h1 class="fw-bold">{{ usuario.nome }}</h1>
                 {% if usuario.trabalho %}
                     <span class="badge badge-prof">{{ usuario.trabalho }}</span>
@@ -124,7 +178,12 @@
 
                     <div class="d-flex justify-content-between align-items-center mt-5">
                         <a href="tela_inicial.php" class="btn btn-outline-secondary">Voltar</a>
-                        <button class="btn-contato-verde px-4">Entrar em Contato</button>
+                        <div class="d-flex gap-2 align-items-center">
+                            {% if pode_editar %}
+                                <a href="tela_registro.php?id={{ usuario.usuario_id }}" class="btn-editar-mist">Editar Dados</a>
+                            {% endif %}
+                            <button class="btn-contato-verde px-4">Entrar em Contato</button>
+                        </div>
                     </div>
                 </div>
             </div>

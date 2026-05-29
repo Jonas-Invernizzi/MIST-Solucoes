@@ -37,8 +37,8 @@ try {
 
         if ($admin_tipo === 'contratante') {
             $stmtDetalhes = $pdo->prepare(
-                "INSERT INTO contratantes (usuario_id, nome, data_nascimento, endereco, telefone, descricao, foto_perfil) 
-                 VALUES (:usuario_id, :nome, :data_nascimento, :endereco, :telefone, :descricao, :foto_perfil)"
+                "INSERT INTO contratantes (usuario_id, nome, data_nascimento, endereco, telefone, descricao, trabalho, foto_perfil) 
+                 VALUES (:usuario_id, :nome, :data_nascimento, :endereco, :telefone, :descricao, :trabalho, :foto_perfil)"
             );
             $stmtDetalhes->execute([
                 ':usuario_id' => $usuarioId,

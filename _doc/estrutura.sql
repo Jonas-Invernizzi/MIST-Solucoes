@@ -1,11 +1,16 @@
-DROP TABLE IF EXISTS contratantes;
+-- Desativa a verificação para permitir o DROP de tabelas com dependências
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS profissional_tags;
+DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS clientes;
+DROP TABLE IF EXISTS profissionais;
 DROP TABLE IF EXISTS usuarios;
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(191) UNIQUE NOT NULL,
     senha VARCHAR(255) NOT NULL,
-    tipo_base ENUM('cliente', 'contratante') DEFAULT 'cliente',
+    tipo_base ENUM('cliente', 'profissional') DEFAULT 'cliente',
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status ENUM('ativo', 'inativo') DEFAULT 'inativo',
     token VARCHAR(255) DEFAULT NULL,
@@ -23,7 +28,8 @@ CREATE TABLE clientes (
     foto_perfil VARCHAR(255) DEFAULT NULL,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
-CREATE TABLE contratantes (
+
+CREATE TABLE profissionais (
     id INT AUTO_INCREMENT PRIMARY KEY,
     usuario_id INT UNIQUE NOT NULL, 
     nome VARCHAR(255) NOT NULL,

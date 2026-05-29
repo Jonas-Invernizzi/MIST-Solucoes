@@ -4,11 +4,11 @@ require_once('carregar_pdo.php');
 // Array com as configurações dos administradores
 $admins = [
     [
-        'email' => 'admin_contratante@mist.com',
+        'email' => 'admin_profissional@mist.com',
         'senha' => 'admin67',
-        'nome' => 'Admin Contratante',
-        'tipo' => 'contratante',
-        'descricao' => 'Usuário administrador (contratante) para desenvolvimento e testes.',
+        'nome' => 'Admin Profissional',
+        'tipo' => 'profissional',
+        'descricao' => 'Usuário administrador (profissional) para desenvolvimento e testes.',
         'trabalho' => 'Gerenciamento'
     ],
     [
@@ -52,9 +52,9 @@ foreach ($admins as $admin) {
             $usuarioId = $pdo->lastInsertId();
             echo "<p>Registro criado na tabela 'usuarios' com ID: $usuarioId</p>";
 
-            if ($admin['tipo'] === 'contratante') {
+            if ($admin['tipo'] === 'profissional') {
                 $stmtDetalhes = $pdo->prepare(
-                    "INSERT INTO contratantes (usuario_id, nome, data_nascimento, endereco, telefone, descricao, trabalho, foto_perfil) 
+                    "INSERT INTO profissionais (usuario_id, nome, data_nascimento, endereco, telefone, descricao, trabalho, foto_perfil) 
                      VALUES (:usuario_id, :nome, :data_nascimento, :endereco, :telefone, :descricao, :trabalho, :foto_perfil)"
                 );
                 $stmtDetalhes->execute([
@@ -67,7 +67,21 @@ foreach ($admins as $admin) {
                     ':trabalho' => $admin['trabalho'],
                     ':foto_perfil' => null
                 ]);
-                echo "<p>Registro criado na tabela 'contratantes'.</p>";
+                
+                $profissionalId = $pdo->lastInsertId();
+                
+                // Indexar Tags do Admin para a pesquisa
+                $tagsArray = array_unique(array_filter(array_map('trim', explode(',', $admin['trabalho']))));
+                foreach ($tagsArray as $tagNome) {
+                    $stmtTag = $pdo->prepare("INSERT IGNORE INTO tags (nome) VALUES (:nome)");
+                    $stmtTag->execute(['nome' => $tagNome]);
+                    $tagId = $pdo->query("SELECT id FROM tags WHERE nome = " . $pdo->quote($tagNome))->fetchColumn();
+                    
+                    $pdo->prepare("INSERT IGNORE INTO profissional_tags (profissional_id, tag_id) VALUES (:pid, :tid)")
+                        ->execute(['pid' => $profissionalId, 'tid' => $tagId]);
+                }
+                
+                echo "<p>Registro criado na tabela 'profissionais'.</p>";
 
             } elseif ($admin['tipo'] === 'cliente') {
                 // Inserir na tabela 'clientes'

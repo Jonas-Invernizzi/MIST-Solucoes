@@ -97,7 +97,7 @@
     /* Estilo do botão Ver Perfil */
     .btn-salvar {
         background: linear-gradient(135deg, #5a85ff 0%, #4a6fd8 100%);
-        color: white;
+        color: white !important;
         border: none;
         padding: 12px 24px;
         border-radius: 10px;
@@ -107,12 +107,18 @@
         transition: all 0.3s ease;
         box-shadow: 0 4px 15px rgba(90, 133, 255, 0.3);
         margin-top: 15px;
+        text-decoration: none !important;
+        display: block;
+        width: 100%;
+        text-align: center;
     }
 
     .btn-salvar:hover {
         background: linear-gradient(135deg, #4a6fd8 0%, #3a5fb8 100%);
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(90, 133, 255, 0.4);
+        text-decoration: none !important;
+        color: white !important;
     }
 
     .btn-salvar:active {

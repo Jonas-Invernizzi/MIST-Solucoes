@@ -178,4 +178,3 @@ main {
     .header-center { display: none; } /* Esconde a busca no mobile para não amontoar */
     .header-left, .header-right { flex: auto; }
 }
-}

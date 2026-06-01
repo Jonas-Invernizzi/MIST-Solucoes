@@ -387,7 +387,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             $stmtCliente->bindValue(':nascimento', $nascimento);
                             $stmtCliente->bindValue(':descricao', $descricao);
                             $stmtCliente->bindValue(':foto_perfil', $fotoParaSalvar);
-                            $stmtCliente->bindValue(':nome', $nome);
                             $stmtCliente->execute();
                             
                             // A transação do banco de dados é confirmada ANTES do envio de e-mail.

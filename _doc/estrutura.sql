@@ -3,9 +3,11 @@ SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS profissional_tags;
 DROP TABLE IF EXISTS tags;
+DROP TABLE IF EXISTS avaliacoes;
 DROP TABLE IF EXISTS clientes;
 DROP TABLE IF EXISTS profissionais;
 DROP TABLE IF EXISTS usuarios;
+
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(191) UNIQUE NOT NULL,
@@ -17,6 +19,7 @@ CREATE TABLE usuarios (
     reset_token VARCHAR(255) DEFAULT NULL,
     reset_token_expires_at DATETIME DEFAULT NULL
 );
+
 CREATE TABLE clientes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     usuario_id INT UNIQUE NOT NULL, 
@@ -55,6 +58,17 @@ CREATE TABLE profissional_tags (
     PRIMARY KEY (profissional_id, tag_id),
     FOREIGN KEY (profissional_id) REFERENCES profissionais(id) ON DELETE CASCADE,
     FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+);
+
+CREATE TABLE avaliacoes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    profissional_id INT NOT NULL,
+    cliente_id INT NOT NULL,
+    nota INT NOT NULL CHECK (nota >= 1 AND nota <= 5),
+    comentario TEXT,
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (profissional_id) REFERENCES profissionais(id) ON DELETE CASCADE,
+    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
 );
 
 -- Reativa a verificação de chaves estrangeiras

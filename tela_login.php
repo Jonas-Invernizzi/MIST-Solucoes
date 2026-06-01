@@ -108,11 +108,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         } else {
             $stmt = $pdo->prepare("
                 SELECT u.*, 
-                       COALESCE(c.nome, co.nome) as nome, 
-                       COALESCE(c.foto_perfil, co.foto_perfil) as foto_perfil
+                       COALESCE(c.nome, p.nome) as nome, 
+                       COALESCE(c.foto_perfil, p.foto_perfil) as foto_perfil
                 FROM usuarios u
                 LEFT JOIN clientes c ON u.id = c.usuario_id
-                LEFT JOIN profissionais co ON u.id = co.usuario_id
+                LEFT JOIN profissionais p ON u.id = p.usuario_id
                 WHERE u.email = :email
             ");
             $stmt->execute([':email' => $email]);

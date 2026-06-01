@@ -2,7 +2,7 @@
 -- Este script popula as tabelas 'usuarios' e 'profissionais' com profissionais fictícios.
 -- Nota: Todas as senhas abaixo são o hash para 'senha123'.
 
--- 1. Inserir Usuários (Tipo Contratante)
+-- 1. Inserir Usuários (Tipo Profissional)
 INSERT INTO usuarios (email, senha, tipo_base, status) VALUES
 ('joao.eletricista@email.com', '$2y$10$6mXWlYhYp8p8p8p8p8p8pOu6R.K9p9p9p9p9p9p9p9p9p9p9p9p9p', 'profissional', 'ativo'),
 ('maria.encanadora@email.com', '$2y$10$6mXWlYhYp8p8p8p8p8p8pOu6R.K9p9p9p9p9p9p9p9p9p9p9p9p9p', 'profissional', 'ativo'),
@@ -36,10 +36,3 @@ INSERT INTO profissionais (usuario_id, nome, cpf, data_nascimento, endereco, end
 ((SELECT id FROM usuarios WHERE email = 'lucas.marceneiro@email.com'), 
  'Lucas Bortolotto', '678.901.234-56', '1988-01-25', 'Rua Olavo Bilac, 44', 'Bento Gonçalves', '(54) 99678-9012', 
  'Conserto de móveis sob medida, restauração de antiguidades e montagem de móveis novos.', 'Marceneiro', NULL);
-
--- 3. Inserir algumas avaliações (Opcional, se a tabela avaliacoes já existir)
--- Caso queira testar as estrelinhas na tela inicial:
--- INSERT INTO avaliacoes (profissional_id, contratante_id, nota, comentario) VALUES
--- ((SELECT id FROM usuarios WHERE email = 'joao.eletricista@email.com'), 1, 5, 'Excelente serviço!'),
--- ((SELECT id FROM usuarios WHERE email = 'joao.eletricista@email.com'), 1, 4, 'Muito bom profissional.'),
--- ((SELECT id FROM usuarios WHERE email = 'maria.encanadora@email.com'), 1, 5, 'Resolveu o vazamento rápido.');

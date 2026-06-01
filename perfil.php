@@ -38,7 +38,7 @@ if (!$id) {
             }
 
             // Busca dados atuais para saber qual tabela atualizar e deletar a foto antiga
-            $stmtCheck = $pdo->prepare("SELECT u.tipo_base, COALESCE(c.foto_perfil, co.foto_perfil) as foto_atual 
+            $stmtCheck = $pdo->prepare("SELECT u.tipo_base, COALESCE(c.foto_perfil, p.foto_perfil) as foto_atual 
                                         FROM usuarios u 
                                         LEFT JOIN clientes c ON u.id = c.usuario_id 
                                         LEFT JOIN profissionais co ON u.id = co.usuario_id 
@@ -79,13 +79,13 @@ if (!$id) {
         // Nota: 'trabalho' é específico de profissionais.
         $stmt = $pdo->prepare("
             SELECT u.email, u.tipo_base,
-                   COALESCE(c.nome, co.nome) as nome,
-                   COALESCE(c.endereco, co.endereco) as endereco,
-                   COALESCE(c.telefone, co.telefone) as telefone,
-                   COALESCE(c.descricao, co.descricao) as descricao,
-                   COALESCE(c.foto_perfil, co.foto_perfil) as foto_perfil,
-                   co.trabalho,
-                   COALESCE(c.data_nascimento, co.data_nascimento) as data_nascimento
+                   COALESCE(c.nome, p.nome) as nome,
+                   COALESCE(c.endereco, p.endereco) as endereco,
+                   COALESCE(c.telefone, p.telefone) as telefone,
+                   COALESCE(c.descricao, p.descricao) as descricao,
+                   COALESCE(c.foto_perfil, p.foto_perfil) as foto_perfil,
+                   p.trabalho,
+                   COALESCE(c.data_nascimento, p.data_nascimento) as data_nascimento
             FROM usuarios u
             LEFT JOIN clientes c ON u.id = c.usuario_id
             LEFT JOIN profissionais co ON u.id = co.usuario_id

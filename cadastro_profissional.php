@@ -114,23 +114,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                     'foto'  => $fotoParaSalvar
                 ]);
 
-                $profissionalId = $pdo->lastInsertId();
-
-                // Processar Tags (Estilo YouTube: string separada por vírgulas)
-                if (!empty($trabalho)) {
-                    $tagsArray = array_unique(array_filter(array_map('trim', explode(',', $trabalho))));
-                    foreach ($tagsArray as $tagNome) {
-                        // Insere a tag se não existir
-                        $stmtTag = $pdo->prepare("INSERT IGNORE INTO tags (nome) VALUES (:nome)");
-                        $stmtTag->execute(['nome' => $tagNome]);
-                        $tagId = $pdo->query("SELECT id FROM tags WHERE nome = " . $pdo->quote($tagNome))->fetchColumn();
-                        
-                        // Vincula ao profissional
-                        $pdo->prepare("INSERT IGNORE INTO profissional_tags (profissional_id, tag_id) VALUES (:pid, :tid)")
-                            ->execute(['pid' => $profissionalId, 'tid' => $tagId]);
-                    }
-                }
-
                 $pdo->commit();
 
                 // Envio de E-mail

@@ -9,23 +9,23 @@ $id = (!empty($_GET['id'])) ? $_GET['id'] : ($_SESSION['usuario_id'] ?? null);
 $usuario = null;
 $erro = '';
 
-// Define se o usuário logado tem permissão para alterar este perfil (apenas o próprio dono)
-$pode_editar = (isset($_SESSION['usuario_id']) && $id && $_SESSION['usuario_id'] == $id);
+// Captura o ID do usuário logado (se houver)
+$id_logado = $_SESSION['usuario_id'] ?? null;
+
+// Verifica se o perfil sendo visualizado é o do próprio usuário logado
+// Usamos cast para string para evitar erros de comparação entre tipos diferentes (int vs string)
+$eh_proprio_perfil = ($id_logado && $id && (string)$id_logado === (string)$id);
 
 if (!$id) {
     $erro = "⚠️ Usuário não especificado.";
 } else {
     // --- Lógica de Upload de Foto (Apenas se o dono do perfil estiver logado) ---
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['foto_perfil']) && $pode_editar) {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['foto_perfil']) && $eh_proprio_perfil) {
         try {
             $file = $_FILES['foto_perfil'];
             $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'img' . DIRECTORY_SEPARATOR;
             
             // Validações básicas
-            if (!class_exists('finfo')) {
-                throw new Exception("A extensão 'fileinfo' não está ativa no seu PHP. Habilite-a no php.ini.");
-            }
-
             $allowedMimes = ['image/jpeg', 'image/png', 'image/gif'];
             $finfo = new finfo(FILEINFO_MIME_TYPE);
             $mimeType = $finfo->file($file['tmp_name']);
@@ -78,7 +78,7 @@ if (!$id) {
         // Busca unificada utilizando COALESCE para pegar dados de ambas as tabelas (clientes ou contratantes)
         // Nota: 'trabalho' é específico de profissionais.
         $stmt = $pdo->prepare("
-            SELECT u.email, u.tipo_base,
+            SELECT u.id as usuario_id, u.email, u.tipo_base,
                    COALESCE(c.nome, co.nome) as nome,
                    COALESCE(c.endereco, co.endereco) as endereco,
                    COALESCE(c.telefone, co.telefone) as telefone,
@@ -105,6 +105,6 @@ if (!$id) {
 echo $twig->render('perfil.html', [
     'usuario' => $usuario,
     'erro' => $erro,
-    'pode_editar' => $pode_editar,
-    'eh_proprio_perfil' => $pode_editar // Flag para ocultar o botão de contato no template
+    'eh_proprio_perfil' => $eh_proprio_perfil, // Nova flag recomendada
+    'pode_editar' => $eh_proprio_perfil       // Restaurada para não quebrar seu HTML atual
 ]);

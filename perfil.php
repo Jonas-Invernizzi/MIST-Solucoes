@@ -1,9 +1,10 @@
 <?php
+session_start();
 require_once('carregar_twig.php');
 require_once('carregar_pdo.php');
 
 // Tenta pegar o ID da URL. Se não existir, tenta pegar o ID do usuário logado na sessão.
-$id = $_GET['id'] ?? $_SESSION['usuario_id'] ?? null;
+$id = (!empty($_GET['id'])) ? $_GET['id'] : ($_SESSION['usuario_id'] ?? null);
 
 $usuario = null;
 $erro = '';
@@ -21,6 +22,10 @@ if (!$id) {
             $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'img' . DIRECTORY_SEPARATOR;
             
             // Validações básicas
+            if (!class_exists('finfo')) {
+                throw new Exception("A extensão 'fileinfo' não está ativa no seu PHP. Habilite-a no php.ini.");
+            }
+
             $allowedMimes = ['image/jpeg', 'image/png', 'image/gif'];
             $finfo = new finfo(FILEINFO_MIME_TYPE);
             $mimeType = $finfo->file($file['tmp_name']);
@@ -36,7 +41,7 @@ if (!$id) {
             $stmtCheck = $pdo->prepare("SELECT u.tipo_base, COALESCE(c.foto_perfil, co.foto_perfil) as foto_atual 
                                         FROM usuarios u 
                                         LEFT JOIN clientes c ON u.id = c.usuario_id 
-                                        LEFT JOIN contratantes co ON u.id = co.usuario_id 
+                                        LEFT JOIN profissionais co ON u.id = co.usuario_id 
                                         WHERE u.id = :id");
             $stmtCheck->execute(['id' => $id]);
             $dadosAtuais = $stmtCheck->fetch(PDO::FETCH_ASSOC);
@@ -46,7 +51,7 @@ if (!$id) {
                 $novoNome = uniqid('perfil_', true) . '.' . $ext;
 
                 if (move_uploaded_file($file['tmp_name'], $uploadDir . $novoNome)) {
-                    $tabela = ($dadosAtuais['tipo_base'] === 'contratante') ? 'contratantes' : 'clientes';
+                    $tabela = ($dadosAtuais['tipo_base'] === 'profissional') ? 'profissionais' : 'clientes';
                     
                     // Atualiza banco de dados
                     $stmtUpdate = $pdo->prepare("UPDATE $tabela SET foto_perfil = :foto WHERE usuario_id = :id");
@@ -71,7 +76,7 @@ if (!$id) {
 
     try {
         // Busca unificada utilizando COALESCE para pegar dados de ambas as tabelas (clientes ou contratantes)
-        // Nota: 'trabalho' é específico de contratantes (prestadores).
+        // Nota: 'trabalho' é específico de profissionais.
         $stmt = $pdo->prepare("
             SELECT u.email, u.tipo_base,
                    COALESCE(c.nome, co.nome) as nome,
@@ -83,7 +88,7 @@ if (!$id) {
                    COALESCE(c.data_nascimento, co.data_nascimento) as data_nascimento
             FROM usuarios u
             LEFT JOIN clientes c ON u.id = c.usuario_id
-            LEFT JOIN contratantes co ON u.id = co.usuario_id
+            LEFT JOIN profissionais co ON u.id = co.usuario_id
             WHERE u.id = :id
         ");
         $stmt->execute(['id' => $id]);
@@ -100,5 +105,6 @@ if (!$id) {
 echo $twig->render('perfil.html', [
     'usuario' => $usuario,
     'erro' => $erro,
-    'pode_editar' => $pode_editar
+    'pode_editar' => $pode_editar,
+    'eh_proprio_perfil' => $pode_editar // Flag para ocultar o botão de contato no template
 ]);

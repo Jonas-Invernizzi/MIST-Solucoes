@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once('carregar_twig.php');
 require_once('carregar_pdo.php');
 

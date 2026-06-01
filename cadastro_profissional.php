@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once('carregar_twig.php');
 require_once('carregar_pdo.php');
 require_once 'vendor/autoload.php';
@@ -93,13 +94,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                     }
                 }
 
-                // 3. Inserir em contratantes (incluindo campos específicos da estrutura.sql)
-                $sqlContratante = "INSERT INTO profissionais 
+                // 3. Inserir em profissionais (incluindo campos específicos da estrutura.sql)
+                $sqlProfissional = "INSERT INTO profissionais 
                     (usuario_id, nome, cpf, data_nascimento, endereco, endereco_trabalho, telefone, descricao, trabalho, foto_perfil) 
                     VALUES 
                     (:uid, :nome, :cpf, :nasc, :end, :end_t, :tel, :desc, :trab, :foto)";
                 
-                $stmtProf = $pdo->prepare($sqlContratante);
+                $stmtProf = $pdo->prepare($sqlProfissional);
                 $stmtProf->execute([
                     'uid'   => $usuarioId,
                     'nome'  => $nome,

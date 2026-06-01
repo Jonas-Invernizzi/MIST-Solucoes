@@ -1,18 +1,18 @@
 -- Script de Seed para testes do MIST-Soluções
--- Este script popula as tabelas 'usuarios' e 'contratantes' com profissionais fictícios.
+-- Este script popula as tabelas 'usuarios' e 'profissionais' com profissionais fictícios.
 -- Nota: Todas as senhas abaixo são o hash para 'senha123'.
 
 -- 1. Inserir Usuários (Tipo Contratante)
 INSERT INTO usuarios (email, senha, tipo_base, status) VALUES
-('joao.eletricista@email.com', '$2y$10$6mXWlYhYp8p8p8p8p8p8pOu6R.K9p9p9p9p9p9p9p9p9p9p9p9p9p', 'contratante', 'ativo'),
-('maria.encanadora@email.com', '$2y$10$6mXWlYhYp8p8p8p8p8p8pOu6R.K9p9p9p9p9p9p9p9p9p9p9p9p9p', 'contratante', 'ativo'),
-('carlos.pedreiro@email.com', '$2y$10$6mXWlYhYp8p8p8p8p8p8pOu6R.K9p9p9p9p9p9p9p9p9p9p9p9p9p', 'contratante', 'ativo'),
-('ana.pintora@email.com', '$2y$10$6mXWlYhYp8p8p8p8p8p8pOu6R.K9p9p9p9p9p9p9p9p9p9p9p9p9p', 'contratante', 'ativo'),
-('pedro.jardineiro@email.com', '$2y$10$6mXWlYhYp8p8p8p8p8p8pOu6R.K9p9p9p9p9p9p9p9p9p9p9p9p9p', 'contratante', 'ativo'),
-('lucas.marceneiro@email.com', '$2y$10$6mXWlYhYp8p8p8p8p8p8pOu6R.K9p9p9p9p9p9p9p9p9p9p9p9p9p', 'contratante', 'ativo');
+('joao.eletricista@email.com', '$2y$10$6mXWlYhYp8p8p8p8p8p8pOu6R.K9p9p9p9p9p9p9p9p9p9p9p9p9p', 'profissional', 'ativo'),
+('maria.encanadora@email.com', '$2y$10$6mXWlYhYp8p8p8p8p8p8pOu6R.K9p9p9p9p9p9p9p9p9p9p9p9p9p', 'profissional', 'ativo'),
+('carlos.pedreiro@email.com', '$2y$10$6mXWlYhYp8p8p8p8p8p8pOu6R.K9p9p9p9p9p9p9p9p9p9p9p9p9p', 'profissional', 'ativo'),
+('ana.pintora@email.com', '$2y$10$6mXWlYhYp8p8p8p8p8p8pOu6R.K9p9p9p9p9p9p9p9p9p9p9p9p9p', 'profissional', 'ativo'),
+('pedro.jardineiro@email.com', '$2y$10$6mXWlYhYp8p8p8p8p8p8pOu6R.K9p9p9p9p9p9p9p9p9p9p9p9p9p', 'profissional', 'ativo'),
+('lucas.marceneiro@email.com', '$2y$10$6mXWlYhYp8p8p8p8p8p8pOu6R.K9p9p9p9p9p9p9p9p9p9p9p9p9p', 'profissional', 'ativo');
 
 -- 2. Inserir Dados dos Profissionais (Contratantes)
-INSERT INTO contratantes (usuario_id, nome, cpf, data_nascimento, endereco, endereco_trabalho, telefone, descricao, trabalho, foto_perfil) VALUES
+INSERT INTO profissionais (usuario_id, nome, cpf, data_nascimento, endereco, endereco_trabalho, telefone, descricao, trabalho, foto_perfil) VALUES
 ((SELECT id FROM usuarios WHERE email = 'joao.eletricista@email.com'), 
  'João Silva', '123.456.789-01', '1985-05-20', 'Rua das Flores, 100', 'Bento Gonçalves e região', '(54) 99123-4567', 
  'Eletricista residencial e industrial com 10 anos de experiência. Instalações, manutenção e quadros elétricos.', 'Eletricista', NULL),

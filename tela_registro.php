@@ -363,8 +363,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             if ($oldFotoPerfil && $oldFotoPerfil !== 'default_profile.png' && file_exists($uploadDir . $oldFotoPerfil)) {
                                 unlink($uploadDir . $oldFotoPerfil);
                             }
-                            // Atualiza a foto da sessão apenas se o usuário estiver editando o próprio perfil
+                            // Atualiza os dados da sessão para refletir as mudanças no cabeçalho e boas-vindas imediatamente
                             if ($usuarioId == $_SESSION['usuario_id']) {
+                                $_SESSION['usuario_nome'] = $nome;
                                 $_SESSION['usuario_foto'] = $fotoParaSalvar;
                             }
 
@@ -389,14 +390,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             // Salva na tabela correta baseada na escolha do usuário
                             $tabelaDestino = ($tipo_base_post === 'profissional') ? 'profissionais' : 'clientes';
                             
-                            $sqlColumns = 'usuario_id, endereco, telefone, data_nascimento, descricao, foto_perfil';
-                            $sqlValues = ':usuario_id, :endereco, :telefone, :nascimento, :descricao, :foto_perfil';
-
-                            // O campo 'nome' só existe na tabela 'clientes'.
-                            if ($tipo_base_post === 'cliente') {
-                                $sqlColumns .= ', nome';
-                                $sqlValues .= ', :nome';
-                            }
+                            // O campo 'nome' existe em ambas as tabelas (clientes e profissionais)
+                            $sqlColumns = 'usuario_id, nome, endereco, telefone, data_nascimento, descricao, foto_perfil';
+                            $sqlValues = ':usuario_id, :nome, :endereco, :telefone, :nascimento, :descricao, :foto_perfil';
 
                             $stmtCliente = $pdo->prepare("INSERT INTO $tabelaDestino ($sqlColumns) VALUES ($sqlValues)");
                             $stmtCliente->bindValue(':usuario_id', $usuarioId);
@@ -405,9 +401,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             $stmtCliente->bindValue(':nascimento', $nascimento);
                             $stmtCliente->bindValue(':descricao', $descricao);
                             $stmtCliente->bindValue(':foto_perfil', $fotoParaSalvar);
-                            if ($tipo_base_post === 'cliente') {
-                                $stmtCliente->bindValue(':nome', $nome);
-                            }
+                            $stmtCliente->bindValue(':nome', $nome);
                             $stmtCliente->execute();
                             
                             // A transação do banco de dados é confirmada ANTES do envio de e-mail.

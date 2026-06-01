@@ -27,18 +27,17 @@ try {
         $nome_usuario = $userRow['nome_real'];
     }
 
-    // Busca os 4 profissionais com melhor média de avaliação
+    // Busca os 4 profissionais mais recentes (Removido join com avaliacoes pois a tabela não existe na estrutura atual)
     $query = "
         SELECT 
+            c.usuario_id,
             c.nome, 
             c.trabalho, 
             c.foto_perfil,
-            COALESCE(AVG(a.nota), 0) as nota_media,
-            COUNT(a.id) as total_avaliacoes
+            0 as nota_media,
+            0 as total_avaliacoes
         FROM profissionais c 
-        LEFT JOIN avaliacoes a ON c.usuario_id = a.profissional_id
-        GROUP BY c.usuario_id, c.nome, c.trabalho, c.foto_perfil 
-        ORDER BY nota_media DESC, total_avaliacoes DESC 
+        ORDER BY c.id DESC
         LIMIT 4
     ";
 

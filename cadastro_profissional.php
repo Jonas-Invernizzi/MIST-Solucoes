@@ -52,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
     $nascimento = $_POST['nascimento'] ?? '';
     $endereco = trim($_POST['endereco'] ?? '');
     $endereco_trabalho = trim($_POST['endereco_trabalho'] ?? '');
-    $trabalho = trim($_POST['trabalho'] ?? '');
+    $trabalho = trim($_POST['tags'] ?? $_POST['trabalho'] ?? '');
     $descricao = trim($_POST['descricao'] ?? '');
 
     $dados_usuario = $_POST; // Preservar dados para o formulário

@@ -90,12 +90,20 @@
           <input name="endereco_trabalho" type="text" placeholder="Local de Atuação / Endereço Comercial" value="{{ user.endereco_trabalho }}" required />
         </div>
         <div class="form-group">
-          <input name="tags" type="text" placeholder="Profissões (separadas por vírgula)" value="{{ user.trabalho }}" required />
+          <!-- right column intentionally left blank to preserve spacing -->
         </div>
       </div>
 
-      <div class="form-group-caixa">
-        <textarea name="descricao" placeholder="Experiência profissional...">{{ user.descricao }}</textarea>
+      <div class="linha-inputs">
+        <div class="form-group-caixa">
+          <label style="font-size: 0.8rem; color: #667;">Descrição</label>
+          <textarea name="descricao" placeholder="Experiência profissional...">{{ user.descricao }}</textarea>
+        </div>
+        <div class="form-group">
+          <label style="font-size: 0.8rem; color: #667;">Profissões / Tags</label>
+          <div class="tag-editor" data-name="tags" data-placeholder="Digite profissões..."></div>
+          <input type="hidden" name="tags" value="{{ user.trabalho }}" />
+        </div>
       </div>
 
       <input type="hidden" name="tipo_base" value="profissional" />

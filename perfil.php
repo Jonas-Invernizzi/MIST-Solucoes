@@ -91,6 +91,11 @@ if (!$id) {
 
         if (!$usuario) {
             $erro = "❌ Prestador não encontrado no sistema.";
+        } else {
+            // Converte a string "tag1, tag2" em um array para o Twig
+            $usuario['tags'] = !empty($usuario['trabalho']) 
+                ? array_filter(array_map('trim', explode(',', $usuario['trabalho']))) 
+                : [];
         }
     } catch (Exception $e) {
         $erro = "⚠️ Erro ao carregar perfil: " . $e->getMessage();

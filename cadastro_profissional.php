@@ -93,13 +93,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                     }
                 }
 
-                // 3. Inserir em contratantes (incluindo campos específicos da estrutura.sql)
-                $sqlContratante = "INSERT INTO profissionais 
+                // 3. Inserir em profissionais (incluindo campos específicos da estrutura.sql)
+                $sqlProfissional = "INSERT INTO profissionais 
                     (usuario_id, nome, cpf, data_nascimento, endereco, endereco_trabalho, telefone, descricao, trabalho, foto_perfil) 
                     VALUES 
                     (:uid, :nome, :cpf, :nasc, :end, :end_t, :tel, :desc, :trab, :foto)";
                 
-                $stmtProf = $pdo->prepare($sqlContratante);
+                $stmtProf = $pdo->prepare($sqlProfissional);
                 $stmtProf->execute([
                     'uid'   => $usuarioId,
                     'nome'  => $nome,
@@ -112,23 +112,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                     'trab'  => $trabalho,
                     'foto'  => $fotoParaSalvar
                 ]);
-
-                $profissionalId = $pdo->lastInsertId();
-
-                // Processar Tags (Estilo YouTube: string separada por vírgulas)
-                if (!empty($trabalho)) {
-                    $tagsArray = array_unique(array_filter(array_map('trim', explode(',', $trabalho))));
-                    foreach ($tagsArray as $tagNome) {
-                        // Insere a tag se não existir
-                        $stmtTag = $pdo->prepare("INSERT IGNORE INTO tags (nome) VALUES (:nome)");
-                        $stmtTag->execute(['nome' => $tagNome]);
-                        $tagId = $pdo->query("SELECT id FROM tags WHERE nome = " . $pdo->quote($tagNome))->fetchColumn();
-                        
-                        // Vincula ao profissional
-                        $pdo->prepare("INSERT IGNORE INTO profissional_tags (profissional_id, tag_id) VALUES (:pid, :tid)")
-                            ->execute(['pid' => $profissionalId, 'tid' => $tagId]);
-                    }
-                }
 
                 $pdo->commit();
 

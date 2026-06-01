@@ -2,12 +2,40 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="templates/css/telaInicial.css" />
-<style>
-    .results-info { margin: 20px 40px; color: #667; }
-</style>
+<link rel="stylesheet" href="templates/css/pesquisa.css" />
 {% endblock %}
 
 {% block conteudo %}
+<!-- Barra de Busca e Filtro -->
+<section class="search-section">
+    <div class="search-bar-container">
+        <form action="pesquisa.php" method="GET" class="search-form">
+            <div class="search-input-wrapper">
+                <input type="text" name="q" placeholder="Refinar busca por nome ou tag..." value="{{ termo_buscado|default('') }}" class="search-input">
+                <button type="submit" class="search-button">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Botão de Filtro -->
+            <div class="filter-section">
+                <label for="sort">Ordenar por:</label>
+                <select name="sort" id="sort" class="filter-select" onchange="this.form.submit()">
+                    <option value="relevance" {% if sort_option == 'relevance' %}selected{% endif %}>Relevância</option>
+                    <option value="alpha-asc" {% if sort_option == 'alpha-asc' %}selected{% endif %}>Nome (A-Z)</option>
+                    <option value="alpha-desc" {% if sort_option == 'alpha-desc' %}selected{% endif %}>Nome (Z-A)</option>
+                    <option value="date-desc" {% if sort_option == 'date-desc' %}selected{% endif %}>Mais Recentes</option>
+                    <option value="date-asc" {% if sort_option == 'date-asc' %}selected{% endif %}>Mais Antigos</option>
+                </select>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Informações dos Resultados -->
 <div class="results-info">
     {% if termo_buscado %}
         <p>Resultados para: <strong>"{{ termo_buscado }}"</strong> ({{ profissionais|length }} encontrados)</p>

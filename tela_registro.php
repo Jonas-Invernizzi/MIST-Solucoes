@@ -1,5 +1,4 @@
 <?php
-session_start();
 require_once('carregar_twig.php');
 require_once('carregar_pdo.php');
 // É provável que a falta desta linha esteja causando a falha no envio de e-mail.
@@ -14,8 +13,9 @@ $is_edicao = false;
 
 // --- Lógica de Edição ---
 $id_alvo = null; // ID do usuário a ser editado
+$is_admin = false;
 
-// 1. Determinar se é edição (apenas o próprio usuário logado)
+// 1. Verificar se o usuário logado é admin
 if (isset($_SESSION['usuario_id'])) {
     $stmtAdminCheck = $pdo->prepare("SELECT email FROM usuarios WHERE id = :id");
     $stmtAdminCheck->execute(['id' => $_SESSION['usuario_id']]);
@@ -28,7 +28,14 @@ if (isset($_SESSION['usuario_id'])) {
 // 2. Determinar se é edição e quem está sendo editado
 if (isset($_SESSION['usuario_id'])) { // Apenas usuários logados podem editar
     $is_edicao = true;
-    $id_alvo = $_SESSION['usuario_id'];
+
+    if ($is_admin && isset($_GET['id'])) {
+        // Se o usuário é admin e está acessando com um ID na URL, ele está editando outro perfil.
+        $id_alvo = $_GET['id'];
+    } else {
+        // Caso contrário, qualquer usuário logado (admin ou não) está editando o próprio perfil.
+        $id_alvo = $_SESSION['usuario_id'];
+    }
 }
 
 // 3. Se for edição, carregar os dados do usuário alvo
@@ -117,8 +124,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
     $email = trim($_POST['email'] ?? '');
     $endereco = trim($_POST['endereco'] ?? '');
     $descricao = trim($_POST['descricao'] ?? '');
-    $cpf = trim($_POST['cpf'] ?? '');
-    $endereco_trabalho = trim($_POST['endereco_trabalho'] ?? '');
     $senha = $_POST['senha'] ?? '';
     $tags = trim($_POST['tags'] ?? '');
 
@@ -133,20 +138,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
         $email = $email ?: ($dados_atuais['email'] ?? '');
         $endereco = $endereco ?: ($dados_atuais['endereco'] ?? '');
         $descricao = $descricao ?: ($dados_atuais['descricao'] ?? '');
-        $cpf = $cpf ?: ($dados_atuais['cpf'] ?? '');
-        $endereco_trabalho = $endereco_trabalho ?: ($dados_atuais['endereco_trabalho'] ?? '');
-        $tags = $tags ?: ($dados_atuais['trabalho'] ?? '');
+        $tags = $tags ?: ($dados_atuais['tags'] ?? '');
     }
 
     // Mantém o tipo_base original se estiver em modo edição (pois o campo não vai no POST)
-    $tipo_base_post = $_POST['tipo_base'] ?? ($dados_atuais['tipo_base'] ?? 'cliente');
+    $tipo_base_post = $_POST['tipo_base'] ?? ($dados_atuais['tipo_base'] ?? 'cliente'); // tipo_base é 'cliente' ou 'profissional'
 
     // Atualiza $dados_usuario com os dados mesclados para que o formulário seja
     // repreenchido corretamente em caso de erro e para a lógica de salvamento.
     $dados_usuario = array_merge($dados_atuais, [
         'nome' => $nome, 'data_nascimento' => $nascimento, 'telefone' => $telefone,
         'email' => $email, 'endereco' => $endereco, 'descricao' => $descricao,
-        'trabalho' => $tags, 'cpf' => $cpf, 'endereco_trabalho' => $endereco_trabalho, 'tipo_base' => $tipo_base_post
+        'tags' => $tags, 'tipo_base' => $tipo_base_post
     ]);
 
     // 1. Definir caminho absoluto para a pasta img
@@ -215,8 +218,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
             $nascimento === '' || $telefone === '' || $email === '' || $endereco === '' || $descricao === '' || (!$is_edicao && $senha === '')
         );
 
-        // O campo 'nome' só é obrigatório para 'clientes'.
-        if ($tipo_base_post === 'cliente' && $nome === '') {
+        // O campo 'nome' é obrigatório para ambos os tipos.
+        if ($nome === '') {
             $campos_obrigatorios_vazios = true;
         }
 
@@ -288,9 +291,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             }
 
                             // 1. Atualizar e-mail e senha (se fornecida)
+                            $is_editing_self = ($usuarioId == ($_SESSION['usuario_id'] ?? null));
                             $sql_update_parts = ["email = :email"];
                             if (!empty($senha)) {
                                 $sql_update_parts[] = "senha = :senha";
+                            }
+                            // Se o admin estiver editando o próprio perfil, garantir que o status permaneça 'ativo'.
+                            if ($is_admin && $is_editing_self) {
+                                $sql_update_parts[] = "status = 'ativo'";
                             }
                             $sqlU = "UPDATE usuarios SET " . implode(', ', $sql_update_parts) . " WHERE id = :id";
                             $stmt = $pdo->prepare($sqlU);
@@ -316,10 +324,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                                 "foto_perfil = :foto"
                             ];
 
+                            // O campo 'trabalho' (tags) só existe para profissionais.
                             if ($tipo_base_post === 'profissional') {
                                 $update_fields[] = "trabalho = :trabalho";
-                                $update_fields[] = "cpf = :cpf";
-                                $update_fields[] = "endereco_trabalho = :endereco_trabalho";
                             }
 
                             $sqlC = "UPDATE $tabela SET " . implode(', ', $update_fields) . " WHERE usuario_id = :id";
@@ -327,8 +334,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             $stmtC->bindValue(':nome', $nome);
                             if ($tipo_base_post === 'profissional') {
                                 $stmtC->bindValue(':trabalho', $tags);
-                                $stmtC->bindValue(':cpf', $cpf);
-                                $stmtC->bindValue(':endereco_trabalho', $endereco_trabalho);
                             }
                             $stmtC->bindValue(':endereco', $endereco);
                             $stmtC->bindValue(':telefone', $telefone);
@@ -337,26 +342,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             $stmtC->bindValue(':foto', $fotoParaSalvar);
                             $stmtC->bindValue(':id', $usuarioId);
                             $stmtC->execute();
-
-                            // Atualizar Tags Relacionais
-                            if ($tipo_base_post === 'profissional') {
-                                $stmtGetProfissional = $pdo->prepare("SELECT id FROM profissionais WHERE usuario_id = :uid");
-                                $stmtGetProfissional->execute(['uid' => $usuarioId]);
-                                $profissionalId = $stmtGetProfissional->fetchColumn();
-
-                                // Remove vínculos antigos
-                                $pdo->prepare("DELETE FROM profissional_tags WHERE profissional_id = :pid")->execute(['pid' => $profissionalId]);
-
-                                $tagsArray = array_unique(array_filter(array_map('trim', explode(',', $tags))));
-                                foreach ($tagsArray as $tagNome) {
-                                    $stmtTag = $pdo->prepare("INSERT IGNORE INTO tags (nome) VALUES (:nome)");
-                                    $stmtTag->execute(['nome' => $tagNome]);
-                                    $tagId = $pdo->query("SELECT id FROM tags WHERE nome = " . $pdo->quote($tagNome))->fetchColumn();
-
-                                    $pdo->prepare("INSERT IGNORE INTO profissional_tags (profissional_id, tag_id) VALUES (:pid, :tid)")
-                                        ->execute(['pid' => $profissionalId, 'tid' => $tagId]);
-                                }
-                            }
 
                             $pdo->commit();
                             // Delete old photo after successful update and commit
@@ -389,25 +374,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             // Salva na tabela correta baseada na escolha do usuário
                             $tabelaDestino = ($tipo_base_post === 'profissional') ? 'profissionais' : 'clientes';
                             
-                            $sqlColumns = 'usuario_id, endereco, telefone, data_nascimento, descricao, foto_perfil';
-                            $sqlValues = ':usuario_id, :endereco, :telefone, :nascimento, :descricao, :foto_perfil';
+                            $sqlColumns = 'usuario_id, nome, endereco, telefone, data_nascimento, descricao, foto_perfil';
+                            $sqlValues = ':usuario_id, :nome, :endereco, :telefone, :nascimento, :descricao, :foto_perfil';
 
-                            // O campo 'nome' só existe na tabela 'clientes'.
-                            if ($tipo_base_post === 'cliente') {
+                            // Adiciona colunas específicas de profissionais
+                            if ($tipo_base_post === 'profissional') {
                                 $sqlColumns .= ', nome';
                                 $sqlValues .= ', :nome';
                             }
 
                             $stmtCliente = $pdo->prepare("INSERT INTO $tabelaDestino ($sqlColumns) VALUES ($sqlValues)");
                             $stmtCliente->bindValue(':usuario_id', $usuarioId);
+                            $stmtCliente->bindValue(':nome', $nome);
                             $stmtCliente->bindValue(':endereco', $endereco);
                             $stmtCliente->bindValue(':telefone', $telefone);
                             $stmtCliente->bindValue(':nascimento', $nascimento);
                             $stmtCliente->bindValue(':descricao', $descricao);
                             $stmtCliente->bindValue(':foto_perfil', $fotoParaSalvar);
-                            if ($tipo_base_post === 'cliente') {
-                                $stmtCliente->bindValue(':nome', $nome);
-                            }
                             $stmtCliente->execute();
                             
                             // A transação do banco de dados é confirmada ANTES do envio de e-mail.
@@ -454,15 +437,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
     }
 }
 
-// Determinar qual template carregar
-$template_file = 'tela_registro.html'; // Padrão para novo registro (Geralmente cliente)
-
-if ($is_edicao) {
-    // Se for edição, escolhe o template baseado no tipo de usuário
-    $template_file = ($dados_usuario['tipo_base'] === 'profissional') ? 'editar_profissional.html' : 'editar_cliente.html';
-}
-
-echo $twig->render($template_file, [
+echo $twig->render('tela_registro.html', [
     'erro' => $erro,
     'mostra_modal_codigo' => $mostra_modal_codigo,
     'email_modal' => $email_modal,

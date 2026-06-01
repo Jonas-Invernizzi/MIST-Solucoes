@@ -7,7 +7,7 @@
 {% block conteudo %}
 <section class="hero-section">
     <div class="hero-text">
-        <p class="welcome-text">Bem-vindo, {{ session.usuario_nome }}!</p>
+        <p class="welcome-text">Bem-vindo, {{ nome_usuario }}!</p>
         <h1>Encontre pessoas para serviços manuais</h1>
         <p>Conecte-se com profissionais para trabalhos manuais que você precisa</p>
         
@@ -28,7 +28,7 @@
     {% for prof in profissionais %}
         <div class="card-profissional">
             <div class="avatar-circular">
-                <img src="img/{{ prof.foto_perfil|default('FotoPerfilPadrao.jpg') }}" alt="{{ prof.nome }}">
+                <img src="img/{{ prof.foto_perfil|default('default_profile.png') }}" alt="{{ prof.nome }}">
             </div>
             <h3>{{ prof.nome }}</h3>
             <p>{{ prof.trabalho }}</p>
@@ -37,11 +37,11 @@
                 {% for i in 1..5 %}{{ i <= nota ? '★' : '☆' }}{% endfor %}
                 <span>({{ prof.total_avaliacoes }})</span>
             </div>
-            <a href="perfil.php?id={{ prof.usuario_id }}" class="btn-salvar">Ver Perfil</a>
+            <a href="perfil.php?id={{ prof.usuario_id }}" class="btn btn-salvar" style="width: 100%; text-align: center; text-decoration: none; display: block;">Ver Perfil</a>
         </div>
     {% else %}
         <p style="grid-column: 1 / -1; text-align: center; color: #667; padding: 40px;">
-            Ainda não há profissionais registrados no momento.
+            ⚠️ Ainda não há profissionais registrados no momento.
         </p>
     {% endfor %}
 </div>

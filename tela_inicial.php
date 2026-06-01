@@ -8,46 +8,25 @@ if (!isset($_SESSION['usuario_id'])) {
     exit();
 }
 
-$profissionais = [];
-$nome_usuario = 'Usuário';
+// Base da consulta SQL
+// A lógica de busca foi movida para 'pesquisa.php' para centralizar a funcionalidade.
+// A tela inicial agora apenas lista todos os profissionais.
+$sql = "SELECT p.usuario_id, p.id, p.nome, p.trabalho, p.foto_perfil, p.descricao,
+               COALESCE(AVG(av.nota), 0) as nota_media,
+               COUNT(av.id) as total_avaliacoes
+        FROM profissionais p
+        JOIN usuarios u ON p.usuario_id = u.id
+        LEFT JOIN avaliacoes av ON p.id = av.profissional_id
+        WHERE u.status = 'ativo' AND u.tipo_base = 'profissional'
+        GROUP BY p.id, p.usuario_id, p.nome, p.trabalho, p.foto_perfil, p.descricao
+        ORDER BY p.nome ASC";
 
-try {
-    // Busca o nome do usuário logado (seja cliente ou contratante)
-    $stmtUser = $pdo->prepare("
-        SELECT COALESCE(c.nome, co.nome) as nome_real 
-        FROM usuarios u
-        LEFT JOIN clientes c ON u.id = c.usuario_id
-        LEFT JOIN profissionais co ON u.id = co.usuario_id
-        WHERE u.id = :id
-    ");
-    $stmtUser->execute(['id' => $_SESSION['usuario_id']]);
-    $userRow = $stmtUser->fetch(PDO::FETCH_ASSOC);
-    
-    if ($userRow && !empty($userRow['nome_real'])) {
-        $nome_usuario = $userRow['nome_real'];
-    }
+$stmt = $pdo->query($sql);
 
-    // Busca os 4 profissionais com melhor média de avaliação
-    $query = "
-        SELECT 
-            c.nome, 
-            c.trabalho, 
-            c.foto_perfil,
-            COALESCE(AVG(a.nota), 0) as nota_media,
-            COUNT(a.id) as total_avaliacoes
-        FROM profissionais c 
-        LEFT JOIN avaliacoes a ON c.usuario_id = a.profissional_id
-        GROUP BY c.usuario_id, c.nome, c.trabalho, c.foto_perfil 
-        ORDER BY nota_media DESC, total_avaliacoes DESC 
-        LIMIT 4
-    ";
+$profissionais = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $profissionais = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $profissionais = [];
-}
+// Adicionar o nome do usuário logado para a saudação
+$nome_usuario = $_SESSION['usuario_nome'] ?? 'Visitante';
 
 echo $twig->render('tela_inicial.html', [
     'profissionais' => $profissionais,

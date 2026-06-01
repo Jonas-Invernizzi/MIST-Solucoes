@@ -9,50 +9,67 @@ if (!isset($_SESSION['usuario_id'])) {
 }
 
 $query_term = trim($_GET['q'] ?? '');
-$location_term = trim($_GET['l'] ?? '');
+$sort_option = $_GET['sort'] ?? 'relevance'; // Padrão para relevância/nenhuma ordenação
 $profissionais = [];
 
 try {
-    $sql = "
-        SELECT 
-            c.nome, 
-            c.trabalho, 
-            c.foto_perfil,
-            c.endereco,
-            COALESCE(AVG(a.nota), 0) as nota_media,
-            COUNT(a.id) as total_avaliacoes
-        FROM profissionais c 
-        LEFT JOIN avaliacoes a ON c.usuario_id = a.profissional_id
-    ";
-
-    $conditions = [];
-    $params = [];
+    // Base da consulta SQL para buscar profissionais ativos.
+    $sql = "SELECT p.usuario_id, p.id, p.nome, p.trabalho, p.foto_perfil, p.descricao, u.data_criacao,
+                   COALESCE(AVG(av.nota), 0) as nota_media,
+                   COUNT(av.id) as total_avaliacoes
+            FROM profissionais p
+            JOIN usuarios u ON p.usuario_id = u.id
+            LEFT JOIN avaliacoes av ON p.id = av.profissional_id
+            WHERE u.status = 'ativo' AND u.tipo_base = 'profissional'
+            GROUP BY p.id, p.usuario_id, p.nome, p.trabalho, p.foto_perfil, p.descricao, u.data_criacao";
 
     if (!empty($query_term)) {
-        $conditions[] = "(c.nome LIKE :q OR c.trabalho LIKE :q OR c.descricao LIKE :q)";
-        $params[':q'] = '%' . $query_term . '%';
+        // Adiciona filtro de busca por nome, descrição, trabalho (campo de texto) e tags (tabela normalizada).
+        $sql .= " AND (
+                    p.nome LIKE :search 
+                    OR p.descricao LIKE :search 
+                    OR p.trabalho LIKE :search
+                    OR EXISTS (
+                        SELECT 1
+                        FROM profissional_tags pt
+                        JOIN tags t ON pt.tag_id = t.id
+                        WHERE pt.profissional_id = p.id AND t.nome LIKE :search
+                    )
+                )";
     }
 
-    if (!empty($location_term)) {
-        $conditions[] = "(c.endereco LIKE :l OR c.endereco_trabalho LIKE :l)";
-        $params[':l'] = '%' . $location_term . '%';
-    }
+    // Mapeia as opções de ordenação para evitar injeção de SQL.
+    $sort_map = [
+        'relevance' => 'p.nome ASC',       // Padrão: ordem alfabética
+        'alpha-asc' => 'p.nome ASC',
+        'alpha-desc' => 'p.nome DESC',
+        'date-desc' => 'u.data_criacao DESC', // Mais recentes
+        'date-asc' => 'u.data_criacao ASC'   // Mais antigos
+    ];
 
-    if (!empty($conditions)) {
-        $sql .= " WHERE " . implode(' AND ', $conditions);
-    }
+    // Define ordenação (sempre tem uma, começando com 'relevance')
+    $order_by = $sort_map[$sort_option] ?? $sort_map['relevance'];
+    $sql .= " ORDER BY " . $order_by;
 
-    $sql .= " GROUP BY c.usuario_id ORDER BY nota_media DESC";
-
+    // Prepara e executa a consulta
     $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
+
+    if (!empty($query_term)) {
+        $stmt->execute(['search' => "%$query_term%"]);
+    } else {
+        // Se não houver termo de busca, apenas executa a consulta.
+        $stmt->execute();
+    }
+
     $profissionais = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
+    // Em caso de erro no banco, a lista de profissionais ficará vazia.
+    // Para depuração, o erro pode ser logado: error_log($e->getMessage());
     $profissionais = [];
 }
 
 echo $twig->render('pesquisa.html', [
     'profissionais' => $profissionais,
     'termo_buscado' => $query_term,
-    'local_buscado' => $location_term
+    'sort_option' => $sort_option
 ]);

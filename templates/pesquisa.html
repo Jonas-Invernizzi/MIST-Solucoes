@@ -2,12 +2,40 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="templates/css/telaInicial.css" />
-<style>
-    .results-info { margin: 20px 40px; color: #667; }
-</style>
+<link rel="stylesheet" href="templates/css/pesquisa.css" />
 {% endblock %}
 
 {% block conteudo %}
+<!-- Barra de Busca e Filtro -->
+<section class="search-section">
+    <div class="search-bar-container">
+        <form action="pesquisa.php" method="GET" class="search-form">
+            <div class="search-input-wrapper">
+                <input type="text" name="q" placeholder="Refinar busca por nome ou tag..." value="{{ termo_buscado|default('') }}" class="search-input">
+                <button type="submit" class="search-button">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Botão de Filtro -->
+            <div class="filter-section">
+                <label for="sort">Ordenar por:</label>
+                <select name="sort" id="sort" class="filter-select" onchange="this.form.submit()">
+                    <option value="relevance" {% if sort_option == 'relevance' %}selected{% endif %}>Relevância</option>
+                    <option value="alpha-asc" {% if sort_option == 'alpha-asc' %}selected{% endif %}>Nome (A-Z)</option>
+                    <option value="alpha-desc" {% if sort_option == 'alpha-desc' %}selected{% endif %}>Nome (Z-A)</option>
+                    <option value="date-desc" {% if sort_option == 'date-desc' %}selected{% endif %}>Mais Recentes</option>
+                    <option value="date-asc" {% if sort_option == 'date-asc' %}selected{% endif %}>Mais Antigos</option>
+                </select>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Informações dos Resultados -->
 <div class="results-info">
     {% if termo_buscado %}
         <p>Resultados para: <strong>"{{ termo_buscado }}"</strong> ({{ profissionais|length }} encontrados)</p>
@@ -20,7 +48,13 @@
     {% for prof in profissionais %}
         <div class="card-profissional">
             <div class="avatar-circular">
-                <img src="img/{{ prof.foto_perfil|default('default_profile.png') }}" alt="{{ prof.nome }}">
+                {% if prof.foto_perfil and prof.foto_perfil != 'default_profile.png' %}
+                    <img src="img/{{ prof.foto_perfil }}" alt="Foto de {{ prof.nome }}">
+                {% else %}
+                    <svg class="default-avatar-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                {% endif %}
             </div>
             <h3>{{ prof.nome }}</h3>
             <p>{{ prof.trabalho }}</p>
@@ -32,9 +66,16 @@
             <a href="perfil.php?id={{ prof.usuario_id }}" class="btn-salvar">Ver Perfil</a>
         </div>
     {% else %}
-        <p style="grid-column: 1 / -1; text-align: center; color: #667; padding: 60px;">
-            🔍 Nenhum profissional encontrado para sua busca.
-        </p>
+        <div class="no-results-container">
+            <svg class="no-results-image" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <path d="M25 10 H75 L85 20 V90 H15 V20 L25 10 Z" fill="#fff" stroke="#e0e5eb" stroke-width="3" stroke-linejoin="round"/>
+                <path d="M15 20 H85" stroke="#e0e5eb" stroke-width="3"/>
+                <circle cx="50" cy="55" r="20" fill="none" stroke="#5a85ff" stroke-width="4"/>
+                <line x1="65" y1="70" x2="80" y2="85" stroke="#5a85ff" stroke-width="5" stroke-linecap="round"/>
+            </svg>
+            <h3>Nenhum profissional encontrado</h3>
+            <p>Tente ajustar sua busca ou filtros para encontrar o que procura.</p>
+        </div>
     {% endfor %}
 </div>
 {% endblock %}

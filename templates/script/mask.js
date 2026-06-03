@@ -45,4 +45,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // Aplica as máscaras aos inputs correspondentes
     document.querySelectorAll('input[type="tel"]').forEach(applyPhoneMask);
     document.querySelectorAll('input[name="cpf"]').forEach(applyCpfMask);
+
+    // Lógica para remover tags ao clicar no 'x'
+    document.addEventListener('click', (e) => {
+        // Procura pelo botão de fechar ou o ícone/texto 'x' dentro dele
+        const btn = e.target.closest('.btn-fechar-tag') || e.target.closest('.remove-tag');
+        
+        if (btn) {
+            e.preventDefault();
+            const tagElement = btn.parentElement;
+            
+            // Extrai o texto da tag removendo o conteúdo do botão 'x' para evitar erros de comparação
+            const tagTexto = tagElement.innerText.replace(/[✕xX]/g, '').trim();
+            
+            // Localiza o input oculto que armazena as tags (tenta os nomes usados no seu PHP)
+            const inputTags = document.querySelector('input[name="tags"]') || 
+                              document.querySelector('input[name="trabalho"]') || 
+                              document.getElementById('tags-input');
+
+            if (inputTags) {
+                // Remove a tag da string separada por vírgulas
+                let currentTags = inputTags.value.split(',').map(t => t.trim()).filter(t => t !== "");
+                currentTags = currentTags.filter(t => t.trim().toLowerCase() !== tagTexto.toLowerCase());
+                inputTags.value = currentTags.join(', ');
+            }
+            // Remove o elemento visualmente
+            tagElement.remove();
+        }
+    });
 });

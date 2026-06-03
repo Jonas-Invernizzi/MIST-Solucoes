@@ -15,6 +15,7 @@ $profissionais = [];
 try {
     $sql = "
         SELECT 
+            p.usuario_id,
             p.nome, 
             p.trabalho, 
             p.descricao,

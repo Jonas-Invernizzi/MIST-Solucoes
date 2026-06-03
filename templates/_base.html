@@ -7,10 +7,8 @@
 
     <link rel="stylesheet" href="templates/css/base.css" />
     {% block extra_css %}{% endblock %}
-    <link rel="stylesheet" href="templates/css/tags.css" />
     <script src="templates/script/mask.js" defer></script>
     <script src="templates/script/login.js" defer></script>
-    <script src="templates/script/tags.js" defer></script>
   </head>
   <body>
     <header class="topo topo-header">
@@ -23,6 +21,7 @@
       </div>
 
       {% if session.usuario_id %} 
+      {% block header_search %}
       <div class="header-center">
         <form action="pesquisa.php" method="GET" class="search-container-header">
           <input type="text" name="q" placeholder="O que você está procurando?" value="{{ termo_buscado|default('') }}" aria-label="Pesquisar" />
@@ -34,6 +33,7 @@
           </button>
         </form>
       </div>
+      {% endblock %}
       {% endif %} 
 
       <div class="header-right">

@@ -21,6 +21,9 @@ if (isset($_SESSION['usuario_id'])) {
     $stmtAdminCheck->execute(['id' => $_SESSION['usuario_id']]);
     $currentUser = $stmtAdminCheck->fetch(PDO::FETCH_ASSOC);
     if ($currentUser && $currentUser['email'] === 'admin@mist.com') {
+    
+    // Agora reconhece qualquer e-mail que contenha 'admin' e o domínio '@mist.com'
+    if ($currentUser && str_contains($currentUser['email'], 'admin') && str_contains($currentUser['email'], '@mist.com')) {
         $is_admin = true;
     }
 }

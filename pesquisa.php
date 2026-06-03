@@ -15,16 +15,16 @@ $profissionais = [];
 try {
     $sql = "
         SELECT 
+            p.usuario_id,
             p.nome, 
             p.trabalho, 
             p.descricao,
             p.foto_perfil,
             p.endereco,
-            COALESCE(AVG(a.nota), 0) as nota_media,
-            COUNT(a.id) as total_avaliacoes
+            0 as nota_media,
+            0 as total_avaliacoes
         FROM profissionais p
         INNER JOIN usuarios u ON p.usuario_id = u.id
-        LEFT JOIN avaliacoes a ON p.usuario_id = a.profissional_id
     ";
 
     $conditions = [];
@@ -44,16 +44,13 @@ try {
                 )";
     }
 
-    // Adiciona agrupamento necessário para as funções de média e contagem
-    $sql .= " GROUP BY p.id, u.id ";
-
     // Mapeia as opções de ordenação para evitar injeção de SQL.
     $sort_map = [
         'relevance' => 'p.nome ASC',       // Padrão: ordem alfabética
         'alpha-asc' => 'p.nome ASC',
         'alpha-desc' => 'p.nome DESC',
-        'date-desc' => 'u.data_criacao DESC', // Mais recentes
-        'date-asc' => 'u.data_criacao ASC'   // Mais antigos
+        'date-desc' => 'p.id DESC',        // Mais recentes (usando ID como fallback)
+        'date-asc' => 'p.id ASC'           // Mais antigos
     ];
 
     // Define ordenação (sempre tem uma, começando com 'relevance')

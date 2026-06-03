@@ -49,6 +49,12 @@ if ($is_edicao && $id_alvo) {
         $stmt = $pdo->prepare("SELECT u.email, u.tipo_base, t.* FROM usuarios u LEFT JOIN $tabela t ON u.id = t.usuario_id WHERE u.id = :id");
         $stmt->execute(['id' => $id_alvo]);
         $dados_usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Mapeia o campo 'trabalho' do banco de dados para a chave 'tags', 
+        // garantindo que as tags registradas apareçam no formulário de edição.
+        if ($uBase['tipo_base'] === 'profissional' && isset($dados_usuario['trabalho'])) {
+            $dados_usuario['tags'] = $dados_usuario['trabalho'];
+        }
     }
 }
 

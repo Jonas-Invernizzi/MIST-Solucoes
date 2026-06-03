@@ -162,6 +162,22 @@
         <textarea id="tags" name="tags" placeholder="Tags">{{ user.tags }}</textarea>
       </div>
 
+      {% if is_edicao and user.tipo_base == 'profissional' %}
+      <div class="form-group-caixa">
+        <label style="font-size: 0.9rem; font-weight: 600; color: #29416d; margin-bottom: 10px; display: block;">
+          Fotos do Trabalho (Portfólio)
+        </label>
+        <input
+          type="file"
+          name="fotos_trabalho[]"
+          multiple
+          accept="image/*"
+          style="display: block; margin-bottom: 10px; padding: 8px; border: 1px solid #bbcbe6; border-radius: 6px; width: 100%; font-size: 0.9rem; color: #1f3e65;"
+        />
+        <small style="color: #667; display: block;">Selecione uma ou mais imagens para adicionar ao seu portfólio</small>
+      </div>
+      {% endif %}
+
       {# Campo oculto para tipo_base se não for edição, para garantir que o PHP
       receba o valor #} {% if not is_edicao %}
       <input type="hidden" name="tipo_base" value="cliente" />

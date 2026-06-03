@@ -2,6 +2,7 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS profissional_tags;
+DROP TABLE IF EXISTS profissional_fotos;
 DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS avaliacoes;
 DROP TABLE IF EXISTS clientes;
@@ -45,6 +46,15 @@ CREATE TABLE profissionais (
     trabalho TEXT NOT NULL, 
     foto_perfil VARCHAR(255) DEFAULT NULL,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);
+
+CREATE TABLE profissional_fotos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    profissional_id INT NOT NULL,
+    arquivo VARCHAR(255) NOT NULL,
+    data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_profissional_fotos FOREIGN KEY (profissional_id) 
+        REFERENCES profissionais(id) ON DELETE CASCADE
 );
 
 CREATE TABLE tags (

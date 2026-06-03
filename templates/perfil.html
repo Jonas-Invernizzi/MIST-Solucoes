@@ -6,6 +6,7 @@
     <title>Perfil - {{ usuario.nome|default('Usuário') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="templates/css/base.css">
+    <link rel="stylesheet" href="templates/css/perfil.css">
     <style>
         .profile-header {
             background: linear-gradient(180deg, #1f3e65 0%, #26476f 100%);
@@ -150,48 +151,95 @@
         <main class="container">
             <div class="row justify-content-center">
                 <div class="col-md-8 info-card">
-                    <div class="row mb-4">
-                        <div class="col-sm-6">
-                            <h5 class="text-muted small text-uppercase">E-mail</h5>
-                            <p class="fw-bold">{{ usuario.email }}</p>
+                    <!-- Abas de Navegação -->
+                    <div class="perfil-tabs">
+                        <button class="tab-btn active" data-tab="info">Informações</button>
+                        {% if usuario.tipo_base == 'profissional' %}
+                            <button class="tab-btn" data-tab="portfolio">Fotos do Trabalho ({{ usuario.fotos_trabalho|length }})</button>
+                        {% endif %}
+                    </div>
+
+                    <!-- Conteúdo: Aba Informações -->
+                    <div id="info" class="tab-content active">
+                        <div class="row mb-4">
+                            <div class="col-sm-6">
+                                <h5 class="text-muted small text-uppercase">E-mail</h5>
+                                <p class="fw-bold">{{ usuario.email }}</p>
+                            </div>
+                            <div class="col-sm-6">
+                                <h5 class="text-muted small text-uppercase">Telefone</h5>
+                                <p class="fw-bold">{{ usuario.telefone }}</p>
+                            </div>
                         </div>
-                        <div class="col-sm-6">
-                            <h5 class="text-muted small text-uppercase">Telefone</h5>
-                            <p class="fw-bold">{{ usuario.telefone }}</p>
+
+                        <div class="mb-4">
+                            <h5 class="text-muted small text-uppercase">Data de Nascimento</h5>
+                            <p class="fw-bold">{{ usuario.data_nascimento ? usuario.data_nascimento|date('d/m/Y') : 'Não informada' }}</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <h5 class="text-muted small text-uppercase">Localização</h5>
+                            <p class="fw-bold">{{ usuario.endereco }}</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <h5 class="text-muted small text-uppercase">Sobre / Biografia</h5>
+                            <p>{{ usuario.descricao|nl2br|default('Este profissional ainda não adicionou uma descrição.') }}</p>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-5">
+                            <a href="tela_inicial.php" class="btn btn-outline-secondary">Voltar</a>
+                            <div class="d-flex gap-2 align-items-center">
+                                {% if eh_proprio_perfil %}
+                                    <a href="tela_registro.php" class="btn-editar-mist">Editar Perfil</a>
+                                {% else %}
+                                    <button class="btn-contato-verde px-4">Entrar em Contato</button>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <h5 class="text-muted small text-uppercase">Data de Nascimento</h5>
-                        <p class="fw-bold">{{ usuario.data_nascimento ? usuario.data_nascimento|date('d/m/Y') : 'Não informada' }}</p>
-                    </div>
-
-                    <div class="mb-4">
-                        <h5 class="text-muted small text-uppercase">Localização</h5>
-                        <p class="fw-bold">{{ usuario.endereco }}</p>
-                    </div>
-
-                    <div class="mb-4">
-                        <h5 class="text-muted small text-uppercase">Sobre / Biografia</h5>
-                        <p>{{ usuario.descricao|nl2br|default('Este profissional ainda não adicionou uma descrição.') }}</p>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center mt-5">
-                        <a href="tela_inicial.php" class="btn btn-outline-secondary">Voltar</a>
-                        <div class="d-flex gap-2 align-items-center">
-                            {% if eh_proprio_perfil %}
-                                {# Se for o meu perfil, mostro apenas o botão de editar #}
-                                <a href="tela_registro.php?id={{ usuario.usuario_id }}" class="btn-editar-mist">Editar Dados</a>
-                            {% else %}
-                                {# Se for o perfil de outro, mostro apenas o contato #}
-                                <button class="btn-contato-verde px-4">Entrar em Contato</button>
+                    <!-- Conteúdo: Aba Portfólio (Carrossel) -->
+                    {% if usuario.tipo_base == 'profissional' %}
+                    <div id="portfolio" class="tab-content">
+                        {% if usuario.fotos_trabalho %}
+                            {% if sucesso %}
+                                <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+                                    {{ sucesso }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
                             {% endif %}
-                        </div>
+                            <div class="carousel-container">
+                                <div class="carousel-track">
+                                    {% for foto in usuario.fotos_trabalho %}
+                                        <div class="carousel-item">
+                                            {% if eh_proprio_perfil %}
+                                                <form method="POST" class="delete-photo-form" onsubmit="return confirm('Deseja excluir esta foto permanentemente?')">
+                                                    <input type="hidden" name="excluir_foto_id" value="{{ foto.id }}">
+                                                    <button type="submit" class="btn-delete-photo" title="Remover Foto">&times;</button>
+                                                </form>
+                                            {% endif %}
+                                            <img src="img/{{ foto.arquivo }}" alt="Foto do Trabalho">
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                {% if usuario.fotos_trabalho|length > 1 %}
+                                    <button class="carousel-control prev">❮</button>
+                                    <button class="carousel-control next">❯</button>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <p class="text-muted">Este profissional ainda não adicionou fotos ao portfólio.</p>
+                            </div>
+                        {% endif %}
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </main>
     {% endif %}
-
+    <script src="templates/script/perfil.js"></script>
 </body>
 </html>

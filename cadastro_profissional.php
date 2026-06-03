@@ -1,5 +1,4 @@
 <?php
-session_start();
 require_once('carregar_twig.php');
 require_once('carregar_pdo.php');
 require_once 'vendor/autoload.php';
@@ -53,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
     $nascimento = $_POST['nascimento'] ?? '';
     $endereco = trim($_POST['endereco'] ?? '');
     $endereco_trabalho = trim($_POST['endereco_trabalho'] ?? '');
-    $trabalho = trim($_POST['trabalho'] ?? '');
+    $trabalho = trim($_POST['tags'] ?? $_POST['trabalho'] ?? '');
     $descricao = trim($_POST['descricao'] ?? '');
 
     $dados_usuario = $_POST; // Preservar dados para o formulário
@@ -115,6 +114,35 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                 ]);
 
                 $pdo->commit();
+
+                // --- Processar Upload de Fotos do Trabalho (Portfólio) ---
+                if (isset($_FILES['fotos_trabalho'])) {
+                    try {
+                        $files = $_FILES['fotos_trabalho'];
+                        $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'img' . DIRECTORY_SEPARATOR;
+                        $allowedMimes = ['image/jpeg', 'image/png', 'image/gif'];
+                        $finfo = class_exists('finfo') ? new finfo(FILEINFO_MIME_TYPE) : null;
+                        
+                        $pid = $pdo->query("SELECT id FROM profissionais WHERE usuario_id = $usuarioId")->fetchColumn();
+
+                        for ($i = 0; $i < count($files['name']); $i++) {
+                            if ($files['error'][$i] === UPLOAD_ERR_OK) {
+                                $mimeType = $finfo ? $finfo->file($files['tmp_name'][$i]) : $files['type'][$i];
+                                if (in_array($mimeType, $allowedMimes) && $files['size'][$i] <= 5 * 1024 * 1024) {
+                                    $ext = pathinfo($files['name'][$i], PATHINFO_EXTENSION);
+                                    $novoNome = uniqid('trabalho_', true) . '.' . $ext;
+                                    
+                                    if (move_uploaded_file($files['tmp_name'][$i], $uploadDir . $novoNome)) {
+                                        $stmtIns = $pdo->prepare("INSERT INTO profissional_fotos (profissional_id, arquivo) VALUES (:pid, :arquivo)");
+                                        $stmtIns->execute(['pid' => $pid, 'arquivo' => $novoNome]);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception $e) {
+                        error_log("Erro no upload de portfólio em cadastro_profissional: " . $e->getMessage());
+                    }
+                }
 
                 // Envio de E-mail
                 $mail = new \PHPMailer\PHPMailer\PHPMailer(true);

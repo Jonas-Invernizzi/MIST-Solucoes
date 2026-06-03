@@ -402,8 +402,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             if ($oldFotoPerfil && $oldFotoPerfil !== 'default_profile.png' && file_exists($uploadDir . $oldFotoPerfil)) {
                                 unlink($uploadDir . $oldFotoPerfil);
                             }
-                            // Atualiza a foto da sessão apenas se o usuário estiver editando o próprio perfil
+                            // Atualiza os dados da sessão para refletir as mudanças no cabeçalho e boas-vindas imediatamente
                             if ($usuarioId == $_SESSION['usuario_id']) {
+                                $_SESSION['usuario_nome'] = $nome;
                                 $_SESSION['usuario_foto'] = $fotoParaSalvar;
                             }
 

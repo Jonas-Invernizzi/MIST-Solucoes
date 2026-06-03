@@ -179,10 +179,13 @@
                     <div class="d-flex justify-content-between align-items-center mt-5">
                         <a href="tela_inicial.php" class="btn btn-outline-secondary">Voltar</a>
                         <div class="d-flex gap-2 align-items-center">
-                            {% if pode_editar %}
+                            {% if eh_proprio_perfil %}
+                                {# Se for o meu perfil, mostro apenas o botão de editar #}
                                 <a href="tela_registro.php?id={{ usuario.usuario_id }}" class="btn-editar-mist">Editar Dados</a>
+                            {% else %}
+                                {# Se for o perfil de outro, mostro apenas o contato #}
+                                <button class="btn-contato-verde px-4">Entrar em Contato</button>
                             {% endif %}
-                            <button class="btn-contato-verde px-4">Entrar em Contato</button>
                         </div>
                     </div>
                 </div>

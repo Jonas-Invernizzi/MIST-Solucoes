@@ -11,7 +11,7 @@ INSERT INTO usuarios (email, senha, tipo_base, status) VALUES
 ('pedro.jardineiro@email.com', '$2y$10$6mXWlYhYp8p8p8p8p8p8pOu6R.K9p9p9p9p9p9p9p9p9p9p9p9p9p', 'profissional', 'ativo'),
 ('lucas.marceneiro@email.com', '$2y$10$6mXWlYhYp8p8p8p8p8p8pOu6R.K9p9p9p9p9p9p9p9p9p9p9p9p9p', 'profissional', 'ativo');
 
--- 2. Inserir Dados dos Profissionais
+-- 2. Inserir Dados dos Profissionais (Contratantes)
 INSERT INTO profissionais (usuario_id, nome, cpf, data_nascimento, endereco, endereco_trabalho, telefone, descricao, trabalho, foto_perfil) VALUES
 ((SELECT id FROM usuarios WHERE email = 'joao.eletricista@email.com'), 
  'João Silva', '123.456.789-01', '1985-05-20', 'Rua das Flores, 100', 'Bento Gonçalves e região', '(54) 99123-4567', 

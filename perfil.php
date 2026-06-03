@@ -1,21 +1,26 @@
 <?php
+session_start();
 require_once('carregar_twig.php');
 require_once('carregar_pdo.php');
 
 // Tenta pegar o ID da URL. Se não existir, tenta pegar o ID do usuário logado na sessão.
-$id = $_GET['id'] ?? $_SESSION['usuario_id'] ?? null;
+$id = (!empty($_GET['id'])) ? $_GET['id'] : ($_SESSION['usuario_id'] ?? null);
 
 $usuario = null;
 $erro = '';
 
-// Define se o usuário logado tem permissão para alterar este perfil (apenas o próprio dono)
-$pode_editar = (isset($_SESSION['usuario_id']) && $id && $_SESSION['usuario_id'] == $id);
+// Captura o ID do usuário logado (se houver)
+$id_logado = $_SESSION['usuario_id'] ?? null;
+
+// Verifica se o perfil sendo visualizado é o do próprio usuário logado
+// Usamos cast para string para evitar erros de comparação entre tipos diferentes (int vs string)
+$eh_proprio_perfil = ($id_logado && $id && (string)$id_logado === (string)$id);
 
 if (!$id) {
     $erro = "⚠️ Usuário não especificado.";
 } else {
     // --- Lógica de Upload de Foto (Apenas se o dono do perfil estiver logado) ---
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['foto_perfil']) && $pode_editar) {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['foto_perfil']) && $eh_proprio_perfil) {
         try {
             $file = $_FILES['foto_perfil'];
             $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'img' . DIRECTORY_SEPARATOR;
@@ -33,10 +38,10 @@ if (!$id) {
             }
 
             // Busca dados atuais para saber qual tabela atualizar e deletar a foto antiga
-            $stmtCheck = $pdo->prepare("SELECT u.tipo_base, COALESCE(c.foto_perfil, p.foto_perfil) as foto_atual 
+            $stmtCheck = $pdo->prepare("SELECT u.tipo_base, COALESCE(c.foto_perfil, co.foto_perfil) as foto_atual 
                                         FROM usuarios u 
                                         LEFT JOIN clientes c ON u.id = c.usuario_id 
-                                        LEFT JOIN profissionais p ON u.id = p.usuario_id 
+                                        LEFT JOIN profissionais co ON u.id = co.usuario_id 
                                         WHERE u.id = :id");
             $stmtCheck->execute(['id' => $id]);
             $dadosAtuais = $stmtCheck->fetch(PDO::FETCH_ASSOC);
@@ -73,17 +78,17 @@ if (!$id) {
         // Busca unificada utilizando COALESCE para pegar dados de ambas as tabelas (clientes ou contratantes)
         // Nota: 'trabalho' é específico de profissionais.
         $stmt = $pdo->prepare("
-            SELECT u.email, u.tipo_base,
-                   COALESCE(c.nome, p.nome) as nome,
-                   COALESCE(c.endereco, p.endereco) as endereco,
-                   COALESCE(c.telefone, p.telefone) as telefone,
-                   COALESCE(c.descricao, p.descricao) as descricao,
-                   COALESCE(c.foto_perfil, p.foto_perfil) as foto_perfil,
-                   p.trabalho,
-                   COALESCE(c.data_nascimento, p.data_nascimento) as data_nascimento
+            SELECT u.id as usuario_id, u.email, u.tipo_base,
+                   COALESCE(c.nome, co.nome) as nome,
+                   COALESCE(c.endereco, co.endereco) as endereco,
+                   COALESCE(c.telefone, co.telefone) as telefone,
+                   COALESCE(c.descricao, co.descricao) as descricao,
+                   COALESCE(c.foto_perfil, co.foto_perfil) as foto_perfil,
+                   co.trabalho,
+                   COALESCE(c.data_nascimento, co.data_nascimento) as data_nascimento
             FROM usuarios u
             LEFT JOIN clientes c ON u.id = c.usuario_id
-            LEFT JOIN profissionais p ON u.id = p.usuario_id
+            LEFT JOIN profissionais co ON u.id = co.usuario_id
             WHERE u.id = :id
         ");
         $stmt->execute(['id' => $id]);
@@ -105,5 +110,6 @@ if (!$id) {
 echo $twig->render('perfil.html', [
     'usuario' => $usuario,
     'erro' => $erro,
-    'pode_editar' => $pode_editar
+    'eh_proprio_perfil' => $eh_proprio_perfil, // Nova flag recomendada
+    'pode_editar' => $eh_proprio_perfil       // Restaurada para não quebrar seu HTML atual
 ]);

@@ -7,7 +7,9 @@ require_once('carregar_pdo.php');
 $id = (!empty($_GET['id'])) ? $_GET['id'] : ($_SESSION['usuario_id'] ?? null);
 
 $usuario = null;
+$avaliacoes = [];
 $erro = '';
+$sucesso = '';
 
 // Captura o ID do usuário logado (se houver)
 $id_logado = $_SESSION['usuario_id'] ?? null;
@@ -15,6 +17,79 @@ $id_logado = $_SESSION['usuario_id'] ?? null;
 // Verifica se o perfil sendo visualizado é o do próprio usuário logado
 // Usamos cast para string para evitar erros de comparação entre tipos diferentes (int vs string)
 $eh_proprio_perfil = ($id_logado && $id && (string)$id_logado === (string)$id);
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_avaliacao'])) {
+    if (!$id_logado) {
+        $erro = "⚠️ Você precisa estar logado para editar.";
+    } else {
+        $nota = filter_input(INPUT_POST, 'nota', FILTER_VALIDATE_INT, ["options" => ["min_range" => 1, "max_range" => 5]]);
+        $comentario = trim($_POST['comentario'] ?? '');
+
+        if ($nota === false) {
+            $erro = "⚠️ A nota deve ser um valor entre 1 e 5 estrelas.";
+        } elseif (empty($comentario)) {
+            $erro = "⚠️ O campo de comentário não pode estar vazio.";
+        } else {
+            try {
+                $stmtUpdate = $pdo->prepare(
+                    "UPDATE avaliacoes SET nota = :nota, comentario = :comentario, data_criacao = NOW() 
+                     WHERE profissional_id = :pid AND cliente_id = :cid"
+                );
+                $stmtUpdate->execute([
+                    'nota' => $nota,
+                    'comentario' => $comentario,
+                    'pid' => $id,
+                    'cid' => $id_logado
+                ]);
+                header("Location: perfil.php?id=$id&sucesso_edicao=1");
+                exit();
+            } catch (Exception $e) {
+                $erro = "⚠️ Erro ao atualizar avaliação: " . $e->getMessage();
+            }
+        }
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['avaliar'])) {
+    if (!$id_logado) {
+        $erro = "⚠️ Você precisa estar logado para avaliar.";
+    } elseif ($eh_proprio_perfil) {
+        $erro = "⚠️ Você não pode avaliar o seu próprio perfil.";
+    } else {
+        $nota = filter_input(INPUT_POST, 'nota', FILTER_VALIDATE_INT, ["options" => ["min_range" => 1, "max_range" => 5]]);
+        $comentario = trim($_POST['comentario'] ?? '');
+
+        if ($nota === false) {
+            $erro = "⚠️ A nota deve ser um valor entre 1 e 5 estrelas.";
+        } elseif (empty($comentario)) {
+            $erro = "⚠️ O campo de comentário não pode estar vazio.";
+        } else {
+            try {
+                $stmtInsert = $pdo->prepare(
+                    "INSERT INTO avaliacoes (profissional_id, cliente_id, nota, comentario) 
+                     VALUES (:profissional_id, :cliente_id, :nota, :comentario)"
+                );
+                $stmtInsert->execute([
+                    'profissional_id' => $id,
+                    'cliente_id' => $id_logado,
+                    'nota' => $nota,
+                    'comentario' => $comentario
+                ]);
+                header("Location: perfil.php?id=$id&sucesso_avaliacao=1");
+                exit();
+            } catch (Exception $e) {
+                // Se o erro for de entrada duplicada (código 23000), significa que o usuário já avaliou.
+                // Em vez de mostrar um erro, apenas recarregamos a página.
+                // A lógica que vem depois irá esconder o formulário, criando uma experiência mais suave.
+                if ($e->getCode() == '23000') {
+                    header("Location: perfil.php?id=$id");
+                    exit();
+                }
+                $erro = "⚠️ Erro ao salvar avaliação: " . $e->getMessage();
+            }
+        }
+    }
+}
 
 if (!$id) {
     $erro = "⚠️ Usuário não especificado.";
@@ -85,11 +160,15 @@ if (!$id) {
                    COALESCE(c.descricao, co.descricao) as descricao,
                    COALESCE(c.foto_perfil, co.foto_perfil) as foto_perfil,
                    co.trabalho,
-                   COALESCE(c.data_nascimento, co.data_nascimento) as data_nascimento
+                   COALESCE(c.data_nascimento, co.data_nascimento) as data_nascimento,
+                   COALESCE(AVG(a.nota), 0) as nota_media,
+                   COUNT(a.id) as total_avaliacoes
             FROM usuarios u
             LEFT JOIN clientes c ON u.id = c.usuario_id
             LEFT JOIN profissionais co ON u.id = co.usuario_id
+            LEFT JOIN avaliacoes a ON u.id = a.profissional_id
             WHERE u.id = :id
+            GROUP BY u.id
         ");
         $stmt->execute(['id' => $id]);
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -101,15 +180,60 @@ if (!$id) {
             $usuario['tags'] = !empty($usuario['trabalho']) 
                 ? array_filter(array_map('trim', explode(',', $usuario['trabalho']))) 
                 : [];
+            
+            // Busca as avaliações detalhadas para o perfil visualizado
+            $stmtAvaliacoes = $pdo->prepare("
+                SELECT 
+                    a.id as avaliacao_id,
+                    a.cliente_id,
+                    a.nota, 
+                    a.comentario, 
+                    a.data_criacao,
+                    COALESCE(cl.nome, p.nome) as autor_nome,
+                    COALESCE(cl.foto_perfil, p.foto_perfil) as autor_foto
+                FROM avaliacoes a
+                JOIN usuarios u_autor ON a.cliente_id = u_autor.id
+                LEFT JOIN clientes cl ON u_autor.id = cl.usuario_id
+                LEFT JOIN profissionais p ON u_autor.id = p.usuario_id
+                WHERE a.profissional_id = :id
+                ORDER BY a.data_criacao DESC
+            ");
+            $stmtAvaliacoes->execute(['id' => $id]);
+            $avaliacoes = $stmtAvaliacoes->fetchAll(PDO::FETCH_ASSOC);
         }
     } catch (Exception $e) {
         $erro = "⚠️ Erro ao carregar perfil: " . $e->getMessage();
     }
 }
 
+if (isset($_GET['sucesso_avaliacao'])) {
+    $sucesso = "✅ Avaliação enviada com sucesso!";
+}
+if (isset($_GET['sucesso_edicao'])) {
+    $sucesso = "✅ Sua avaliação foi atualizada com sucesso!";
+}
+
+$minha_avaliacao = null;
+$outras_avaliacoes = [];
+if ($id_logado && !empty($avaliacoes)) {
+    foreach ($avaliacoes as $avaliacao) {
+        if (isset($avaliacao['cliente_id']) && $avaliacao['cliente_id'] == $id_logado) {
+            $minha_avaliacao = $avaliacao;
+        } else {
+            $outras_avaliacoes[] = $avaliacao;
+        }
+    }
+} else {
+    $outras_avaliacoes = $avaliacoes;
+}
+
 echo $twig->render('perfil.html', [
     'usuario' => $usuario,
     'erro' => $erro,
-    'eh_proprio_perfil' => $eh_proprio_perfil, // Nova flag recomendada
-    'pode_editar' => $eh_proprio_perfil       // Restaurada para não quebrar seu HTML atual
+    'sucesso' => $sucesso,
+    'minha_avaliacao' => $minha_avaliacao,
+    'avaliacoes' => $outras_avaliacoes,
+    'eh_proprio_perfil' => $eh_proprio_perfil,
+    'pode_editar' => $eh_proprio_perfil,
+    'pode_avaliar' => $id_logado && !$eh_proprio_perfil && $usuario && !$minha_avaliacao
 ]);

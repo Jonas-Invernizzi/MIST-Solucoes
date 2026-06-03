@@ -25,18 +25,18 @@ if (empty($_SESSION['usuario_nome'])) {
 }
 
 // Busca os 4 profissionais mais recentes para a vitrine
-// Nota: O JOIN com a tabela 'avaliacoes' foi removido para evitar o erro Fatal, 
-// já que a tabela não existe ou está vazia no banco de dados atual.
 $query = "
     SELECT 
-        c.usuario_id,
-        c.nome, 
-        c.trabalho, 
-        c.foto_perfil,
-        0 as nota_media,
-        0 as total_avaliacoes
-    FROM profissionais c 
-    ORDER BY c.id DESC
+        p.usuario_id,
+        p.nome, 
+        p.trabalho, 
+        p.foto_perfil,
+        COALESCE(AVG(a.nota), 0) as nota_media,
+        COUNT(a.id) as total_avaliacoes
+    FROM profissionais p
+    LEFT JOIN avaliacoes a ON p.usuario_id = a.profissional_id
+    GROUP BY p.id
+    ORDER BY p.id DESC
     LIMIT 4
 ";
 

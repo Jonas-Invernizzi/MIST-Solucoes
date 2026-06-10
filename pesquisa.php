@@ -49,7 +49,7 @@ try {
 
     // Mapeia as opções de ordenação para evitar injeção de SQL.
     $sort_map = [
-        'relevance' => 'p.nome ASC',       // Padrão: ordem alfabética
+        'relevance' => 'nota_media DESC, total_avaliacoes DESC, p.nome ASC', // Padrão: maior nota e mais avaliações primeiro
         'alpha-asc' => 'p.nome ASC',
         'alpha-desc' => 'p.nome DESC',
         'date-desc' => 'u.data_criacao DESC', // Mais recentes

@@ -143,35 +143,57 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $usuario_logado_id) {
     }
 }
 
-// --- CARREGAMENTO DE DADOS DO PERFIL (Para GET e POST) ---
-try {
-    $stmt = $pdo->prepare("
-        SELECT u.id as usuario_id, u.email, u.tipo_base,
-               COALESCE(c.nome, co.nome) as nome,
-               COALESCE(c.endereco, co.endereco) as endereco,
-               COALESCE(c.telefone, co.telefone) as telefone,
-               COALESCE(c.descricao, co.descricao) as descricao,
-               COALESCE(c.foto_perfil, co.foto_perfil) as foto_perfil,
-               co.trabalho,
-               COALESCE(c.data_nascimento, co.data_nascimento) as data_nascimento,
-               COALESCE(AVG(a.nota), 0) as nota_media,
-               COUNT(a.id) as total_avaliacoes
-        FROM usuarios u
-        LEFT JOIN clientes c ON u.id = c.usuario_id
-        LEFT JOIN profissionais co ON u.id = co.usuario_id
-        LEFT JOIN avaliacoes a ON u.id = a.profissional_id
-        WHERE u.id = :id
-        GROUP BY u.id
-    ");
-    $stmt->execute(['id' => $id_perfil]);
-    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+    try {
+        // Busca unificada utilizando COALESCE para pegar dados de ambas as tabelas (clientes ou contratantes)
+        // Nota: 'trabalho' é específico de profissionais.
+        $stmt = $pdo->prepare("
+            SELECT u.id as usuario_id, u.email, u.tipo_base,
+                   COALESCE(c.nome, co.nome) as nome,
+                   COALESCE(c.endereco, co.endereco) as endereco,
+                   COALESCE(c.telefone, co.telefone) as telefone,
+                   COALESCE(c.descricao, co.descricao) as descricao,
+                   COALESCE(c.foto_perfil, co.foto_perfil) as foto_perfil,
+                   co.trabalho,
+                   COALESCE(c.data_nascimento, co.data_nascimento) as data_nascimento,
+                   COALESCE(AVG(a.nota), 0) as nota_media,
+                   COUNT(a.id) as total_avaliacoes
+            FROM usuarios u
+            LEFT JOIN clientes c ON u.id = c.usuario_id
+            LEFT JOIN profissionais co ON u.id = co.usuario_id
+            LEFT JOIN avaliacoes a ON co.id = a.profissional_id
+            WHERE u.id = :id
+            GROUP BY u.id
+        ");
+        $stmt->execute(['id' => $id]);
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$usuario) {
-        $erro = "❌ Prestador não encontrado no sistema.";
-    } else {
-        // Fallback para foto padrão no perfil visualizado
-        if (empty($usuario['foto_perfil'])) {
-            $usuario['foto_perfil'] = $fotoPerfilPadrao;
+        if (!$usuario) {
+            $erro = "❌ Prestador não encontrado no sistema.";
+        } else {
+            // Converte a string "tag1, tag2" em um array para o Twig
+            $usuario['tags'] = !empty($usuario['trabalho']) 
+                ? array_filter(array_map('trim', explode(',', $usuario['trabalho']))) 
+                : [];
+            
+            // Busca as avaliações detalhadas para o perfil visualizado
+            $stmtAvaliacoes = $pdo->prepare("
+                SELECT 
+                    a.id as avaliacao_id,
+                    a.cliente_id,
+                    a.nota, 
+                    a.comentario, 
+                    a.data_criacao,
+                    COALESCE(cl.nome, p.nome) as autor_nome,
+                    COALESCE(cl.foto_perfil, p.foto_perfil) as autor_foto
+                FROM avaliacoes a
+                JOIN usuarios u_autor ON a.cliente_id = u_autor.id
+                LEFT JOIN clientes cl ON u_autor.id = cl.usuario_id
+                LEFT JOIN profissionais p ON u_autor.id = p.usuario_id
+                WHERE a.profissional_id = :id
+                ORDER BY a.data_criacao DESC
+            ");
+            $stmtAvaliacoes->execute(['id' => $id]);
+            $avaliacoes = $stmtAvaliacoes->fetchAll(PDO::FETCH_ASSOC);
         }
         $usuario['tags'] = !empty($usuario['trabalho']) 
             ? array_filter(array_map('trim', explode(',', $usuario['trabalho']))) 

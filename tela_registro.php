@@ -26,8 +26,7 @@ if (isset($_SESSION['usuario_id'])) {
     if ($currentUser && str_contains($currentUser['email'], 'admin') && str_contains($currentUser['email'], '@mist.com')) {
         $is_admin = true;
     }
-  }
-}
+}}
 
 // 2. Determinar se é edição e quem está sendo editado
 if (isset($_SESSION['usuario_id'])) { // Apenas usuários logados podem editar

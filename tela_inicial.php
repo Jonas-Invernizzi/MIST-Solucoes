@@ -1,4 +1,6 @@
 <?php
+
+session_start();
 require_once('carregar_pdo.php');
 require_once('carregar_twig.php');
 
@@ -29,15 +31,17 @@ if (empty($_SESSION['usuario_nome'])) {
 // Busca os 4 profissionais mais recentes para a vitrine
 $query = "
     SELECT 
-        p.usuario_id,
+        u.id as usuario_id,
         p.nome, 
         p.trabalho, 
         p.foto_perfil,
         COALESCE(AVG(a.nota), 0) as nota_media,
         COUNT(a.id) as total_avaliacoes
     FROM profissionais p
-    LEFT JOIN avaliacoes a ON p.usuario_id = a.profissional_id
-    GROUP BY p.id
+    INNER JOIN usuarios u ON p.usuario_id = u.id
+    LEFT JOIN avaliacoes a ON p.id = a.profissional_id
+    WHERE u.status = 'ativo'
+    GROUP BY u.id, p.id, p.nome, p.trabalho, p.foto_perfil
     ORDER BY p.id DESC
     LIMIT 4
 ";

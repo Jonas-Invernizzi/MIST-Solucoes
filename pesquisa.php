@@ -25,13 +25,14 @@ try {
             0 as total_avaliacoes
         FROM profissionais p
         INNER JOIN usuarios u ON p.usuario_id = u.id
+        WHERE u.status = 'ativo'
     ";
 
     $conditions = [];
     $params = [];
 
     if (!empty($query_term)) {
-        $sql .= " WHERE (
+        $sql .= " AND (
                     p.nome LIKE :search 
                     OR p.descricao LIKE :search 
                     OR p.trabalho LIKE :search

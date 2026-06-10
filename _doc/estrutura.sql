@@ -7,6 +7,20 @@ DROP TABLE IF EXISTS avaliacoes;
 DROP TABLE IF EXISTS clientes;
 DROP TABLE IF EXISTS profissionais;
 DROP TABLE IF EXISTS usuarios;
+DROP TABLE IF EXISTS mensagens;
+
+CREATE TABLE IF NOT EXISTS mensagens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    remetente_id INT NOT NULL,
+    destinatario_id INT NOT NULL,
+    mensagem TEXT NOT NULL,
+    data_envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    lida TINYINT(1) DEFAULT 0,
+    INDEX (remetente_id),
+    INDEX (destinatario_id),
+    FOREIGN KEY (remetente_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (destinatario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,

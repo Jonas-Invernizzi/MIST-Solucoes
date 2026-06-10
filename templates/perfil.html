@@ -284,7 +284,7 @@
                                 <a href="tela_registro.php?id={{ usuario.usuario_id }}" class="btn-editar-mist">Editar Dados</a>
                             {% else %}
                                 {# Se for o perfil de outro, mostro apenas o contato #}
-                                <button class="btn-contato-verde px-4">Entrar em Contato</button>
+                                <a href="chat.php?id={{ usuario.usuario_id }}" class="btn-contato-verde px-4">Entrar em Contato</a>
                             {% endif %}
                         </div>
                     </div>

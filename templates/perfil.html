@@ -119,13 +119,17 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
             background: #111;
             margin-bottom: 20px;
+            width: 100%;
         }
         .carousel-track {
             display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
             transition: transform 0.4s ease-in-out;
             align-items: center;
         }
         .carousel-item {
+            flex: 0 0 100%;
             min-width: 100%;
             position: relative;
             display: flex;
@@ -158,6 +162,29 @@
         .carousel-control:hover { background: #fff; transform: translateY(-50%) scale(1.1); }
         .carousel-control.prev { left: 15px; }
         .carousel-control.next { right: 15px; }
+        
+        .carousel-indicators {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .dot.active {
+            background: #fff;
+            transform: scale(1.2);
+        }
+
         .delete-photo-form {
             position: absolute;
             top: 15px;
@@ -297,6 +324,7 @@
                                 {% if usuario.fotos_trabalho|length > 1 %}
                                     <button class="carousel-control prev">❮</button>
                                     <button class="carousel-control next">❯</button>
+                                    <div class="carousel-indicators"></div>
                                 {% endif %}
                             </div>
                         {% else %}
@@ -321,36 +349,5 @@
         </main>
     {% endif %}
     <script src="templates/script/perfil.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const track = document.querySelector('.carousel-track');
-            const slides = document.querySelectorAll('.carousel-item');
-            const prevButton = document.querySelector('.carousel-control.prev');
-            const nextButton = document.querySelector('.carousel-control.next');
-            
-            if (!track || slides.length <= 1) return;
-
-            let currentIndex = 0;
-
-            function moveToSlide(index) {
-                const slideWidth = slides[0].clientWidth;
-                track.style.transform = 'translateX(-' + (slideWidth * index) + 'px)';
-            }
-
-            nextButton.addEventListener('click', function() {
-                currentIndex = (currentIndex + 1) % slides.length;
-                moveToSlide(currentIndex);
-            });
-
-            prevButton.addEventListener('click', function() {
-                currentIndex = (currentIndex - 1 + slides.length) % slides.length;
-                moveToSlide(currentIndex);
-            });
-
-            window.addEventListener('resize', function() {
-                moveToSlide(currentIndex);
-            });
-        });
-    </script>
 </body>
 </html>

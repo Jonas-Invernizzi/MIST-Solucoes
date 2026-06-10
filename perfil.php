@@ -93,6 +93,74 @@ if (!$id) {
         }
     }
 
+    // --- Lógica de Upload de Foto de Trabalho (Portfólio / Carrossel) ---
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['nova_foto_trabalho']) && $pode_editar) {
+        try {
+            $files = $_FILES['nova_foto_trabalho'];
+            $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'img' . DIRECTORY_SEPARATOR;
+
+            // Garante que é um profissional e busca o seu ID
+            $stmtProf = $pdo->prepare("SELECT id FROM profissionais WHERE usuario_id = :uid");
+            $stmtProf->execute(['uid' => $id]);
+            $profissional_id = $stmtProf->fetchColumn();
+
+            if (!$profissional_id) {
+                throw new Exception("Apenas profissionais podem adicionar fotos ao portfólio.");
+            }
+
+            if (!class_exists('finfo')) {
+                throw new Exception("A extensão 'fileinfo' não está ativa no PHP.");
+            }
+
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+            // Verifica se múltiplos arquivos foram enviados através de name="nova_foto_trabalho[]"
+            $isMultiple = is_array($files['name']);
+            $fileCount = $isMultiple ? count($files['name']) : 1;
+            $uploadedCount = 0;
+
+            for ($i = 0; $i < $fileCount; $i++) {
+                $tmpName = $isMultiple ? $files['tmp_name'][$i] : $files['tmp_name'];
+                $error = $isMultiple ? $files['error'][$i] : $files['error'];
+                $name = $isMultiple ? $files['name'][$i] : $files['name'];
+                $size = $isMultiple ? $files['size'][$i] : $files['size'];
+
+                if ($error === UPLOAD_ERR_NO_FILE) {
+                    continue; // Ignora se o campo de upload veio vazio
+                }
+
+                if ($error !== UPLOAD_ERR_OK) {
+                    throw new Exception("Erro no upload do arquivo $name (Código: $error)");
+                }
+
+                $mimeType = $finfo->file($tmpName);
+                if (!in_array($mimeType, $allowedMimes)) {
+                    throw new Exception("O arquivo $name tem formato inválido. Use JPG, PNG, WEBP ou GIF.");
+                }
+                if ($size > 5 * 1024 * 1024) {
+                    throw new Exception("O arquivo $name é maior que 5MB.");
+                }
+
+                $ext = pathinfo($name, PATHINFO_EXTENSION);
+                $novoNome = uniqid('port_', true) . '.' . $ext;
+
+                if (move_uploaded_file($tmpName, $uploadDir . $novoNome)) {
+                    $stmtInsert = $pdo->prepare("INSERT INTO profissional_fotos (profissional_id, arquivo) VALUES (:pid, :arquivo)");
+                    $stmtInsert->execute(['pid' => $profissional_id, 'arquivo' => $novoNome]);
+                    $uploadedCount++;
+                }
+            }
+
+            if ($uploadedCount > 0) {
+                header("Location: perfil.php?id=$id&sucesso=1");
+                exit();
+            }
+        } catch (Exception $e) {
+            $erro = "❌ Erro no upload do portfólio: " . $e->getMessage();
+        }
+    }
+
     // --- Lógica de Exclusão de Foto do Trabalho ---
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['excluir_foto_id']) && $pode_editar) {
         try {

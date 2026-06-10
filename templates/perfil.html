@@ -111,6 +111,75 @@
             box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
             filter: brightness(1.1);
         }
+        /* --- ESTILOS DO CARROSSEL --- */
+        .carousel-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            background: #111;
+            margin-bottom: 20px;
+        }
+        .carousel-track {
+            display: flex;
+            transition: transform 0.4s ease-in-out;
+            align-items: center;
+        }
+        .carousel-item {
+            min-width: 100%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+        .carousel-item img {
+            max-width: 100%;
+            height: 400px;
+            object-fit: contain;
+        }
+        .carousel-control {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.8);
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 10;
+            transition: background 0.3s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .carousel-control:hover { background: #fff; transform: translateY(-50%) scale(1.1); }
+        .carousel-control.prev { left: 15px; }
+        .carousel-control.next { right: 15px; }
+        .delete-photo-form {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 10;
+        }
+        .btn-delete-photo {
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-bottom: 3px;
+        }
+        .btn-delete-photo:hover { background: #c82333; }
     </style>
 </head>
 <body>
@@ -202,19 +271,20 @@
                     <!-- Conteúdo: Aba Portfólio (Carrossel) -->
                     {% if usuario.tipo_base == 'profissional' %}
                     <div id="portfolio" class="tab-content">
+                        {% if sucesso %}
+                            <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+                                {{ sucesso }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endif %}
+
                         {% if usuario.fotos_trabalho %}
-                            {% if sucesso %}
-                                <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
-                                    {{ sucesso }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            {% endif %}
                             <div class="carousel-container">
                                 <div class="carousel-track">
                                     {% for foto in usuario.fotos_trabalho %}
                                         <div class="carousel-item">
-                                            {% if eh_proprio_perfil %}
-                                                <form method="POST" class="delete-photo-form" onsubmit="return confirm('Deseja excluir esta foto permanentemente?')">
+                                            {% if pode_editar %}
+                                                <form method="POST" action="perfil.php?id={{ usuario.id }}" class="delete-photo-form" onsubmit="return confirm('Deseja excluir esta foto permanentemente?')">
                                                     <input type="hidden" name="excluir_foto_id" value="{{ foto.id }}">
                                                     <button type="submit" class="btn-delete-photo" title="Remover Foto">&times;</button>
                                                 </form>
@@ -234,6 +304,16 @@
                                 <p class="text-muted">Este profissional ainda não adicionou fotos ao portfólio.</p>
                             </div>
                         {% endif %}
+
+                        {% if pode_editar %}
+                        <div class="mt-4 pt-3 border-top">
+                            <h5 class="mb-3">Adicionar novas fotos</h5>
+                            <form action="perfil.php?id={{ usuario.id }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-3">
+                                <input type="file" name="nova_foto_trabalho[]" id="nova_foto_trabalho" class="form-control" accept="image/jpeg, image/png, image/webp, image/gif" multiple required>
+                                <button type="submit" class="btn-acao-mist text-nowrap">Enviar Imagens</button>
+                            </form>
+                        </div>
+                        {% endif %}
                     </div>
                     {% endif %}
                 </div>
@@ -241,5 +321,36 @@
         </main>
     {% endif %}
     <script src="templates/script/perfil.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const track = document.querySelector('.carousel-track');
+            const slides = document.querySelectorAll('.carousel-item');
+            const prevButton = document.querySelector('.carousel-control.prev');
+            const nextButton = document.querySelector('.carousel-control.next');
+            
+            if (!track || slides.length <= 1) return;
+
+            let currentIndex = 0;
+
+            function moveToSlide(index) {
+                const slideWidth = slides[0].clientWidth;
+                track.style.transform = 'translateX(-' + (slideWidth * index) + 'px)';
+            }
+
+            nextButton.addEventListener('click', function() {
+                currentIndex = (currentIndex + 1) % slides.length;
+                moveToSlide(currentIndex);
+            });
+
+            prevButton.addEventListener('click', function() {
+                currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+                moveToSlide(currentIndex);
+            });
+
+            window.addEventListener('resize', function() {
+                moveToSlide(currentIndex);
+            });
+        });
+    </script>
 </body>
 </html>

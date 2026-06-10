@@ -166,7 +166,7 @@ if (!$id) {
             FROM usuarios u
             LEFT JOIN clientes c ON u.id = c.usuario_id
             LEFT JOIN profissionais co ON u.id = co.usuario_id
-            LEFT JOIN avaliacoes a ON u.id = a.profissional_id
+            LEFT JOIN avaliacoes a ON co.id = a.profissional_id
             WHERE u.id = :id
             GROUP BY u.id
         ");

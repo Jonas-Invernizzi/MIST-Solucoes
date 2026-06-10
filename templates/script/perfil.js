@@ -1,4 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Variáveis Globais do Carrossel (acessíveis pelas abas) ---
+    const track = document.querySelector('.carousel-track');
+    const items = document.querySelectorAll('.carousel-item');
+    let currentIndex = 0;
+    let updateCarousel = () => {}; // Função vazia por padrão
+
     // --- Lógica das Abas ---
     const tabs = document.querySelectorAll('.tab-btn');
     const contents = document.querySelectorAll('.tab-content');
@@ -19,18 +25,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Lógica do Carrossel ---
-    const track = document.querySelector('.carousel-track');
-    const items = document.querySelectorAll('.carousel-item');
     const nextBtn = document.querySelector('.next');
     const prevBtn = document.querySelector('.prev');
+    const indicatorsContainer = document.querySelector('.carousel-indicators');
 
     if (track && items.length > 0) {
-        let currentIndex = 0;
-
-        const updateCarousel = () => {
-            const width = track.clientWidth; // Pega a largura visível do container
+        updateCarousel = () => {
+            // Usa o clientWidth do container para maior precisão se o item ainda não estiver renderizado
+            const width = track.parentElement.clientWidth; 
+            if (width === 0) return; // Evita cálculos se ainda estiver invisível
+            
             track.style.transform = `translateX(-${currentIndex * width}px)`;
+
+            // Atualiza o estado das bolinhas
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === currentIndex);
+            });
         };
+
+        // Cria as bolinhas dinamicamente baseado no número de imagens
+        if (indicatorsContainer) {
+            items.forEach((_, i) => {
+                const dot = document.createElement('div');
+                dot.classList.add('dot');
+                if (i === 0) dot.classList.add('active');
+                dot.addEventListener('click', () => {
+                    currentIndex = i;
+                    updateCarousel();
+                });
+                indicatorsContainer.appendChild(dot);
+            });
+        }
 
         nextBtn?.addEventListener('click', () => {
             currentIndex = (currentIndex + 1) % items.length;
@@ -44,6 +70,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Reajusta em caso de redimensionamento da janela
         window.addEventListener('resize', updateCarousel);
+
+        // Executa uma vez no início caso a aba de portfólio já comece aberta
+        if (document.getElementById('portfolio')?.classList.contains('active')) {
+            setTimeout(updateCarousel, 100);
+        }
     }
 
     // --- Lógica de Pré-visualização de Fotos ---

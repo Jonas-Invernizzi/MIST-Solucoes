@@ -3,6 +3,8 @@ session_start();
 require_once('carregar_twig.php');
 require_once('carregar_pdo.php');
 
+$fotoPerfilPadrao = 'FotoPerfilPadrao.jpg';
+
 // Tenta pegar o ID da URL. Se não existir, tenta pegar o ID do usuário logado na sessão.
 $id = (!empty($_GET['id'])) ? $_GET['id'] : ($_SESSION['usuario_id'] ?? null);
 
@@ -133,7 +135,7 @@ if (!$id) {
                     $stmtUpdate->execute(['foto' => $novoNome, 'id' => $id]);
 
                     // Deleta foto antiga se não for a padrão
-                    if ($dadosAtuais['foto_atual'] && $dadosAtuais['foto_atual'] !== 'default_profile.png' && file_exists($uploadDir . $dadosAtuais['foto_atual'])) {
+                    if ($dadosAtuais['foto_atual'] && $dadosAtuais['foto_atual'] !== $fotoPerfilPadrao && file_exists($uploadDir . $dadosAtuais['foto_atual'])) {
                         unlink($uploadDir . $dadosAtuais['foto_atual']);
                     }
 
@@ -176,6 +178,11 @@ if (!$id) {
         if (!$usuario) {
             $erro = "❌ Prestador não encontrado no sistema.";
         } else {
+            // Aplica foto padrão se o campo estiver vazio no banco
+            if (empty($usuario['foto_perfil'])) {
+                $usuario['foto_perfil'] = $fotoPerfilPadrao;
+            }
+
             // Converte a string "tag1, tag2" em um array para o Twig
             $usuario['tags'] = !empty($usuario['trabalho']) 
                 ? array_filter(array_map('trim', explode(',', $usuario['trabalho']))) 
@@ -200,6 +207,14 @@ if (!$id) {
             ");
             $stmtAvaliacoes->execute(['id' => $id]);
             $avaliacoes = $stmtAvaliacoes->fetchAll(PDO::FETCH_ASSOC);
+
+            // Garante foto padrão para os autores das avaliações listadas
+            foreach ($avaliacoes as &$av) {
+                if (empty($av['autor_foto'])) {
+                    $av['autor_foto'] = $fotoPerfilPadrao;
+                }
+            }
+            unset($av);
         }
     } catch (Exception $e) {
         $erro = "⚠️ Erro ao carregar perfil: " . $e->getMessage();
@@ -235,5 +250,6 @@ echo $twig->render('perfil.html', [
     'avaliacoes' => $outras_avaliacoes,
     'eh_proprio_perfil' => $eh_proprio_perfil,
     'pode_editar' => $eh_proprio_perfil,
-    'pode_avaliar' => $id_logado && !$eh_proprio_perfil && $usuario && !$minha_avaliacao
+    'pode_avaliar' => $id_logado && !$eh_proprio_perfil && $usuario && !$minha_avaliacao,
+    'foto_perfil_padrao' => $fotoPerfilPadrao
 ]);

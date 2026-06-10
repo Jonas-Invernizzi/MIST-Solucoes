@@ -216,13 +216,13 @@
                 {% if pode_editar %}
                 <form id="form-foto" method="POST" enctype="multipart/form-data">
                     <label for="foto_perfil" class="profile-img-container">
-                        <img src="{{ usuario.foto_perfil ? 'img/' ~ usuario.foto_perfil : 'img/default_profile.png' }}" 
+                        <img src="img/{{ usuario.foto_perfil|default(foto_perfil_padrao) }}" 
                              alt="Foto de {{ usuario.nome }}" class="rounded-circle profile-img mb-3">
                         <input type="file" id="foto_perfil" name="foto_perfil" hidden onchange="document.getElementById('form-foto').submit()">
                     </label>
                 </form>
                 {% else %}
-                    <img src="{{ usuario.foto_perfil ? 'img/' ~ usuario.foto_perfil : 'img/default_profile.png' }}" 
+                    <img src="img/{{ usuario.foto_perfil|default(foto_perfil_padrao) }}" 
                          alt="Foto de {{ usuario.nome }}" class="rounded-circle profile-img mb-3">
                 {% endif %}
                 
@@ -327,7 +327,7 @@
                             <div id="seu-comentario-container">
                                 <div class="card-avaliacao seu-comentario">
                                     <div class="autor">
-                                        <img src="{{ minha_avaliacao.autor_foto ? 'img/' ~ minha_avaliacao.autor_foto : 'img/default_profile.png' }}" alt="Sua foto">
+                                        <img src="img/{{ minha_avaliacao.autor_foto|default(foto_perfil_padrao) }}" alt="Sua foto">
                                         <strong>Seu comentário</strong>
                                     </div>
                                     <div class="conteudo">
@@ -371,7 +371,7 @@
                                 {% for avaliacao in avaliacoes %}
                                     <div class="card-avaliacao {% if loop.index > 3 %}hidden{% endif %}">
                                         <div class="autor">
-                                            <img src="{{ avaliacao.autor_foto ? 'img/' ~ avaliacao.autor_foto : 'img/default_profile.png' }}" alt="Foto de {{ avaliacao.autor_nome }}">
+                                            <img src="img/{{ avaliacao.autor_foto|default(foto_perfil_padrao) }}" alt="Foto de {{ avaliacao.autor_nome }}">
                                             <strong>{{ avaliacao.autor_nome }}</strong>
                                         </div>
                                         <div class="conteudo">

@@ -7,6 +7,8 @@ if (!isset($_SESSION['usuario_id'])) {
     exit();
 }
 
+$fotoPerfilPadrao = 'FotoPerfilPadrao.jpg';
+
 // Lógica de "Auto-Cura": Se o nome do usuário sumiu da sessão (comum em trocas de PC ou sessões expiradas),
 // tenta recuperá-lo do banco de dados antes de renderizar a página.
 if (empty($_SESSION['usuario_nome'])) {
@@ -43,10 +45,19 @@ $query = "
 $stmt = $pdo->query($query);
 $profissionais = $stmt->fetchAll();
 
+// Garante que todos os profissionais em destaque tenham uma foto de perfil (mesmo que seja a padrão)
+foreach ($profissionais as &$p) {
+    if (empty($p['foto_perfil'])) {
+        $p['foto_perfil'] = $fotoPerfilPadrao;
+    }
+}
+unset($p); // Boa prática: remover a referência após o loop
+
 // Adicionar o nome do usuário logado para a saudação
 $nome_usuario = $_SESSION['usuario_nome'] ?? 'Visitante';
 
 echo $twig->render('tela_inicial.html', [
     'profissionais' => $profissionais,
-    'nome_usuario' => $nome_usuario
+    'nome_usuario' => $nome_usuario,
+    'foto_perfil_padrao' => $fotoPerfilPadrao
 ]);

@@ -81,8 +81,8 @@ CREATE TABLE avaliacoes (
     nota INT NOT NULL CHECK (nota >= 1 AND nota <= 5),
     comentario TEXT,
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (profissional_id) REFERENCES profissionais(id) ON DELETE CASCADE,
-    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
+    FOREIGN KEY (profissional_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (cliente_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
 -- Reativa a verificação de chaves estrangeiras

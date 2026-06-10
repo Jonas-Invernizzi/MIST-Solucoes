@@ -7,6 +7,8 @@ $sucesso = '';
 $mostra_modal_redefinir_senha = false; // Nova flag para o modal de redefinição de senha
 $email_redefinir_modal = ''; // E-mail para exibir no modal de redefinição
 
+$fotoPerfilPadrao = 'FotoPerfilPadrao.jpg';
+
 // Verificar se vem de verificação bem-sucedida
 if (isset($_GET['verificado']) && $_GET['verificado'] === '1') {
     $sucesso = "✅ E-mail confirmado com sucesso! Faça login com suas credenciais.";
@@ -125,13 +127,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     // Garante que o nome na sessão nunca seja nulo para não quebrar o "Bem-vindo"
                     $_SESSION['usuario_nome'] = $usuario['nome'] ?: 'Usuário';
                     
-                    $foto = $usuario['foto_perfil'];
-                    // Se a foto for nula, 'default_profile.png', ou o arquivo não existir, usamos null.
-                    // O template irá então renderizar o ícone padrão.
-                    if ($foto && $foto !== 'default_profile.png' && file_exists(__DIR__ . "/img/$foto")) {
-                        $_SESSION['usuario_foto'] = $foto;
+                    // Se o usuário tem uma foto de perfil e ela existe, usa-a.
+                    // Caso contrário, usa a foto de perfil padrão.
+                    if ($usuario['foto_perfil'] && file_exists(__DIR__ . "/img/" . $usuario['foto_perfil'])) {
+                        $_SESSION['usuario_foto'] = $usuario['foto_perfil'];
                     } else {
-                        $_SESSION['usuario_foto'] = null;
+                        $_SESSION['usuario_foto'] = $fotoPerfilPadrao;
                     }
                     header("Location: tela_inicial.php");
                     exit();

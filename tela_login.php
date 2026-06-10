@@ -132,7 +132,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     if ($usuario['foto_perfil'] && file_exists(__DIR__ . "/img/" . $usuario['foto_perfil'])) {
                         $_SESSION['usuario_foto'] = $usuario['foto_perfil'];
                     } else {
-                        $_SESSION['usuario_foto'] = null;
+                        $_SESSION['usuario_foto'] = $fotoPerfilPadrao;
                     }
                     header("Location: tela_inicial.php");
                     exit();

@@ -27,3 +27,12 @@ try {
 } catch (Exception $e) {
     $twig->addGlobal('logo_site', 'data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="40"><rect width="120" height="40" fill="%231f3e65"/><text x="50%" y="55%" fill="%23ffffff" font-family="Arial,sans-serif" font-size="14" text-anchor="middle" alignment-baseline="middle">MIST Soluções</text></svg>');
 }
+
+$mensagens_nao_lidas = 0;
+if (isset($_SESSION['usuario_id'])) {
+    if (!isset($pdo)) { require_once __DIR__ . '/carregar_pdo.php'; }
+    $stmtCount = $pdo->prepare("SELECT COUNT(*) FROM mensagens WHERE destinatario_id = :me AND lida = 0");
+    $stmtCount->execute(['me' => $_SESSION['usuario_id']]);
+    $mensagens_nao_lidas = (int) $stmtCount->fetchColumn();
+}
+$twig->addGlobal('mensagens_nao_lidas', $mensagens_nao_lidas);

@@ -111,92 +111,125 @@
             box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
             filter: brightness(1.1);
         }
-        /* --- ESTILOS DO CARROSSEL --- */
-        .carousel-container {
-            position: relative;
-            overflow: hidden;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            background: #111;
+        /* --- ESTILOS DO PORTFÓLIO E LIGHTBOX --- */
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
             margin-bottom: 20px;
-            width: 100%;
         }
-        .carousel-track {
-            display: flex;
-            flex-direction: row;
-            flex-wrap: nowrap;
-            transition: transform 0.4s ease-in-out;
-            align-items: center;
-        }
-        .carousel-item {
-            flex: 0 0 100%;
-            min-width: 100%;
+        .portfolio-item {
             position: relative;
-            display: flex;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            background: #f8f9fa;
+        }
+        .portfolio-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .portfolio-item:hover img {
+            transform: scale(1.05);
+        }
+        
+        .lightbox-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            align-items: center;
             justify-content: center;
         }
-        .carousel-item img {
-            max-width: 100%;
-            height: 400px;
-            object-fit: contain;
+        .lightbox-overlay.active {
+            display: flex;
         }
-        .carousel-control {
+        .lightbox-img {
+            max-width: 90%;
+            max-height: 85vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            animation: zoomIn 0.3s ease;
+        }
+        @keyframes zoomIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10000;
+            transition: color 0.3s;
+        }
+        .lightbox-close:hover { color: #ccc; }
+        
+        .lightbox-control {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.2);
             border: none;
-            width: 45px;
-            height: 45px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
+            color: white;
             cursor: pointer;
-            z-index: 10;
+            z-index: 10000;
             transition: background 0.3s, transform 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #333;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
-        .carousel-control:hover { background: #fff; transform: translateY(-50%) scale(1.1); }
-        .carousel-control.prev { left: 15px; }
-        .carousel-control.next { right: 15px; }
+        .lightbox-control:hover { background: rgba(255, 255, 255, 0.4); transform: translateY(-50%) scale(1.1); }
+        .lightbox-control.prev { left: 20px; }
+        .lightbox-control.next { right: 20px; }
         
-        .carousel-indicators {
+        .lightbox-indicators {
             position: absolute;
-            bottom: 15px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 8px;
-            z-index: 10;
+            gap: 10px;
+            z-index: 10000;
         }
-        .dot {
-            width: 10px;
-            height: 10px;
+        .lightbox-dot {
+            width: 12px;
+            height: 12px;
             background: rgba(255, 255, 255, 0.5);
             border-radius: 50%;
             cursor: pointer;
             transition: all 0.3s ease;
         }
-        .dot.active {
+        .lightbox-dot.active {
             background: #fff;
             transform: scale(1.2);
         }
 
         .delete-photo-form {
             position: absolute;
-            top: 15px;
-            right: 15px;
+            top: 8px;
+            right: 8px;
             z-index: 10;
         }
         .btn-delete-photo {
             background: rgba(220, 53, 69, 0.9);
             color: white;
             border: none;
-            width: 35px;
-            height: 35px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             cursor: pointer;
             font-size: 1.2rem;
@@ -205,8 +238,22 @@
             align-items: center;
             justify-content: center;
             padding-bottom: 3px;
+            line-height: 1;
         }
-        .btn-delete-photo:hover { background: #c82333; }
+        .btn-delete-photo:hover { background: #c82333; transform: scale(1.1); }
+
+        /* --- ESTILOS DO LER MAIS (DESCRIÇÃO) --- */
+        .descricao-curta {
+            display: -webkit-box;
+            -webkit-line-clamp: 3; /* Limita a 3 linhas */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: all 0.3s ease;
+        }
+        .descricao-expandida {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -280,7 +327,10 @@
 
                         <div class="mb-4">
                             <h5 class="text-muted small text-uppercase">Sobre / Biografia</h5>
-                            <p>{{ usuario.descricao|nl2br|default('Este profissional ainda não adicionou uma descrição.') }}</p>
+                            <div class="descricao-wrapper">
+                                <p id="texto-descricao" class="descricao-curta mb-1">{{ usuario.descricao|nl2br|default('Este profissional ainda não adicionou uma descrição.') }}</p>
+                                <button id="btn-ler-mais-desc" class="btn btn-link p-0 text-decoration-none d-none" style="font-weight: 600; color: #5a85ff;">Ler mais</button>
+                            </div>
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center mt-5">
@@ -306,26 +356,33 @@
                         {% endif %}
 
                         {% if usuario.fotos_trabalho %}
-                            <div class="carousel-container">
-                                <div class="carousel-track">
-                                    {% for foto in usuario.fotos_trabalho %}
-                                        <div class="carousel-item">
-                                            {% if pode_editar %}
-                                                <form method="POST" action="perfil.php?id={{ usuario.id }}" class="delete-photo-form" onsubmit="return confirm('Deseja excluir esta foto permanentemente?')">
-                                                    <input type="hidden" name="excluir_foto_id" value="{{ foto.id }}">
-                                                    <button type="submit" class="btn-delete-photo" title="Remover Foto">&times;</button>
-                                                </form>
-                                            {% endif %}
-                                            <img src="img/{{ foto.arquivo }}" alt="Foto do Trabalho">
-                                        </div>
-                                    {% endfor %}
+                            <div class="portfolio-grid">
+                                {% for foto in usuario.fotos_trabalho %}
+                                    <div class="portfolio-item {% if loop.index > 6 %}d-none portfolio-item-hidden{% endif %}">
+                                        {% if pode_editar %}
+                                            <form method="POST" action="perfil.php?id={{ usuario.id }}" class="delete-photo-form" onsubmit="return confirm('Deseja excluir esta foto permanentemente?')">
+                                                <input type="hidden" name="excluir_foto_id" value="{{ foto.id }}">
+                                                <button type="submit" class="btn-delete-photo" title="Remover Foto">&times;</button>
+                                            </form>
+                                        {% endif %}
+                                        <img src="img/{{ foto.arquivo }}" alt="Foto do Trabalho" class="portfolio-img" data-index="{{ loop.index0 }}">
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            {% if usuario.fotos_trabalho|length > 6 %}
+                                <div class="text-center mt-3 mb-4">
+                                    <button id="btn-ver-mais-fotos" class="btn btn-outline-secondary px-4 py-2" data-expanded="false">Ver mais fotos ({{ usuario.fotos_trabalho|length - 6 }})</button>
                                 </div>
-                                
-                                {% if usuario.fotos_trabalho|length > 1 %}
-                                    <button class="carousel-control prev">❮</button>
-                                    <button class="carousel-control next">❯</button>
-                                    <div class="carousel-indicators"></div>
-                                {% endif %}
+                            {% endif %}
+
+                            <!-- Lightbox Modal -->
+                            <div id="lightbox-modal" class="lightbox-overlay">
+                                <span class="lightbox-close">&times;</span>
+                                <button class="lightbox-control prev">❮</button>
+                                <img class="lightbox-img" src="" alt="Ampliada">
+                                <button class="lightbox-control next">❯</button>
+                                <div class="lightbox-indicators"></div>
                             </div>
                         {% else %}
                             <div class="text-center py-5">

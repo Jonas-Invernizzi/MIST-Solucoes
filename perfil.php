@@ -220,7 +220,7 @@ if (!$id) {
 
             // Busca as fotos do portfólio caso seja um profissional
             if ($usuario['tipo_base'] === 'profissional' && $usuario['profissional_id']) {
-                $stmtFotos = $pdo->prepare("SELECT id, arquivo FROM profissional_fotos WHERE profissional_id = :pid");
+                $stmtFotos = $pdo->prepare("SELECT id, arquivo FROM profissional_fotos WHERE profissional_id = :pid ORDER BY id ASC");
                 $stmtFotos->execute(['pid' => $usuario['profissional_id']]);
                 $usuario['fotos_trabalho'] = $stmtFotos->fetchAll(PDO::FETCH_ASSOC);
             }

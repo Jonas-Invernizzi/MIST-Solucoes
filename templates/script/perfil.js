@@ -1,10 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Variáveis Globais do Carrossel (acessíveis pelas abas) ---
-    const track = document.querySelector('.carousel-track');
-    const items = document.querySelectorAll('.carousel-item');
-    let currentIndex = 0;
-    let updateCarousel = () => {}; // Função vazia por padrão
-
     // --- Lógica das Abas ---
     const tabs = document.querySelectorAll('.tab-btn');
     const contents = document.querySelectorAll('.tab-content');
@@ -18,63 +12,127 @@ document.addEventListener('DOMContentLoaded', () => {
 
             tab.classList.add('active');
             document.getElementById(target).classList.add('active');
-            
-            // Importante: Recalcula o carrossel se a aba de portfólio for aberta
-            if (target === 'portfolio') updateCarousel();
         });
     });
 
-    // --- Lógica do Carrossel ---
-    const nextBtn = document.querySelector('.next');
-    const prevBtn = document.querySelector('.prev');
-    const indicatorsContainer = document.querySelector('.carousel-indicators');
+    // --- Lógica do Botão "Ler mais" na Descrição ---
+    const textoDesc = document.getElementById('texto-descricao');
+    const btnLerMais = document.getElementById('btn-ler-mais-desc');
 
-    if (track && items.length > 0) {
-        updateCarousel = () => {
-            // Usa o clientWidth do container para maior precisão se o item ainda não estiver renderizado
-            const width = track.parentElement.clientWidth; 
-            if (width === 0) return; // Evita cálculos se ainda estiver invisível
-            
-            track.style.transform = `translateX(-${currentIndex * width}px)`;
-
-            // Atualiza o estado das bolinhas
-            const dots = document.querySelectorAll('.dot');
-            dots.forEach((dot, i) => {
-                dot.classList.toggle('active', i === currentIndex);
-            });
-        };
-
-        // Cria as bolinhas dinamicamente baseado no número de imagens
-        if (indicatorsContainer) {
-            items.forEach((_, i) => {
-                const dot = document.createElement('div');
-                dot.classList.add('dot');
-                if (i === 0) dot.classList.add('active');
-                dot.addEventListener('click', () => {
-                    currentIndex = i;
-                    updateCarousel();
-                });
-                indicatorsContainer.appendChild(dot);
-            });
+    if (textoDesc && btnLerMais) {
+        // Verifica se o texto é longo o suficiente para ter sido cortado
+        if (textoDesc.scrollHeight > textoDesc.clientHeight) {
+            btnLerMais.classList.remove('d-none');
         }
 
+        btnLerMais.addEventListener('click', () => {
+            if (textoDesc.classList.contains('descricao-curta')) {
+                textoDesc.classList.remove('descricao-curta');
+                textoDesc.classList.add('descricao-expandida');
+                btnLerMais.textContent = 'Ler menos';
+            } else {
+                textoDesc.classList.add('descricao-curta');
+                textoDesc.classList.remove('descricao-expandida');
+                btnLerMais.textContent = 'Ler mais';
+            }
+        });
+    }
+
+    // --- Lógica do Botão "Ver mais fotos" no Portfólio ---
+    const btnVerMaisFotos = document.getElementById('btn-ver-mais-fotos');
+    if (btnVerMaisFotos) {
+        btnVerMaisFotos.addEventListener('click', () => {
+            const hiddenItems = document.querySelectorAll('.portfolio-item-hidden');
+            const isExpanded = btnVerMaisFotos.dataset.expanded === 'true';
+
+            // Revela ou oculta as fotos excedentes
+            hiddenItems.forEach(item => item.classList.toggle('d-none'));
+            btnVerMaisFotos.textContent = isExpanded ? `Ver mais fotos (${hiddenItems.length})` : 'Ver menos';
+            btnVerMaisFotos.dataset.expanded = !isExpanded;
+        });
+    }
+
+    // --- Lógica do Lightbox (Portfólio) ---
+    const portfolioImgs = document.querySelectorAll('.portfolio-img');
+    const lightbox = document.getElementById('lightbox-modal');
+    const lightboxImg = document.querySelector('.lightbox-img');
+    const closeBtn = document.querySelector('.lightbox-close');
+    const prevBtn = document.querySelector('.lightbox-control.prev');
+    const nextBtn = document.querySelector('.lightbox-control.next');
+    const indicatorsContainer = document.querySelector('.lightbox-indicators');
+    
+    let currentImageIndex = 0;
+    const imagesSrc = Array.from(portfolioImgs).map(img => img.src);
+
+    const updateLightbox = () => {
+        if (imagesSrc.length === 0) return;
+        lightboxImg.src = imagesSrc[currentImageIndex];
+        
+        // Atualiza as bolinhas
+        const dots = document.querySelectorAll('.lightbox-dot');
+        dots.forEach((dot, i) => {
+            dot.classList.toggle('active', i === currentImageIndex);
+        });
+    };
+
+    if (lightbox && portfolioImgs.length > 0) {
+        // Cria as bolinhas dinamicamente
+        imagesSrc.forEach((_, i) => {
+            const dot = document.createElement('div');
+            dot.classList.add('lightbox-dot');
+            if (i === 0) dot.classList.add('active');
+            dot.addEventListener('click', () => {
+                currentImageIndex = i;
+                updateLightbox();
+            });
+            indicatorsContainer.appendChild(dot);
+        });
+
+        // Abrir Lightbox
+        portfolioImgs.forEach((img, index) => {
+            img.addEventListener('click', () => {
+                currentImageIndex = index;
+                updateLightbox();
+                lightbox.classList.add('active');
+            });
+        });
+
+        // Fechar Lightbox
+        closeBtn.addEventListener('click', () => {
+            lightbox.classList.remove('active');
+        });
+
+        // Fechar clicando fora da imagem
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) {
+                lightbox.classList.remove('active');
+            }
+        });
+
+        // Botões Próximo / Anterior
         nextBtn?.addEventListener('click', () => {
-            currentIndex = (currentIndex + 1) % items.length;
-            updateCarousel();
+            currentImageIndex = (currentImageIndex + 1) % imagesSrc.length;
+            updateLightbox();
         });
 
         prevBtn?.addEventListener('click', () => {
-            currentIndex = (currentIndex - 1 + items.length) % items.length;
-            updateCarousel();
+            currentImageIndex = (currentImageIndex - 1 + imagesSrc.length) % imagesSrc.length;
+            updateLightbox();
         });
-
-        // Reajusta em caso de redimensionamento da janela
-        window.addEventListener('resize', updateCarousel);
-
-        // Executa uma vez no início caso a aba de portfólio já comece aberta
-        if (document.getElementById('portfolio')?.classList.contains('active')) {
-            setTimeout(updateCarousel, 100);
-        }
+        
+        // Navegação por teclado
+        document.addEventListener('keydown', (e) => {
+            if (!lightbox.classList.contains('active')) return;
+            if (e.key === 'Escape') lightbox.classList.remove('active');
+            if (e.key === 'ArrowRight') {
+                currentImageIndex = (currentImageIndex + 1) % imagesSrc.length;
+                updateLightbox();
+            }
+            if (e.key === 'ArrowLeft') {
+                currentImageIndex = (currentImageIndex - 1 + imagesSrc.length) % imagesSrc.length;
+                updateLightbox();
+            }
+        });
     }
 
     // --- Lógica de Pré-visualização de Fotos ---

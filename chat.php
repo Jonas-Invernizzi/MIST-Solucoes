@@ -72,6 +72,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo json_encode(['success' => true, 'mensagem' => $mensagem, 'hora' => date('H:i')]);
                 exit();
             }
+            if (isset($_FILES['audio'])) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true]);
+                exit();
+            }
 
             header("Location: chat.php?id=$destinatario_id");
             exit();
@@ -82,6 +87,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit();
             }
             $erro_chat = "Erro ao enviar mensagem.";
+        }
+    } else {
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'A mensagem não pode estar vazia.']);
+            exit;
         }
     }
 }
@@ -99,6 +110,18 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute(['r' => $remetente_id, 'd' => $destinatario_id]);
 $mensagens = $stmt->fetchAll();
+
+foreach ($mensagens as &$msg) {
+    $msg['arquivo'] = null;
+    $msg['tipo_arquivo'] = null;
+    $texto = $msg['mensagem'];
+    if (preg_match('/^\[MEDIA:(.*?)\|(.*?)\](.*)$/s', $texto, $matches)) {
+        $msg['tipo_arquivo'] = $matches[1];
+        $msg['arquivo'] = $matches[2];
+        $msg['mensagem'] = $matches[3];
+    }
+}
+unset($msg);
 
 echo $twig->render('chat.html', [
     'destinatario' => $destinatario,

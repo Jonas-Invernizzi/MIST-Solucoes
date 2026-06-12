@@ -42,16 +42,62 @@
             <div class="historico-mensagens" id="chat-box">
                 {% for msg in mensagens %}
                     <div class="balao {% if msg.remetente_id == meu_id %}enviada{% else %}recebida{% endif %}">
-                        <div class="conteudo">{{ msg.mensagem }}</div>
+                        {% if msg.arquivo %}
+                            <div class="midia-anexo" style="margin-bottom: 5px;">
+                                {% if 'image' in msg.tipo_arquivo %}
+                                    <img src="img/chat/{{ msg.arquivo }}" alt="Imagem enviada" style="max-width: 100%; border-radius: 8px; display: block; max-height: 250px;">
+                                {% elseif 'video' in msg.tipo_arquivo %}
+                                    <video controls style="max-width: 100%; border-radius: 8px; display: block; max-height: 250px;">
+                                        <source src="img/chat/{{ msg.arquivo }}" type="{{ msg.tipo_arquivo }}">
+                                    </video>
+                                {% elseif 'audio' in msg.tipo_arquivo %}
+                                    <audio controls style="max-width: 250px; display: block; margin-top: 5px;">
+                                        <source src="img/chat/{{ msg.arquivo }}" type="{{ msg.tipo_arquivo }}">
+                                    </audio>
+                                {% else %}
+                                    <a href="img/chat/{{ msg.arquivo }}" target="_blank" style="color: inherit; text-decoration: underline;">Baixar anexo</a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        {% if msg.mensagem %}
+                            <div class="conteudo">{{ msg.mensagem }}</div>
+                        {% endif %}
                         <small class="hora">{{ msg.data_envio|date('H:i') }}</small>
                     </div>
                 {% endfor %}
             </div>
 
-            <form action="mensagens.php" method="POST" class="chat-footer">
+            <form action="mensagens.php" method="POST" class="chat-footer" id="form-chat" enctype="multipart/form-data">
                 <input type="hidden" name="destinatario_id" value="{{ contato_id }}">
-                <input type="text" name="mensagem" placeholder="Digite sua mensagem..." required autocomplete="off">
-                <button type="submit" class="btn-enviar">➤</button>
+                
+                <label for="arquivo" class="btn-anexo" style="cursor: pointer; padding: 0 10px; color: #5a85ff; display: flex; align-items: center;" title="Anexar Imagem ou Vídeo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                    </svg>
+                </label>
+                <input type="file" name="arquivo" id="arquivo" accept="image/*,video/*" style="display: none;" onchange="previewFile()">
+                
+                <div id="file-preview" style="display: none; padding: 5px 10px; background: #e2e8f0; border-radius: 15px; align-items: center; margin-right: 5px;">
+                    <span id="file-name" style="font-size: 0.8rem; max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></span>
+                    <button type="button" onclick="clearFile()" style="border: none; background: transparent; cursor: pointer; color: red; margin-left: 5px; font-weight: bold;">×</button>
+                </div>
+
+                <input type="text" name="mensagem" id="mensagem" placeholder="Digite sua mensagem..." autocomplete="off">
+                
+                <button type="button" id="btn-audio" class="btn-audio" style="cursor: pointer; padding: 0 10px; border: none; background: transparent; color: #5a85ff; display: flex; align-items: center;" title="Gravar Áudio">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                </button>
+                <button type="submit" class="btn-enviar" style="display: flex; align-items: center; justify-content: center; background: transparent; border: none; color: #5a85ff; cursor: pointer; padding: 0 10px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
             </form>
         {% else %}
             <div class="chat-placeholder">
@@ -65,5 +111,94 @@
     // Rola o chat para o final automaticamente
     const chatBox = document.getElementById('chat-box');
     if(chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Lógica para upload de arquivo
+    function previewFile() {
+        const fileInput = document.getElementById('arquivo');
+        const preview = document.getElementById('file-preview');
+        const fileName = document.getElementById('file-name');
+        if (fileInput.files.length > 0) {
+            fileName.textContent = fileInput.files[0].name;
+            preview.style.display = 'flex';
+        }
+    }
+
+    function clearFile() {
+        document.getElementById('arquivo').value = '';
+        document.getElementById('file-preview').style.display = 'none';
+    }
+
+    // Lógica para gravação de áudio
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+    let audioBlob = null;
+    const btnAudio = document.getElementById('btn-audio');
+    const formChat = document.getElementById('form-chat');
+    
+    const svgMic = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>';
+    const svgStop = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>';
+    const svgReady = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>';
+
+    if (btnAudio) {
+        btnAudio.addEventListener('click', async () => {
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = e => {
+                        audioChunks.push(e.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        btnAudio.innerHTML = svgReady;
+                        btnAudio.title = 'Áudio gravado. Envie a mensagem.';
+                        btnAudio.style.color = '#28a745';
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    btnAudio.innerHTML = svgStop;
+                    btnAudio.title = 'Parar gravação';
+                    btnAudio.style.color = '#dc3545';
+                } catch (err) {
+                    if (err.name === 'NotFoundError' || err.message.includes('Requested device not found')) {
+                        alert('Nenhum microfone foi encontrado neste dispositivo. Conecte um fone ou microfone e tente novamente.');
+                    } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                        alert('Permissão negada. Você precisa permitir o acesso ao microfone no seu navegador para gravar áudios.');
+                    } else {
+                        alert('Erro ao acessar o microfone: ' + err.message);
+                    }
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            }
+        });
+    }
+
+    if (formChat) {
+        formChat.addEventListener('submit', (e) => {
+            if (audioBlob) {
+                e.preventDefault();
+                const formData = new FormData(formChat);
+                formData.append('audio', audioBlob, 'audio.webm');
+
+                fetch('mensagens.php', {
+                    method: 'POST',
+                    body: formData
+                }).then(() => {
+                    window.location.reload();
+                }).catch(err => {
+                    console.error(err);
+                    alert('Erro ao enviar mensagem com áudio.');
+                });
+            }
+        });
+    }
 </script>
 {% endblock %}

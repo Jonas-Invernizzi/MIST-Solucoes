@@ -13,17 +13,50 @@ $contato_id = filter_input(INPUT_GET, 'u', FILTER_VALIDATE_INT);
 $erro = '';
 
 // --- Ação: Enviar Mensagem ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mensagem'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $destinatario = filter_input(INPUT_POST, 'destinatario_id', FILTER_VALIDATE_INT);
-    $conteudo = trim($_POST['mensagem']);
+    $conteudo = trim($_POST['mensagem'] ?? '');
 
-    if ($destinatario && !empty($conteudo)) {
+    $arquivoNome = null;
+    $arquivoTipo = null;
+
+    $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'img' . DIRECTORY_SEPARATOR . 'chat' . DIRECTORY_SEPARATOR;
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+    }
+
+    if (isset($_FILES['arquivo']) && $_FILES['arquivo']['error'] === UPLOAD_ERR_OK) {
+        $ext = pathinfo($_FILES['arquivo']['name'], PATHINFO_EXTENSION);
+        $arquivoNome = uniqid('media_', true) . '.' . $ext;
+        $arquivoTipo = mime_content_type($_FILES['arquivo']['tmp_name']);
+        if (!$arquivoTipo) $arquivoTipo = $_FILES['arquivo']['type'];
+        move_uploaded_file($_FILES['arquivo']['tmp_name'], $uploadDir . $arquivoNome);
+    } elseif (isset($_FILES['audio']) && $_FILES['audio']['error'] === UPLOAD_ERR_OK) {
+        $arquivoNome = uniqid('audio_', true) . '.webm';
+        $arquivoTipo = 'audio/webm';
+        move_uploaded_file($_FILES['audio']['tmp_name'], $uploadDir . $arquivoNome);
+    }
+
+    if ($destinatario && (!empty($conteudo) || $arquivoNome)) {
+        $prefix = "";
+        if ($arquivoNome) {
+            $prefix = "[MEDIA:" . $arquivoTipo . "|" . $arquivoNome . "]";
+        }
+        $conteudoFinal = $prefix . $conteudo;
+
         $stmt = $pdo->prepare("INSERT INTO mensagens (remetente_id, destinatario_id, mensagem) VALUES (:rem, :dest, :cont)");
         $stmt->execute([
             'rem'  => $meu_id,
             'dest' => $destinatario,
-            'cont' => $conteudo
+            'cont' => $conteudoFinal
         ]);
+
+        if (isset($_FILES['audio'])) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true]);
+            exit();
+        }
+
         // Redireciona para evitar reenvio ao atualizar (F5)
         header("Location: mensagens.php?u=" . $destinatario);
         exit();
@@ -85,6 +118,18 @@ if ($contato_id) {
         ");
         $stmtMsg->execute(['me' => $meu_id, 'contato' => $contato_id]);
         $mensagens = $stmtMsg->fetchAll();
+
+        foreach ($mensagens as &$msg) {
+            $msg['arquivo'] = null;
+            $msg['tipo_arquivo'] = null;
+            $texto = $msg['mensagem'];
+            if (preg_match('/^\[MEDIA:(.*?)\|(.*?)\](.*)$/s', $texto, $matches)) {
+                $msg['tipo_arquivo'] = $matches[1];
+                $msg['arquivo'] = $matches[2];
+                $msg['mensagem'] = $matches[3];
+            }
+        }
+        unset($msg);
     }
 }
 

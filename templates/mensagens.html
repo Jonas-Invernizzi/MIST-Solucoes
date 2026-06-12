@@ -42,7 +42,7 @@
             <div class="historico-mensagens" id="chat-box">
                 {% for msg in mensagens %}
                     <div class="balao {% if msg.remetente_id == meu_id %}enviada{% else %}recebida{% endif %}">
-                        <div class="conteudo">{{ msg.conteudo }}</div>
+                        <div class="conteudo">{{ msg.mensagem }}</div>
                         <small class="hora">{{ msg.data_envio|date('H:i') }}</small>
                     </div>
                 {% endfor %}

@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mensagem'])) {
     $conteudo = trim($_POST['mensagem']);
 
     if ($destinatario && !empty($conteudo)) {
-        $stmt = $pdo->prepare("INSERT INTO mensagens (remetente_id, destinatario_id, conteudo) VALUES (:rem, :dest, :cont)");
+        $stmt = $pdo->prepare("INSERT INTO mensagens (remetente_id, destinatario_id, mensagem) VALUES (:rem, :dest, :cont)");
         $stmt->execute([
             'rem'  => $meu_id,
             'dest' => $destinatario,

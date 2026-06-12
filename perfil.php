@@ -291,7 +291,7 @@ try {
             if (!empty($usuario['foto_perfil'])) {
                 $usuario['foto_perfil'] = 'data:image/jpeg;base64,' . base64_encode($usuario['foto_perfil']);
             } else {
-                $usuario['foto_perfil'] = $default_avatar;
+                $usuario['foto_perfil'] = $fotoPerfilPadrao;
             }
 
             // Converte a string "tag1, tag2" em um array para o Twig

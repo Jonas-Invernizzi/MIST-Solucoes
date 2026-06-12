@@ -254,6 +254,7 @@
         }
         .descricao-expandida {
             display: block;
+        }
 
         /* --- ESTILOS PARA AVALIAÇÕES --- */
         .rating-summary { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
@@ -459,7 +460,7 @@
                                 {% for foto in usuario.fotos_trabalho %}
                                     <div class="portfolio-item {% if loop.index > 6 %}d-none portfolio-item-hidden{% endif %}">
                                         {% if pode_editar %}
-                                            <form method="POST" action="perfil.php?id={{ usuario.id }}" class="delete-photo-form" onsubmit="return confirm('Deseja excluir esta foto permanentemente?')">
+                                            <form method="POST" action="perfil.php?id={{ usuario.usuario_id }}" class="delete-photo-form" onsubmit="return confirm('Deseja excluir esta foto permanentemente?')">
                                                 <input type="hidden" name="excluir_foto_id" value="{{ foto.id }}">
                                                 <button type="submit" class="btn-delete-photo" title="Remover Foto">&times;</button>
                                             </form>
@@ -473,15 +474,6 @@
                                 <div class="text-center mt-3 mb-4">
                                     <button id="btn-ver-mais-fotos" class="btn btn-outline-secondary px-4 py-2" data-expanded="false">Ver mais fotos ({{ usuario.fotos_trabalho|length - 6 }})</button>
                                 </div>
-                    <div class="d-flex justify-content-between align-items-center mt-5">
-                        <a href="tela_inicial.php" class="btn btn-outline-secondary">Voltar</a>
-                        <div class="d-flex gap-2 align-items-center">
-                            {% if eh_proprio_perfil %}
-                                {# Se for o meu perfil, mostro apenas o botão de editar #}
-                                <a href="tela_registro.php?id={{ usuario.usuario_id }}" class="btn-editar-mist">Editar Dados</a>
-                            {% else %}
-                                {# Se for o perfil de outro, mostro apenas o contato #}
-                                <a href="chat.php?id={{ usuario.usuario_id }}" class="btn-contato-verde px-4">Entrar em Contato</a>
                             {% endif %}
 
                             <!-- Lightbox Modal -->
@@ -498,10 +490,23 @@
                             </div>
                         {% endif %}
 
+                        <div class="d-flex justify-content-between align-items-center mt-5">
+                            <a href="tela_inicial.php" class="btn btn-outline-secondary">Voltar</a>
+                            <div class="d-flex gap-2 align-items-center">
+                                {% if eh_proprio_perfil %}
+                                    {# Se for o meu perfil, mostro apenas o botão de editar #}
+                                    <a href="tela_registro.php?id={{ usuario.usuario_id }}" class="btn-editar-mist">Editar Dados</a>
+                                {% else %}
+                                    {# Se for o perfil de outro, mostro apenas o contato #}
+                                    <a href="chat.php?id={{ usuario.usuario_id }}" class="btn-contato-verde px-4">Entrar em Contato</a>
+                                {% endif %}
+                            </div>
+                        </div>
+
                         {% if pode_editar %}
                         <div class="mt-4 pt-3 border-top">
                             <h5 class="mb-3">Adicionar novas fotos</h5>
-                            <form action="perfil.php?id={{ usuario.id }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-3">
+                            <form action="perfil.php?id={{ usuario.usuario_id }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-3">
                                 <input type="file" name="nova_foto_trabalho[]" id="nova_foto_trabalho" class="form-control" accept="image/jpeg, image/png, image/webp, image/gif" multiple required>
                                 <button type="submit" class="btn-acao-mist text-nowrap">Enviar Imagens</button>
                             </form>

@@ -204,26 +204,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $usuario_logado_id) {
             $fileCount = $isMultiple ? count($files['name']) : 1;
             $uploadedCount = 0;
 
-            // Busca dados atuais para saber qual tabela atualizar e deletar a foto antiga
-            $stmtCheck = $pdo->prepare("SELECT u.tipo_base, COALESCE(c.foto_perfil, p.foto_perfil) as foto_atual 
-                                        FROM usuarios u 
-                                        LEFT JOIN clientes c ON u.id = c.usuario_id 
-                                        LEFT JOIN profissionais p ON u.id = p.usuario_id 
-                                        WHERE u.id = :id");
-            $stmtCheck->execute(['id' => $id]);
-            $dadosAtuais = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+            for ($i = 0; $i < $fileCount; $i++) {
+                $error = $isMultiple ? $files['error'][$i] : $files['error'];
+                if ($error === UPLOAD_ERR_OK) {
+                    $tmpName = $isMultiple ? $files['tmp_name'][$i] : $files['tmp_name'];
+                    $size = $isMultiple ? $files['size'][$i] : $files['size'];
+                    
+                    if ($size > 5 * 1024 * 1024) continue;
 
-            if ($dadosAtuais) {
-                $conteudoFoto = file_get_contents($file['tmp_name']);
-                $tabela = ($dadosAtuais['tipo_base'] === 'profissional') ? 'profissionais' : 'clientes';
-                
-                $stmtUpdate = $pdo->prepare("UPDATE $tabela SET foto_perfil = :foto WHERE usuario_id = :id");
-                $stmtUpdate->execute(['foto' => $conteudoFoto, 'id' => $id]);
-
-                $_SESSION['usuario_foto'] = 'data:' . $mimeType . ';base64,' . base64_encode($conteudoFoto);
-                
-                header("Location: perfil.php?id=$id&sucesso=1");
-                exit();
+                    $mimeType = $finfo->file($tmpName);
+                    if (in_array($mimeType, $allowedMimes)) {
+                        $conteudoFoto = file_get_contents($tmpName);
+                        $stmtIns = $pdo->prepare("INSERT INTO profissional_fotos (profissional_id, arquivo) VALUES (:pid, :arquivo)");
+                        $stmtIns->execute(['pid' => $profissional_id, 'arquivo' => $conteudoFoto]);
+                        $uploadedCount++;
+                    }
+                }
             }
 
             if ($uploadedCount > 0) {
@@ -289,9 +285,14 @@ try {
         } else {
             // Converte o BLOB para Data URI para exibição no HTML
             if (!empty($usuario['foto_perfil'])) {
-                $usuario['foto_perfil'] = 'data:image/jpeg;base64,' . base64_encode($usuario['foto_perfil']);
+                // Identifica se a foto é um arquivo salvo no disco ou um BLOB no banco de dados
+                if (strlen($usuario['foto_perfil']) < 255 && preg_match('/\.(jpg|jpeg|png|gif|webp)$/i', $usuario['foto_perfil'])) {
+                    $usuario['foto_perfil'] = 'img/' . $usuario['foto_perfil'];
+                } else {
+                    $usuario['foto_perfil'] = 'data:image/jpeg;base64,' . base64_encode($usuario['foto_perfil']);
+                }
             } else {
-                $usuario['foto_perfil'] = $fotoPerfilPadrao;
+                $usuario['foto_perfil'] = 'img/' . $fotoPerfilPadrao;
             }
 
             // Converte a string "tag1, tag2" em um array para o Twig
@@ -339,7 +340,13 @@ if ($uBase['tipo_base'] === 'profissional') {
         foreach ($todasAvaliacoes as &$aval) {
             // Foto padrão para autores no loop de avaliações
             if (empty($aval['autor_foto'])) {
-                $aval['autor_foto'] = $fotoPerfilPadrao;
+                $aval['autor_foto'] = 'img/' . $fotoPerfilPadrao;
+            } else {
+                if (strlen($aval['autor_foto']) < 255 && preg_match('/\.(jpg|jpeg|png|gif|webp)$/i', $aval['autor_foto'])) {
+                    $aval['autor_foto'] = 'img/' . $aval['autor_foto'];
+                } else {
+                    $aval['autor_foto'] = 'data:image/jpeg;base64,' . base64_encode($aval['autor_foto']);
+                }
             }
 
             if ($usuario_logado_id && $aval['avaliador_id'] == $usuario_logado_id) {

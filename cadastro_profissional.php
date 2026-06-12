@@ -8,6 +8,18 @@ $mostra_modal_codigo = false;
 $email_modal = '';
 $dados_usuario = [];
 
+// Carregar Assets do Sistema (Logo e Imagem Padrão)
+$stmtAssets = $pdo->prepare("SELECT nome, arquivo, mime_type FROM sistema_assets WHERE nome IN ('logo', 'default_avatar')");
+$stmtAssets->execute();
+$assets = $stmtAssets->fetchAll(PDO::FETCH_UNIQUE|PDO::FETCH_ASSOC);
+
+$logo_site = isset($assets['logo']) 
+    ? 'data:' . $assets['logo']['mime_type'] . ';base64,' . base64_encode($assets['logo']['arquivo']) 
+    : '';
+
+$imagem_padrao_blob = $assets['default_avatar']['arquivo'] ?? null;
+
+
 // Processar verificação de código (mantendo o fluxo de ativação de conta)
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['verificar_codigo'])) {
     $codigo = trim($_POST['codigo'] ?? '');
@@ -35,8 +47,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['verificar_codigo'])) 
                 header("Location: tela_login.php?verificado=1");
                 exit();
             } catch (Exception $e) {
-                $pdo->rollBack();
-                $erro = "⚠️ Erro ao ativar conta.";
+                try {
+                    if ($pdo->inTransaction()) $pdo->rollBack();
+                } catch (Exception $rb) {}
+                
+                $erro = "⚠️ Erro ao ativar conta: " . $e->getMessage();
             }
         }
     }
@@ -82,15 +97,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                 ]);
                 $usuarioId = $pdo->lastInsertId();
 
-                // 2. Tratar imagem de perfil
-                $fotoParaSalvar = null;
+                // 2. Tratar imagem de perfil (Salvar como BLOB ou usar a padrão)
+                $fotoParaSalvar = $imagem_padrao_blob;
                 if (isset($_FILES['foto_perfil']) && $_FILES['foto_perfil']['error'] === UPLOAD_ERR_OK) {
-                    $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'img' . DIRECTORY_SEPARATOR;
-                    $ext = strtolower(pathinfo($_FILES['foto_perfil']['name'], PATHINFO_EXTENSION));
-                    $newFileName = uniqid('perfil_', true) . '.' . $ext;
-                    if (move_uploaded_file($_FILES['foto_perfil']['tmp_name'], $uploadDir . $newFileName)) {
-                        $fotoParaSalvar = $newFileName;
-                    }
+                    $fotoParaSalvar = file_get_contents($_FILES['foto_perfil']['tmp_name']);
                 }
 
                 // 3. Inserir em profissionais (incluindo campos específicos da estrutura.sql)
@@ -119,23 +129,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                 if (isset($_FILES['fotos_trabalho'])) {
                     try {
                         $files = $_FILES['fotos_trabalho'];
-                        $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'img' . DIRECTORY_SEPARATOR;
                         $allowedMimes = ['image/jpeg', 'image/png', 'image/gif'];
                         $finfo = class_exists('finfo') ? new finfo(FILEINFO_MIME_TYPE) : null;
                         
-                        $pid = $pdo->query("SELECT id FROM profissionais WHERE usuario_id = $usuarioId")->fetchColumn();
+                        $stmtPid = $pdo->prepare("SELECT id FROM profissionais WHERE usuario_id = :uid");
+                        $stmtPid->execute(['uid' => $usuarioId]);
+                        $pid = $stmtPid->fetchColumn();
 
                         for ($i = 0; $i < count($files['name']); $i++) {
                             if ($files['error'][$i] === UPLOAD_ERR_OK) {
                                 $mimeType = $finfo ? $finfo->file($files['tmp_name'][$i]) : $files['type'][$i];
                                 if (in_array($mimeType, $allowedMimes) && $files['size'][$i] <= 5 * 1024 * 1024) {
-                                    $ext = pathinfo($files['name'][$i], PATHINFO_EXTENSION);
-                                    $novoNome = uniqid('trabalho_', true) . '.' . $ext;
-                                    
-                                    if (move_uploaded_file($files['tmp_name'][$i], $uploadDir . $novoNome)) {
-                                        $stmtIns = $pdo->prepare("INSERT INTO profissional_fotos (profissional_id, arquivo) VALUES (:pid, :arquivo)");
-                                        $stmtIns->execute(['pid' => $pid, 'arquivo' => $novoNome]);
-                                    }
+                                    $conteudoFoto = file_get_contents($files['tmp_name'][$i]);
+                                    $stmtIns = $pdo->prepare("INSERT INTO profissional_fotos (profissional_id, arquivo) VALUES (:pid, :arquivo)");
+                                    $stmtIns->execute(['pid' => $pid, 'arquivo' => $conteudoFoto]);
                                 }
                             }
                         }
@@ -170,8 +177,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                 }
 
             } catch (Exception $e) {
-                if ($pdo->inTransaction()) $pdo->rollBack();
-                $erro = "⚠️ Erro ao processar registro: " . $e->getMessage();
+                try {
+                    if ($pdo && $pdo->inTransaction()) {
+                        $pdo->rollBack();
+                    }
+                } catch (PDOException $rollbackEx) {
+                    // Conexão perdida
+                }
+
+                if (strpos($e->getMessage(), 'server has gone away') !== false) {
+                    $erro = "⚠️ Imagem muito grande. Ajuste o 'max_allowed_packet' no seu phpMyAdmin/MySQL.";
+                } else {
+                    $erro = "⚠️ Erro ao processar registro: " . $e->getMessage();
+                }
             }
         }
     }
@@ -181,5 +199,6 @@ echo $twig->render('cadastro_profissional.html', [
     'erro' => $erro,
     'mostra_modal_codigo' => $mostra_modal_codigo,
     'email_modal' => $email_modal,
-    'user' => $dados_usuario
+    'user' => $dados_usuario,
+    'logo_site' => $logo_site
 ]);

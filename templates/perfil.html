@@ -129,13 +129,13 @@
                 {% if pode_editar %}
                 <form id="form-foto" method="POST" enctype="multipart/form-data">
                     <label for="foto_perfil" class="profile-img-container">
-                        <img src="{{ usuario.foto_perfil ? 'img/' ~ usuario.foto_perfil : 'img/default_profile.png' }}" 
+                        <img src="{{ usuario.foto_perfil|raw }}" 
                              alt="Foto de {{ usuario.nome }}" class="rounded-circle profile-img mb-3">
                         <input type="file" id="foto_perfil" name="foto_perfil" hidden onchange="document.getElementById('form-foto').submit()">
                     </label>
                 </form>
                 {% else %}
-                    <img src="{{ usuario.foto_perfil ? 'img/' ~ usuario.foto_perfil : 'img/default_profile.png' }}" 
+                    <img src="{{ usuario.foto_perfil|raw }}" 
                          alt="Foto de {{ usuario.nome }}" class="rounded-circle profile-img mb-3">
                 {% endif %}
                 
@@ -219,7 +219,7 @@
                                                     <button type="submit" class="btn-delete-photo" title="Remover Foto">&times;</button>
                                                 </form>
                                             {% endif %}
-                                            <img src="img/{{ foto.arquivo }}" alt="Foto do Trabalho">
+                                            <img src="{{ foto.arquivo }}" alt="Foto do Trabalho">
                                         </div>
                                     {% endfor %}
                                 </div>

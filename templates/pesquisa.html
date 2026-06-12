@@ -48,13 +48,7 @@
     {% for prof in profissionais %}
         <div class="card-profissional">
             <div class="avatar-circular">
-                {% if prof.foto_perfil and prof.foto_perfil != 'default_profile.png' %}
-                    <img src="img/{{ prof.foto_perfil }}" alt="Foto de {{ prof.nome }}">
-                {% else %}
-                    <svg class="default-avatar-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
-                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                    </svg>
-                {% endif %}
+                <img src="{{ prof.foto_perfil|raw }}" alt="Foto de {{ prof.nome }}">
             </div>
             <h3>{{ prof.nome }}</h3>
             <p>{{ prof.trabalho }}</p>

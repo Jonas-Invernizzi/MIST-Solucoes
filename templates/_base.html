@@ -47,7 +47,7 @@
           {# Exibe a foto do usuário se logado, caso contrário exibe o SVG
           original #} {% if session.usuario_id and session.usuario_foto %}
           <img
-            src="img/{{ session.usuario_foto }}"
+            src="{{ session.usuario_foto|raw }}"
             alt="Perfil"
             class="profile-pic-header"
           />

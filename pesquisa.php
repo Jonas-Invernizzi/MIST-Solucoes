@@ -12,6 +12,19 @@ $query_term = trim($_GET['q'] ?? '');
 $sort_option = $_GET['sort'] ?? 'relevance'; // Padrão para relevância/nenhuma ordenação
 $profissionais = [];
 
+// Carregar Assets do Sistema (Logo e Avatar Padrão)
+$stmtAssets = $pdo->prepare("SELECT nome, arquivo, mime_type FROM sistema_assets WHERE nome IN ('logo', 'default_avatar')");
+$stmtAssets->execute();
+$assets = $stmtAssets->fetchAll(PDO::FETCH_UNIQUE|PDO::FETCH_ASSOC);
+
+$logo_site = isset($assets['logo']) 
+    ? 'data:' . $assets['logo']['mime_type'] . ';base64,' . base64_encode($assets['logo']['arquivo']) 
+    : '';
+
+$default_avatar = isset($assets['default_avatar'])
+    ? 'data:' . $assets['default_avatar']['mime_type'] . ';base64,' . base64_encode($assets['default_avatar']['arquivo'])
+    : 'img/FotoPerfilPadrao.jpg';
+
 try {
     // Base da consulta SQL para buscar profissionais ativos.
     $sql = "SELECT p.usuario_id, p.id, p.nome, p.trabalho, p.foto_perfil, p.descricao, u.data_criacao,
@@ -62,6 +75,15 @@ try {
     }
 
     $profissionais = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Converter fotos BLOB para Base64
+    foreach ($profissionais as &$prof) {
+        if ($prof['foto_perfil']) {
+            $prof['foto_perfil'] = 'data:image/jpeg;base64,' . base64_encode($prof['foto_perfil']);
+        } else {
+            $prof['foto_perfil'] = $default_avatar;
+        }
+    }
 } catch (PDOException $e) {
     // Em caso de erro no banco, a lista de profissionais ficará vazia.
     // Para depuração, o erro pode ser logado: error_log($e->getMessage());
@@ -71,5 +93,6 @@ try {
 echo $twig->render('pesquisa.html', [
     'profissionais' => $profissionais,
     'termo_buscado' => $query_term,
-    'sort_option' => $sort_option
+    'sort_option' => $sort_option,
+    'logo_site' => $logo_site
 ]);

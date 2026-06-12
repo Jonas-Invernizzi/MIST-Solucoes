@@ -16,6 +16,19 @@ if (isset($_GET['sucesso']) && $_GET['sucesso'] == '1') {
     $sucesso = "🗑️ Foto removida do portfólio!";
 }
 
+// Carregar Assets do Sistema (Logo e Avatar Padrão)
+$stmtAssets = $pdo->prepare("SELECT nome, arquivo, mime_type FROM sistema_assets WHERE nome IN ('logo', 'default_avatar')");
+$stmtAssets->execute();
+$assets = $stmtAssets->fetchAll(PDO::FETCH_UNIQUE|PDO::FETCH_ASSOC);
+
+$logo_site = isset($assets['logo']) 
+    ? 'data:' . $assets['logo']['mime_type'] . ';base64,' . base64_encode($assets['logo']['arquivo']) 
+    : '';
+
+$default_avatar = isset($assets['default_avatar'])
+    ? 'data:' . $assets['default_avatar']['mime_type'] . ';base64,' . base64_encode($assets['default_avatar']['arquivo'])
+    : 'img/FotoPerfilPadrao.jpg';
+
 // Verificar se o usuário logado é admin para permitir edição de terceiros
 $is_admin = false;
 if (isset($_SESSION['usuario_id'])) {
@@ -66,27 +79,16 @@ if (!$id) {
             $dadosAtuais = $stmtCheck->fetch(PDO::FETCH_ASSOC);
 
             if ($dadosAtuais) {
-                $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-                $novoNome = uniqid('perfil_', true) . '.' . $ext;
+                $conteudoFoto = file_get_contents($file['tmp_name']);
+                $tabela = ($dadosAtuais['tipo_base'] === 'profissional') ? 'profissionais' : 'clientes';
+                
+                $stmtUpdate = $pdo->prepare("UPDATE $tabela SET foto_perfil = :foto WHERE usuario_id = :id");
+                $stmtUpdate->execute(['foto' => $conteudoFoto, 'id' => $id]);
 
-                if (move_uploaded_file($file['tmp_name'], $uploadDir . $novoNome)) {
-                    $tabela = ($dadosAtuais['tipo_base'] === 'profissional') ? 'profissionais' : 'clientes';
-                    
-                    // Atualiza banco de dados
-                    $stmtUpdate = $pdo->prepare("UPDATE $tabela SET foto_perfil = :foto WHERE usuario_id = :id");
-                    $stmtUpdate->execute(['foto' => $novoNome, 'id' => $id]);
-
-                    // Deleta foto antiga se não for a padrão
-                    if ($dadosAtuais['foto_atual'] && $dadosAtuais['foto_atual'] !== 'default_profile.png' && file_exists($uploadDir . $dadosAtuais['foto_atual'])) {
-                        unlink($uploadDir . $dadosAtuais['foto_atual']);
-                    }
-
-                    // Atualiza a foto na sessão
-                    $_SESSION['usuario_foto'] = $novoNome;
-                    
-                    header("Location: perfil.php?id=$id&sucesso=1");
-                    exit();
-                }
+                $_SESSION['usuario_foto'] = 'data:' . $mimeType . ';base64,' . base64_encode($conteudoFoto);
+                
+                header("Location: perfil.php?id=$id&sucesso=1");
+                exit();
             }
         } catch (Exception $e) {
             $erro = "❌ Erro no upload: " . $e->getMessage();
@@ -110,8 +112,6 @@ if (!$id) {
 
             if ($fotoData) {
                 $pdo->prepare("DELETE FROM profissional_fotos WHERE id = :id")->execute(['id' => $fotoId]);
-                $caminho = $uploadDir . $fotoData['arquivo'];
-                if (file_exists($caminho)) unlink($caminho);
                 
                 header("Location: perfil.php?id=$id&sucesso=deleted");
                 exit();
@@ -145,6 +145,13 @@ if (!$id) {
         if (!$usuario) {
             $erro = "❌ Prestador não encontrado no sistema.";
         } else {
+            // Converte o BLOB para Data URI para exibição no HTML
+            if (!empty($usuario['foto_perfil'])) {
+                $usuario['foto_perfil'] = 'data:image/jpeg;base64,' . base64_encode($usuario['foto_perfil']);
+            } else {
+                $usuario['foto_perfil'] = $default_avatar;
+            }
+
             // Converte a string "tag1, tag2" em um array para o Twig
             $usuario['tags'] = !empty($usuario['trabalho']) 
                 ? array_filter(array_map('trim', explode(',', $usuario['trabalho']))) 
@@ -154,7 +161,11 @@ if (!$id) {
             if ($usuario['tipo_base'] === 'profissional' && $usuario['profissional_id']) {
                 $stmtFotos = $pdo->prepare("SELECT id, arquivo FROM profissional_fotos WHERE profissional_id = :pid");
                 $stmtFotos->execute(['pid' => $usuario['profissional_id']]);
-                $usuario['fotos_trabalho'] = $stmtFotos->fetchAll(PDO::FETCH_ASSOC);
+                $fotos = $stmtFotos->fetchAll(PDO::FETCH_ASSOC);
+                foreach ($fotos as &$f) {
+                    $f['arquivo'] = 'data:image/jpeg;base64,' . base64_encode($f['arquivo']);
+                }
+                $usuario['fotos_trabalho'] = $fotos;
             }
         }
     } catch (Exception $e) {
@@ -171,5 +182,6 @@ echo $twig->render('perfil.html', [
     'sucesso' => $sucesso,
     'pode_editar' => $pode_editar,
     'eh_proprio_perfil' => $eh_proprio_perfil,
-    'url_edicao' => ($is_admin && $id != $_SESSION['usuario_id']) ? "tela_registro.php?id=$id" : "tela_registro.php"
+    'url_edicao' => ($is_admin && $id != $_SESSION['usuario_id']) ? "tela_registro.php?id=$id" : "tela_registro.php",
+    'logo_site' => $logo_site
 ]);

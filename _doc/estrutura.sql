@@ -8,6 +8,7 @@ DROP TABLE IF EXISTS avaliacoes;
 DROP TABLE IF EXISTS clientes;
 DROP TABLE IF EXISTS profissionais;
 DROP TABLE IF EXISTS usuarios;
+DROP TABLE IF EXISTS sistema_assets;
 
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -29,7 +30,7 @@ CREATE TABLE clientes (
     telefone VARCHAR(20) NOT NULL,
     data_nascimento DATE NOT NULL,
     descricao TEXT NOT NULL,
-    foto_perfil VARCHAR(255) DEFAULT NULL,
+    foto_perfil LONGBLOB DEFAULT NULL,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
@@ -44,14 +45,14 @@ CREATE TABLE profissionais (
     telefone VARCHAR(20) NOT NULL,
     descricao TEXT NOT NULL,
     trabalho TEXT NOT NULL, 
-    foto_perfil VARCHAR(255) DEFAULT NULL,
+    foto_perfil LONGBLOB DEFAULT NULL,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
 CREATE TABLE profissional_fotos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     profissional_id INT NOT NULL,
-    arquivo VARCHAR(255) NOT NULL,
+    arquivo LONGBLOB NOT NULL,
     data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_profissional_fotos FOREIGN KEY (profissional_id) 
         REFERENCES profissionais(id) ON DELETE CASCADE
@@ -79,6 +80,13 @@ CREATE TABLE avaliacoes (
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (profissional_id) REFERENCES profissionais(id) ON DELETE CASCADE,
     FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
+);
+
+CREATE TABLE sistema_assets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(50) UNIQUE NOT NULL,
+    arquivo LONGBLOB NOT NULL,
+    mime_type VARCHAR(50) NOT NULL
 );
 
 -- Reativa a verificação de chaves estrangeiras

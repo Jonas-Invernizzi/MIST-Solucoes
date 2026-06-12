@@ -3,6 +3,11 @@ session_start();
 require_once('carregar_twig.php');
 require_once('carregar_pdo.php');
 
+$stmtLogo = $pdo->prepare("SELECT arquivo, mime_type FROM sistema_assets WHERE nome = 'logo'");
+$stmtLogo->execute();
+$logoRow = $stmtLogo->fetch(PDO::FETCH_ASSOC);
+$logo_site = $logoRow ? 'data:' . $logoRow['mime_type'] . ';base64,' . base64_encode($logoRow['arquivo']) : '';
+
 $erro = '';
 $sucesso = '';
 $mostra_modal_redefinir_senha = false; // Nova flag para o modal de redefinição de senha
@@ -124,11 +129,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 } else {
                     $_SESSION['usuario_id'] = $usuario['id'];
                     $_SESSION['usuario_nome'] = $usuario['nome'];
-                    $foto = $usuario['foto_perfil'];
-                    // Se a foto for nula, 'default_profile.png', ou o arquivo não existir, usamos null.
-                    // O template irá então renderizar o ícone padrão.
-                    if ($foto && $foto !== 'default_profile.png' && file_exists(__DIR__ . "/img/$foto")) {
-                        $_SESSION['usuario_foto'] = $foto;
+                    
+                    if ($usuario['foto_perfil']) {
+                        $_SESSION['usuario_foto'] = 'data:image/png;base64,' . base64_encode($usuario['foto_perfil']);
                     } else {
                         $_SESSION['usuario_foto'] = null;
                     }
@@ -146,5 +149,6 @@ echo $twig->render('tela_login.html', [
     'erro' => $erro,
     'sucesso' => $sucesso,
     'mostra_modal_redefinir_senha' => $mostra_modal_redefinir_senha,
-    'email_redefinir_modal' => $email_redefinir_modal
+    'email_redefinir_modal' => $email_redefinir_modal,
+    'logo_site' => $logo_site
 ]);

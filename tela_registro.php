@@ -22,9 +22,12 @@ if (isset($_SESSION['usuario_id'])) {
     $stmtAdminCheck->execute(['id' => $_SESSION['usuario_id']]);
     $currentUser = $stmtAdminCheck->fetch(PDO::FETCH_ASSOC);
     if ($currentUser && $currentUser['email'] === 'admin@mist.com') {
+    
+    // Agora reconhece qualquer e-mail que contenha 'admin' e o domínio '@mist.com'
+    if ($currentUser && str_contains($currentUser['email'], 'admin') && str_contains($currentUser['email'], '@mist.com')) {
         $is_admin = true;
     }
-}
+}}
 
 // 2. Determinar se é edição e quem está sendo editado
 if (isset($_SESSION['usuario_id'])) { // Apenas usuários logados podem editar
@@ -50,6 +53,12 @@ if ($is_edicao && $id_alvo) {
         $stmt = $pdo->prepare("SELECT u.email, u.tipo_base, t.* FROM usuarios u LEFT JOIN $tabela t ON u.id = t.usuario_id WHERE u.id = :id");
         $stmt->execute(['id' => $id_alvo]);
         $dados_usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Mapeia o campo 'trabalho' do banco de dados para a chave 'tags', 
+        // garantindo que as tags registradas apareçam no formulário de edição.
+        if ($uBase['tipo_base'] === 'profissional' && isset($dados_usuario['trabalho'])) {
+            $dados_usuario['tags'] = $dados_usuario['trabalho'];
+        }
     }
 }
 
@@ -143,10 +152,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
     }
 
     // Mantém o tipo_base original se estiver em modo edição (pois o campo não vai no POST)
-    $tipo_base_post = $_POST['tipo_base'] ?? ($dados_atuais['tipo_base'] ?? 'cliente'); // tipo_base é 'cliente' ou 'profissional'
+    $tipo_base_post = $_POST['tipo_base'] ?? ($dados_atuais['tipo_base'] ?? 'cliente');
+
+    // Na edição, a senha só é processada se preenchida.
+    if ($is_edicao && empty($senha)) {
+        $senha = ''; 
+    }
 
     // Atualiza $dados_usuario com os dados mesclados para que o formulário seja
     // repreenchido corretamente em caso de erro e para a lógica de salvamento.
+    // Removido o fallback ?: para permitir remoção de tags e limpeza de campos.
     $dados_usuario = array_merge($dados_atuais, [
         'nome' => $nome, 'data_nascimento' => $nascimento, 'telefone' => $telefone,
         'email' => $email, 'endereco' => $endereco, 'descricao' => $descricao,
@@ -275,10 +290,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             $usuarioId = $id_alvo;
 
                             if (!$usuarioId) throw new Exception("ID do usuário a ser atualizado é inválido.");
-
+                            
+                            $tabela = ($tipo_base_post === 'profissional') ? 'profissionais' : 'clientes';
                             $oldFotoPerfil = null;
-                            $tabela = ($dados_usuario['tipo_base'] === 'profissional') ? 'profissionais' : 'clientes';
-
+                            
                             // Buscar a foto atual para decidir se mantém ou deleta
                             $stmtOldPhoto = $pdo->prepare("SELECT foto_perfil FROM $tabela WHERE usuario_id = :id");
                             $stmtOldPhoto->bindValue(':id', $usuarioId);
@@ -315,6 +330,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                                 // Usa a nova foto se houver, senão a atual, senão a padrão (null).
                                 $fotoParaSalvar = $caminhoFotoPerfil ?: ($fotoAtualNoBanco ?: $imagemPadrao);
                             }
+
+                            // GARANTIA PARA ADMINS: Se o registro na tabela de perfil não existir, nós o criamos agora.
+                            $checkProfile = $pdo->prepare("SELECT 1 FROM $tabela WHERE usuario_id = :id");
+                            $checkProfile->execute(['id' => $usuarioId]);
+                            if ($checkProfile->rowCount() === 0) {
+                                $sqlInsertBase = "INSERT INTO $tabela (usuario_id, nome, endereco, telefone, data_nascimento, descricao) 
+                                                 VALUES (:id, :n, :e, :t, :d, :desc)";
+                                $stmtBase = $pdo->prepare($sqlInsertBase);
+                                $stmtBase->execute([
+                                    'id' => $usuarioId, 'n' => $nome, 'e' => $endereco, 
+                                    't' => $telefone, 'd' => $nascimento ?: '1900-01-01', 'desc' => $descricao
+                                ]);
+                            }
                             
                             $update_fields = [
                                 "nome = :nome",
@@ -343,6 +371,35 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             $stmtC->bindValue(':foto', $fotoParaSalvar);
                             $stmtC->bindValue(':id', $usuarioId);
                             $stmtC->execute();
+
+                            // Sincronização de Tags (Estilo YouTube)
+                            if ($tipo_base_post === 'profissional') {
+                                $stmtGetProfissional = $pdo->prepare("SELECT id FROM profissionais WHERE usuario_id = :uid");
+                                $stmtGetProfissional->execute(['uid' => $usuarioId]);
+                                $profissionalId = $stmtGetProfissional->fetchColumn();
+
+                                if ($profissionalId) {
+                                    // 1. Remove vínculos antigos para reconstruir a lista
+                                    $pdo->prepare("DELETE FROM profissional_tags WHERE profissional_id = :pid")->execute(['pid' => $profissionalId]);
+
+                                    // 2. Transforma a string "tag1, tag2" em array e remove duplicatas
+                                    $tagsArray = array_unique(array_filter(array_map('trim', explode(',', $tags))));
+                                    
+                                    foreach ($tagsArray as $tagNome) {
+                                        // 3. Insere a tag na tabela global se ela não existir (permite novas tags)
+                                        $stmtTag = $pdo->prepare("INSERT IGNORE INTO tags (nome) VALUES (:nome)");
+                                        $stmtTag->execute(['nome' => $tagNome]);
+                                        
+                                        // 4. Busca o ID da tag de forma segura
+                                        $stmtGetTagId = $pdo->prepare("SELECT id FROM tags WHERE nome = :nome");
+                                        $stmtGetTagId->execute(['nome' => $tagNome]);
+                                        $tagId = $stmtGetTagId->fetchColumn();
+
+                                        $pdo->prepare("INSERT IGNORE INTO profissional_tags (profissional_id, tag_id) VALUES (:pid, :tid)")
+                                            ->execute(['pid' => $profissionalId, 'tid' => $tagId]);
+                                    }
+                                }
+                            }
 
                             $pdo->commit();
                             // Delete old photo after successful update and commit
@@ -413,19 +470,51 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             // Salva na tabela correta baseada na escolha do usuário
                             $tabelaDestino = ($tipo_base_post === 'profissional') ? 'profissionais' : 'clientes';
                             
-                            // O campo 'nome' existe em ambas as tabelas (clientes e profissionais)
+                            // Campos comuns a ambas as tabelas (conforme estrutura.sql)
                             $sqlColumns = 'usuario_id, nome, endereco, telefone, data_nascimento, descricao, foto_perfil';
                             $sqlValues = ':usuario_id, :nome, :endereco, :telefone, :nascimento, :descricao, :foto_perfil';
 
-                            $stmtCliente = $pdo->prepare("INSERT INTO $tabelaDestino ($sqlColumns) VALUES ($sqlValues)");
-                            $stmtCliente->bindValue(':usuario_id', $usuarioId);
-                            $stmtCliente->bindValue(':nome', $nome);
-                            $stmtCliente->bindValue(':endereco', $endereco);
-                            $stmtCliente->bindValue(':telefone', $telefone);
-                            $stmtCliente->bindValue(':nascimento', $nascimento);
-                            $stmtCliente->bindValue(':descricao', $descricao);
-                            $stmtCliente->bindValue(':foto_perfil', $fotoParaSalvar);
-                            $stmtCliente->execute();
+                            // Campos adicionais exclusivos do profissional
+                            if ($tipo_base_post === 'profissional') {
+                                $sqlColumns .= ', trabalho, cpf, endereco_trabalho';
+                                $sqlValues .= ', :trabalho, :cpf, :endereco_trabalho';
+                            }
+
+                            $stmtInfo = $pdo->prepare("INSERT INTO $tabelaDestino ($sqlColumns) VALUES ($sqlValues)");
+                            $stmtInfo->bindValue(':usuario_id', $usuarioId);
+                            $stmtInfo->bindValue(':nome', $nome);
+                            $stmtInfo->bindValue(':endereco', $endereco);
+                            $stmtInfo->bindValue(':telefone', $telefone);
+                            $stmtInfo->bindValue(':nascimento', $nascimento);
+                            $stmtInfo->bindValue(':descricao', $descricao);
+                            $stmtInfo->bindValue(':foto_perfil', $fotoParaSalvar);
+                            
+                            if ($tipo_base_post === 'profissional') {
+                                $stmtInfo->bindValue(':trabalho', $tags);
+                                $stmtInfo->bindValue(':cpf', $cpf);
+                                $stmtInfo->bindValue(':endereco_trabalho', $endereco_trabalho);
+                            }
+                            $stmtInfo->execute();
+                            
+                            // Processar Tags Relacionais para o novo Profissional
+                            if ($tipo_base_post === 'profissional') {
+                                $profissionalId = $pdo->lastInsertId();
+                                $tagsArray = array_unique(array_filter(array_map('trim', explode(',', $tags))));
+                                foreach ($tagsArray as $tagNome) {
+                                    // Insere a tag global se não existir
+                                    $stmtTag = $pdo->prepare("INSERT IGNORE INTO tags (nome) VALUES (:nome)");
+                                    $stmtTag->execute(['nome' => $tagNome]);
+                                    
+                                    // Busca o ID da tag de forma segura
+                                    $stmtGetTagId = $pdo->prepare("SELECT id FROM tags WHERE nome = :nome");
+                                    $stmtGetTagId->execute(['nome' => $tagNome]);
+                                    $tagId = $stmtGetTagId->fetchColumn();
+                                    
+                                    // Cria o vínculo na tabela intermediária
+                                    $pdo->prepare("INSERT IGNORE INTO profissional_tags (profissional_id, tag_id) VALUES (:pid, :tid)")
+                                        ->execute(['pid' => $profissionalId, 'tid' => $tagId]);
+                                }
+                            }
                             
                             // A transação do banco de dados é confirmada ANTES do envio de e-mail.
                             // Isso garante que o usuário seja salvo mesmo se o e-mail falhar.

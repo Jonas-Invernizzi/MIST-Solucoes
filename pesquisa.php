@@ -13,18 +13,25 @@ $sort_option = $_GET['sort'] ?? 'relevance'; // Padrão para relevância/nenhuma
 $profissionais = [];
 
 try {
-    // Base da consulta SQL para buscar profissionais ativos.
-    $sql = "SELECT p.usuario_id, p.id, p.nome, p.trabalho, p.foto_perfil, p.descricao, u.data_criacao,
-                   COALESCE(AVG(av.nota), 0) as nota_media,
-                   COUNT(av.id) as total_avaliacoes
-            FROM profissionais p
-            JOIN usuarios u ON p.usuario_id = u.id
-            LEFT JOIN avaliacoes av ON p.id = av.profissional_id
-            WHERE u.status = 'ativo' AND u.tipo_base = 'profissional'
-            GROUP BY p.id, p.usuario_id, p.nome, p.trabalho, p.foto_perfil, p.descricao, u.data_criacao";
+    $sql = "
+        SELECT 
+            p.usuario_id,
+            p.nome, 
+            p.trabalho, 
+            p.descricao,
+            p.foto_perfil,
+            p.endereco,
+            0 as nota_media,
+            0 as total_avaliacoes
+        FROM profissionais p
+        INNER JOIN usuarios u ON p.usuario_id = u.id
+        WHERE u.status = 'ativo'
+    ";
+
+    $conditions = [];
+    $params = [];
 
     if (!empty($query_term)) {
-        // Adiciona filtro de busca por nome, descrição, trabalho (campo de texto) e tags (tabela normalizada).
         $sql .= " AND (
                     p.nome LIKE :search 
                     OR p.descricao LIKE :search 
@@ -40,11 +47,11 @@ try {
 
     // Mapeia as opções de ordenação para evitar injeção de SQL.
     $sort_map = [
-        'relevance' => 'p.nome ASC',       // Padrão: ordem alfabética
+        'relevance' => 'nota_media DESC, total_avaliacoes DESC, p.nome ASC', // Padrão: maior nota e mais avaliações primeiro
         'alpha-asc' => 'p.nome ASC',
         'alpha-desc' => 'p.nome DESC',
-        'date-desc' => 'u.data_criacao DESC', // Mais recentes
-        'date-asc' => 'u.data_criacao ASC'   // Mais antigos
+        'date-desc' => 'p.id DESC',        // Mais recentes (usando ID como fallback)
+        'date-asc' => 'p.id ASC'           // Mais antigos
     ];
 
     // Define ordenação (sempre tem uma, começando com 'relevance')
@@ -61,7 +68,16 @@ try {
         $stmt->execute();
     }
 
-    $profissionais = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $profissionais = [];
+    foreach ($rows as $p) {
+        // Transforma a string de especialidades em array para exibição
+        $p['tags'] = !empty($p['trabalho']) 
+            ? array_filter(array_map('trim', explode(',', $p['trabalho']))) 
+            : [];
+        $profissionais[] = $p;
+    }
 } catch (PDOException $e) {
     // Em caso de erro no banco, a lista de profissionais ficará vazia.
     // Para depuração, o erro pode ser logado: error_log($e->getMessage());

@@ -1,0 +1,129 @@
+{% extends '_base.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="templates/css/chat.css">
+{% endblock %}
+
+{% block conteudo %}
+<div class="container chat-wrapper">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card chat-card">
+                <!-- Cabeçalho do Chat -->
+                <div class="card-header chat-header">
+                    <a href="perfil.php?id={{ destinatario.id }}" class="chat-header-link">
+                        <img src="img/{{ destinatario.foto_perfil|default('default_profile.png') }}" alt="{{ destinatario.nome }}" class="rounded-circle chat-profile-pic">
+                        <div class="chat-header-info">
+                            <h5 class="chat-destinatario-nome">{{ destinatario.nome }}</h5>
+                            <div class="status-indicator">
+                                <span class="status-dot"></span>
+                                <small>Online agora</small>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="tela_inicial.php" class="ms-auto btn-close-chat" title="Sair do chat">&times;</a>
+                </div>
+
+                <!-- Área de Mensagens -->
+                <div class="card-body chat-messages" id="chatContainer">
+                    {% for msg in mensagens %}
+                        <div class="message-row {{ msg.remetente_id == session.usuario_id ? 'me' : 'them' }}">
+                            <div class="message-bubble shadow-sm">
+                                <p class="mb-0">{{ msg.mensagem }}</p>
+                                <small class="message-time">{{ msg.data_envio|date('H:i') }}</small>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <p>Envie um "Olá" para começar a conversa com {{ destinatario.nome }}!</p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Rodapé com Input -->
+                <div class="card-footer chat-footer">
+                    <form id="chatForm" action="chat.php?id={{ destinatario.id }}" method="POST">
+                        <div class="chat-input-wrapper">
+                            <input type="text" name="mensagem" class="chat-input-field" placeholder="Digite uma mensagem..." autocomplete="off" required autofocus>
+                            <button type="submit" class="btn-send-minimal">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const chatContainer = document.getElementById('chatContainer');
+    const chatForm = document.getElementById('chatForm');
+    const inputField = document.querySelector('.chat-input-field');
+
+    const scrollToBottom = () => {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    };
+
+    scrollToBottom();
+
+    chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const mensagemTexto = inputField.value.trim();
+        if (!mensagemTexto) return;
+
+        const formData = new FormData(chatForm);
+        
+        try {
+            const response = await fetch(chatForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            // Captura o texto puro primeiro para diagnosticar erros do PHP
+            const responseText = await response.text();
+            
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (e) {
+                console.error("Resposta do servidor não é JSON:", responseText);
+                throw new Error("Erro de formato na resposta do servidor.");
+            }
+
+            if (data.success) {
+                renderizarMensagem(data.mensagem, data.hora);
+                inputField.value = '';
+                inputField.focus();
+                scrollToBottom();
+            } else {
+                alert('Erro: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('Não foi possível enviar a mensagem. Tente novamente.');
+        }
+    });
+
+    function renderizarMensagem(texto, hora) {
+        const novaMsgHtml = `
+            <div class="message-row me">
+                <div class="message-bubble">
+                    <p class="mb-0">${texto}</p>
+                    <small class="message-time">${hora}</small>
+                </div>
+            </div>
+        `;
+        const emptyMsg = chatContainer.querySelector('.text-center.text-muted');
+        if (emptyMsg) emptyMsg.remove();
+        chatContainer.insertAdjacentHTML('beforeend', novaMsgHtml);
+    }
+</script>
+{% endblock %}

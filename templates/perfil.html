@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="templates/css/base.css">
     <link rel="stylesheet" href="templates/css/perfil.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         .profile-header {
             background: linear-gradient(180deg, #1f3e65 0%, #26476f 100%);
@@ -253,32 +254,119 @@
         }
         .descricao-expandida {
             display: block;
+
+        /* --- ESTILOS PARA AVALIAÇÕES --- */
+        .rating-summary { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
+        .rating-summary .nota-media { font-size: 1.2rem; font-weight: bold; }
+        .rating-summary .stars { color: #ffc107; font-size: 1.1rem; }
+        .rating-summary .stars .text-muted { color: rgba(255,255,255,0.5); }
+        .rating-summary .total-avaliacoes { font-size: 0.9rem; color: #eee; }
+
+        .secao-avaliacoes { margin-top: 40px; }
+        .card-avaliacao-form { background: #f9f9f9; padding: 25px; border-radius: 15px; margin-bottom: 30px; border: 1px solid #eee; }
+        .card-avaliacao-form .form-group { margin-bottom: 15px; }
+        .card-avaliacao-form label { display: block; margin-bottom: 5px; font-weight: 600; }
+        .card-avaliacao-form textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-family: inherit; }
+
+        .star-rating-input { 
+            display: inline-flex; 
+            flex-direction: row-reverse; 
+            justify-content: flex-end;
+        }
+        .star-rating-input label { color: #ddd; cursor: pointer; font-size: 2rem; padding: 0 0.1em; transition: color 0.2s; }
+        .star-rating-input input { display: none; }
+        .star-rating-input label:hover,
+        .star-rating-input label:hover ~ label,
+        .star-rating-input input:checked ~ label { color: #ffc107; }
+
+        .card-avaliacao { display: flex; gap: 15px; background: #fff; padding: 20px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; }
+        .card-avaliacao.hidden { display: none; }
+        .card-avaliacao .autor { text-align: center; flex-shrink: 0; width: 80px; }
+        .card-avaliacao .autor img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 5px; }
+        .card-avaliacao .conteudo { flex-grow: 1; }
+        .card-avaliacao .conteudo .stars { color: #ffc107; margin-bottom: 10px; }
+        .card-avaliacao .conteudo .stars .text-muted { color: #e0e0e0; }
+
+        .card-avaliacao.seu-comentario {
+            border-left: 4px solid #5a85ff;
+            background-color: #f8faff;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .btn-secondary:hover { background-color: #5a6268; }
+
+        /* Alertas */
+        .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            width: auto;
+            max-width: 400px;
+        }
+        .alert {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
     </style>
 </head>
 <body>
 
     {% if erro %}
+        {# Se o erro for de upload ou avaliação, ele é exibido como um alerta temporário #}
+        {% if 'upload' in erro or 'Avalia' in erro %}
+        <div class="alert-container">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ erro|escape }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+        {% endif %}
+
+        {# Erros críticos (ex: usuário não encontrado) continuam a mostrar a página de erro completa #}
         <div class="container mt-5">
             <div class="alert alert-danger text-center">
-                {{ erro|raw }}
+                {{ erro|escape }}
                 <br><br>
                 <a href="tela_inicial.php" class="btn btn-primary">Voltar ao Início</a>
             </div>
         </div>
     {% else %}
+        {# Exibe mensagem de sucesso (avaliação, foto, etc) #}
+        {% if sucesso %}
+        <div class="alert-container">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ sucesso|escape }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+        {% endif %}
+
         <header class="profile-header text-center">
             <div class="container">
                 {% if pode_editar %}
                 <form id="form-foto" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <label for="foto_perfil" class="profile-img-container">
-                        <img src="{{ usuario.foto_perfil ? 'img/' ~ usuario.foto_perfil : 'img/default_profile.png' }}" 
+                        <img src="img/{{ usuario.foto_perfil|default(foto_perfil_padrao) }}" 
                              alt="Foto de {{ usuario.nome }}" class="rounded-circle profile-img mb-3">
                         <input type="file" id="foto_perfil" name="foto_perfil" hidden onchange="document.getElementById('form-foto').submit()">
                     </label>
                 </form>
                 {% else %}
-                    <img src="{{ usuario.foto_perfil ? 'img/' ~ usuario.foto_perfil : 'img/default_profile.png' }}" 
+                    <img src="img/{{ usuario.foto_perfil|default(foto_perfil_padrao) }}" 
                          alt="Foto de {{ usuario.nome }}" class="rounded-circle profile-img mb-3">
                 {% endif %}
                 
@@ -288,6 +376,17 @@
                 {% else %}
                     <span class="badge bg-secondary">Cliente</span>
                 {% endif %}
+
+                {# Exibe a média de avaliações para todos os perfis #}
+                <div class="rating-summary">
+                    <span class="nota-media">{{ '%.1f'|format(usuario.nota_media) }}</span>
+                    <div class="stars">
+                        {% for i in 1..5 %}
+                            <i class="fa fa-star{% if i > usuario.nota_media|round(0, 'floor') %} text-muted{% endif %}"></i>
+                        {% endfor %}
+                    </div>
+                    <span class="total-avaliacoes">({{ usuario.total_avaliacoes }} avaliações)</span>
+                </div>
             </div>
         </header>
 
@@ -374,6 +473,15 @@
                                 <div class="text-center mt-3 mb-4">
                                     <button id="btn-ver-mais-fotos" class="btn btn-outline-secondary px-4 py-2" data-expanded="false">Ver mais fotos ({{ usuario.fotos_trabalho|length - 6 }})</button>
                                 </div>
+                    <div class="d-flex justify-content-between align-items-center mt-5">
+                        <a href="tela_inicial.php" class="btn btn-outline-secondary">Voltar</a>
+                        <div class="d-flex gap-2 align-items-center">
+                            {% if eh_proprio_perfil %}
+                                {# Se for o meu perfil, mostro apenas o botão de editar #}
+                                <a href="tela_registro.php?id={{ usuario.usuario_id }}" class="btn-editar-mist">Editar Dados</a>
+                            {% else %}
+                                {# Se for o perfil de outro, mostro apenas o contato #}
+                                <a href="chat.php?id={{ usuario.usuario_id }}" class="btn-contato-verde px-4">Entrar em Contato</a>
                             {% endif %}
 
                             <!-- Lightbox Modal -->
@@ -404,7 +512,142 @@
                 </div>
             </div>
         </main>
+
+        {# Seção de Avaliações - aparece para todos os perfis #}
+        <div class="container mt-5">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    {# Formulário para deixar uma avaliação #}
+                    {% if pode_avaliar %}
+                        <div class="card-avaliacao-form">
+                            <h3>Deixe sua avaliação</h3>
+                            <form method="POST" action="perfil.php?id={{ usuario.usuario_id }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <div class="form-group">
+                                    <label>Sua nota:</label>
+                                    <div class="star-rating-input">
+                                        <input type="radio" id="star5" name="nota" value="5" required><label for="star5" title="5 estrelas">★</label>
+                                        <input type="radio" id="star4" name="nota" value="4"><label for="star4" title="4 estrelas">★</label>
+                                        <input type="radio" id="star3" name="nota" value="3"><label for="star3" title="3 estrelas">★</label>
+                                        <input type="radio" id="star2" name="nota" value="2"><label for="star2" title="2 estrelas">★</label>
+                                        <input type="radio" id="star1" name="nota" value="1"><label for="star1" title="1 estrela">★</label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="comentario">Seu comentário:</label>
+                                    <textarea id="comentario" name="comentario" rows="4" placeholder="Descreva sua experiência com este profissional..." required></textarea>
+                                </div>
+                                <button type="submit" name="avaliar" class="btn-acao-mist w-100">Enviar Avaliação</button>
+                            </form>
+                        </div>
+                    {% endif %}
+
+                    <div class="secao-avaliacoes">
+                        <h2 class="mb-4">Avaliações ({{ (avaliacoes|length) + (minha_avaliacao ? 1 : 0) }})</h2>
+
+                        {# Exibe o comentário do próprio usuário no topo, com opção de editar #}
+                        {% if minha_avaliacao %}
+                            <div id="seu-comentario-container">
+                                <div class="card-avaliacao seu-comentario">
+                                    <div class="autor">
+                                        <img src="img/{{ minha_avaliacao.autor_foto|default(foto_perfil_padrao) }}" alt="Sua foto">
+                                        <strong>Seu comentário</strong>
+                                    </div>
+                                    <div class="conteudo">
+                                        <div class="stars">
+                                            {% for i in 1..5 %}<i class="fa fa-star{% if i > minha_avaliacao.nota %} text-muted{% endif %}"></i>{% endfor %}
+                                        </div>
+                                        <p>{{ minha_avaliacao.comentario|escape }}</p>
+                                        <small class="text-muted">{{ minha_avaliacao.data_criacao|date("d/m/Y") }}</small>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary ms-auto align-self-start" onclick="toggleEditForm(true)">Editar</button>
+                                </div>
+                            </div>
+
+                            <div id="editar-comentario-form" class="card-avaliacao-form" style="display: none;">
+                                <h3>Editar sua avaliação</h3>
+                                <form method="POST" action="perfil.php?id={{ usuario.usuario_id }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <input type="hidden" name="editar_avaliacao" value="1">
+                                    <div class="form-group">
+                                        <label>Sua nota:</label>
+                                        <div class="star-rating-input">
+                                            <input type="radio" id="edit-star5" name="nota" value="5" {% if minha_avaliacao.nota == 5 %}checked{% endif %} required><label for="edit-star5" title="5 estrelas">★</label>
+                                            <input type="radio" id="edit-star4" name="nota" value="4" {% if minha_avaliacao.nota == 4 %}checked{% endif %}><label for="edit-star4" title="4 estrelas">★</label>
+                                            <input type="radio" id="edit-star3" name="nota" value="3" {% if minha_avaliacao.nota == 3 %}checked{% endif %}><label for="edit-star3" title="3 estrelas">★</label>
+                                            <input type="radio" id="edit-star2" name="nota" value="2" {% if minha_avaliacao.nota == 2 %}checked{% endif %}><label for="edit-star2" title="2 estrelas">★</label>
+                                            <input type="radio" id="edit-star1" name="nota" value="1" {% if minha_avaliacao.nota == 1 %}checked{% endif %}><label for="edit-star1" title="1 estrela">★</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="comentario-edit">Seu comentário:</label>
+                                        <textarea id="comentario-edit" name="comentario" rows="4" required>{{ minha_avaliacao.comentario|escape }}</textarea>
+                                    </div>
+                                    <button type="submit" class="btn-acao-mist w-100">Salvar Alterações</button>
+                                    <button type="button" class="btn btn-secondary w-100 mt-2" onclick="toggleEditForm(false)">Cancelar</button>
+                                </form>
+                            </div>
+                        {% endif %}
+
+                        {# Lista de avaliações existentes #}
+                        {% if avaliacoes is not empty or minha_avaliacao %}
+                            <div id="lista-comentarios">
+                                {% for avaliacao in avaliacoes %}
+                                    <div class="card-avaliacao {% if loop.index > 3 %}hidden{% endif %}">
+                                        <div class="autor">
+                                            <img src="img/{{ avaliacao.autor_foto|default(foto_perfil_padrao) }}" alt="Foto de {{ avaliacao.autor_nome }}">
+                                            <strong>{{ avaliacao.autor_nome }}</strong>
+                                        </div>
+                                        <div class="conteudo">
+                                            <div class="stars">
+                                                {% for i in 1..5 %}<i class="fa fa-star{% if i > avaliacao.nota %} text-muted{% endif %}"></i>{% endfor %}
+                                            </div>
+                                            <p>{{ avaliacao.comentario|escape }}</p>
+                                            <small class="text-muted">{{ avaliacao.data_criacao|date("d/m/Y") }}</small>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% if avaliacoes|length > 3 %}
+                                <button id="btn-ver-mais" class="btn-secondary">Ver mais comentários</button>
+                            {% endif %}
+                        {% else %}
+                            <p>Este profissional ainda não recebeu avaliações.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
     {% endif %}
     <script src="templates/script/perfil.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    function toggleEditForm(show) {
+        const displayContainer = document.getElementById('seu-comentario-container');
+        const editForm = document.getElementById('editar-comentario-form');
+
+        if (show) {
+            displayContainer.style.display = 'none';
+            editForm.style.display = 'block';
+        } else {
+            displayContainer.style.display = 'block';
+            editForm.style.display = 'none';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnVerMais = document.getElementById('btn-ver-mais');
+        if (btnVerMais) {
+            btnVerMais.addEventListener('click', function() {
+                const comentariosEscondidos = document.querySelectorAll('#lista-comentarios .card-avaliacao.hidden');
+                comentariosEscondidos.forEach(function(comentario) {
+                    comentario.classList.remove('hidden');
+                });
+                btnVerMais.style.display = 'none';
+            });
+        }
+    });
+    </script>
 </body>
 </html>

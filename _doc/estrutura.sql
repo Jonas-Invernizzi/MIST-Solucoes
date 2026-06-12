@@ -7,8 +7,22 @@ DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS avaliacoes;
 DROP TABLE IF EXISTS clientes;
 DROP TABLE IF EXISTS profissionais;
+DROP TABLE IF EXISTS mensagens;
 DROP TABLE IF EXISTS usuarios;
-DROP TABLE IF EXISTS sistema_assets;
+DROP TABLE IF EXISTS mensagens;
+
+CREATE TABLE IF NOT EXISTS mensagens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    remetente_id INT NOT NULL,
+    destinatario_id INT NOT NULL,
+    mensagem TEXT NOT NULL,
+    data_envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    lida TINYINT(1) DEFAULT 0,
+    INDEX (remetente_id),
+    INDEX (destinatario_id),
+    FOREIGN KEY (remetente_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (destinatario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -78,8 +92,8 @@ CREATE TABLE avaliacoes (
     nota INT NOT NULL CHECK (nota >= 1 AND nota <= 5),
     comentario TEXT,
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (profissional_id) REFERENCES profissionais(id) ON DELETE CASCADE,
-    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
+    FOREIGN KEY (profissional_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (cliente_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
 CREATE TABLE sistema_assets (
@@ -91,3 +105,15 @@ CREATE TABLE sistema_assets (
 
 -- Reativa a verificação de chaves estrangeiras
 SET FOREIGN_KEY_CHECKS = 1;
+
+CREATE TABLE mensagens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    remetente_id INT NOT NULL,
+    destinatario_id INT NOT NULL,
+    conteudo TEXT NOT NULL,
+    data_envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    lida TINYINT(1) DEFAULT 0,
+    FOREIGN KEY (remetente_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (destinatario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    INDEX (data_envio)
+);

@@ -4,6 +4,9 @@
 <link rel="stylesheet" href="templates/css/telaInicial.css" />
 {% endblock %}
 
+{# Sobrescreve o bloco da busca para que ele fique vazio apenas nesta página #}
+{% block header_search %}{% endblock %}
+
 {% block conteudo %}
 <section class="hero-section">
     <div class="hero-text">
@@ -16,19 +19,18 @@
             <button type="submit" class="btn-busca">Buscar</button>
         </form>
     </div>
-    
-    <div class="hero-img-container">
+    <!-- <div class="hero-img-container">
         <img src="img/logo.jpg" alt="Ilustração de serviço">
-    </div>
+    </div> -->
 </section>
 
-<h2 class="titulo-vitrine">Profissionais Disponíveis</h2>
+<h2 class="titulo-vitrine">Profissionais Mais Buscados</h2>
 
 <div class="profissionais-grid">
     {% for prof in profissionais %}
         <div class="card-profissional">
             <div class="avatar-circular">
-                <img src="{{ prof.foto_perfil|raw }}" alt="{{ prof.nome }}">
+                <img src="img/{{ prof.foto_perfil|default(foto_perfil_padrao) }}" alt="{{ prof.nome }}">
             </div>
             <h3>{{ prof.nome }}</h3>
             <p>{{ prof.trabalho }}</p>

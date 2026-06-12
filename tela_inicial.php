@@ -1,4 +1,6 @@
 <?php
+
+session_start();
 require_once('carregar_pdo.php');
 require_once('carregar_twig.php');
 
@@ -7,18 +9,7 @@ if (!isset($_SESSION['usuario_id'])) {
     exit();
 }
 
-// Carregar Assets do Sistema (Logo e Avatar Padrão)
-$stmtAssets = $pdo->prepare("SELECT nome, arquivo, mime_type FROM sistema_assets WHERE nome IN ('logo', 'default_avatar')");
-$stmtAssets->execute();
-$assets = $stmtAssets->fetchAll(PDO::FETCH_UNIQUE|PDO::FETCH_ASSOC);
-
-$logo_site = isset($assets['logo']) 
-    ? 'data:' . $assets['logo']['mime_type'] . ';base64,' . base64_encode($assets['logo']['arquivo']) 
-    : '';
-
-$default_avatar = isset($assets['default_avatar'])
-    ? 'data:' . $assets['default_avatar']['mime_type'] . ';base64,' . base64_encode($assets['default_avatar']['arquivo'])
-    : 'img/FotoPerfilPadrao.jpg';
+$fotoPerfilPadrao = 'FotoPerfilPadrao.jpg';
 
 // Lógica de "Auto-Cura": Se o nome do usuário sumiu da sessão (comum em trocas de PC ou sessões expiradas),
 // tenta recuperá-lo do banco de dados antes de renderizar a página.
@@ -38,32 +29,33 @@ if (empty($_SESSION['usuario_nome'])) {
 }
 
 // Busca os 4 profissionais mais recentes para a vitrine
-// Nota: O JOIN com a tabela 'avaliacoes' foi removido para evitar o erro Fatal, 
-// já que a tabela não existe ou está vazia no banco de dados atual.
 $query = "
     SELECT 
-        c.usuario_id,
-        c.nome, 
-        c.trabalho, 
-        c.foto_perfil,
-        0 as nota_media,
-        0 as total_avaliacoes
-    FROM profissionais c 
-    ORDER BY c.id DESC
+        u.id as usuario_id,
+        p.nome, 
+        p.trabalho, 
+        p.foto_perfil,
+        COALESCE(AVG(a.nota), 0) as nota_media,
+        COUNT(a.id) as total_avaliacoes
+    FROM profissionais p
+    INNER JOIN usuarios u ON p.usuario_id = u.id
+    LEFT JOIN avaliacoes a ON p.id = a.profissional_id
+    WHERE u.status = 'ativo'
+    GROUP BY u.id, p.id, p.nome, p.trabalho, p.foto_perfil
+    ORDER BY p.id DESC
     LIMIT 4
 ";
 
 $stmt = $pdo->query($query);
 $profissionais = $stmt->fetchAll();
 
-// Converter fotos BLOB para Base64 para exibição no template
-foreach ($profissionais as &$prof) {
-    if (!empty($prof['foto_perfil'])) {
-        $prof['foto_perfil'] = 'data:image/jpeg;base64,' . base64_encode($prof['foto_perfil']);
-    } else {
-        $prof['foto_perfil'] = $default_avatar;
+// Garante que todos os profissionais em destaque tenham uma foto de perfil (mesmo que seja a padrão)
+foreach ($profissionais as &$p) {
+    if (empty($p['foto_perfil'])) {
+        $p['foto_perfil'] = $fotoPerfilPadrao;
     }
 }
+unset($p); // Boa prática: remover a referência após o loop
 
 // Adicionar o nome do usuário logado para a saudação
 $nome_usuario = $_SESSION['usuario_nome'] ?? 'Visitante';
@@ -71,5 +63,5 @@ $nome_usuario = $_SESSION['usuario_nome'] ?? 'Visitante';
 echo $twig->render('tela_inicial.html', [
     'profissionais' => $profissionais,
     'nome_usuario' => $nome_usuario,
-    'logo_site' => $logo_site
+    'foto_perfil_padrao' => $fotoPerfilPadrao
 ]);

@@ -13,6 +13,8 @@ $sucesso = '';
 $mostra_modal_redefinir_senha = false; // Nova flag para o modal de redefinição de senha
 $email_redefinir_modal = ''; // E-mail para exibir no modal de redefinição
 
+$fotoPerfilPadrao = 'FotoPerfilPadrao.jpg';
+
 // Verificar se vem de verificação bem-sucedida
 if (isset($_GET['verificado']) && $_GET['verificado'] === '1') {
     $sucesso = "✅ E-mail confirmado com sucesso! Faça login com suas credenciais.";
@@ -128,12 +130,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $erro = "⚠️ E-mail não confirmado.";
                 } else {
                     $_SESSION['usuario_id'] = $usuario['id'];
-                    $_SESSION['usuario_nome'] = $usuario['nome'];
+                    // Garante que o nome na sessão nunca seja nulo para não quebrar o "Bem-vindo"
+                    $_SESSION['usuario_nome'] = $usuario['nome'] ?: 'Usuário';
                     
-                    if ($usuario['foto_perfil']) {
-                        $_SESSION['usuario_foto'] = 'data:image/png;base64,' . base64_encode($usuario['foto_perfil']);
+                    $foto = $usuario['foto_perfil'];
+                    // Se a foto for nula, 'default_profile.png', ou o arquivo não existir, usa a foto de perfil padrão.
+                    if ($foto && $foto !== 'default_profile.png' && file_exists(__DIR__ . "/img/$foto")) {
+                        $_SESSION['usuario_foto'] = $foto;
                     } else {
-                        $_SESSION['usuario_foto'] = null;
+                        $_SESSION['usuario_foto'] = $fotoPerfilPadrao;
                     }
                     header("Location: tela_inicial.php");
                     exit();

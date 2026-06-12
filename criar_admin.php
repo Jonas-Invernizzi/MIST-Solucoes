@@ -8,6 +8,11 @@ $admins = [
         'senha' => 'admin67',
         'nome' => 'Admin Profissional',
         'tipo' => 'profissional',
+        'cpf' => '000.000.000-00',
+        'nascimento' => '1990-01-01',
+        'endereco' => 'Rua do Admin Profissional, 100',
+        'endereco_trabalho' => 'Bento Gonçalves',
+        'telefone' => '(54) 99999-9999',
         'descricao' => 'Usuário administrador (profissional) para desenvolvimento e testes.',
         'trabalho' => 'Gerenciamento'
     ],
@@ -16,6 +21,9 @@ $admins = [
         'senha' => 'admin69',
         'nome' => 'Admin Cliente',
         'tipo' => 'cliente',
+        'nascimento' => '1995-05-15',
+        'endereco' => 'Av. do Admin Cliente, 500',
+        'telefone' => '(54) 88888-8888',
         'descricao' => 'Usuário administrador (cliente) para desenvolvimento e testes.',
         'trabalho' => null // Clientes não têm 'trabalho'
     ]
@@ -54,15 +62,17 @@ foreach ($admins as $admin) {
 
             if ($admin['tipo'] === 'profissional') {
                 $stmtDetalhes = $pdo->prepare(
-                    "INSERT INTO profissionais (usuario_id, nome, data_nascimento, endereco, telefone, descricao, trabalho, foto_perfil) 
-                     VALUES (:usuario_id, :nome, :data_nascimento, :endereco, :telefone, :descricao, :trabalho, :foto_perfil)"
+                    "INSERT INTO profissionais (usuario_id, nome, cpf, data_nascimento, endereco, endereco_trabalho, telefone, descricao, trabalho, foto_perfil) 
+                     VALUES (:usuario_id, :nome, :cpf, :data_nascimento, :endereco, :endereco_trabalho, :telefone, :descricao, :trabalho, :foto_perfil)"
                 );
                 $stmtDetalhes->execute([
                     ':usuario_id' => $usuarioId,
                     ':nome' => $admin['nome'],
-                    ':data_nascimento' => '2000-01-01',
-                    ':endereco' => 'Endereço do Admin',
-                    ':telefone' => '(00) 00000-0000',
+                    ':cpf' => $admin['cpf'],
+                    ':data_nascimento' => $admin['nascimento'],
+                    ':endereco' => $admin['endereco'],
+                    ':endereco_trabalho' => $admin['endereco_trabalho'],
+                    ':telefone' => $admin['telefone'],
                     ':descricao' => $admin['descricao'],
                     ':trabalho' => $admin['trabalho'],
                     ':foto_perfil' => null
@@ -92,9 +102,9 @@ foreach ($admins as $admin) {
                 $stmtDetalhes->execute([
                     ':usuario_id' => $usuarioId,
                     ':nome' => $admin['nome'],
-                    ':data_nascimento' => '2000-01-01',
-                    ':endereco' => 'Endereço do Admin Cliente',
-                    ':telefone' => '(00) 00000-0000',
+                    ':data_nascimento' => $admin['nascimento'],
+                    ':endereco' => $admin['endereco'],
+                    ':telefone' => $admin['telefone'],
                     ':descricao' => $admin['descricao'],
                     ':foto_perfil' => null
                 ]);

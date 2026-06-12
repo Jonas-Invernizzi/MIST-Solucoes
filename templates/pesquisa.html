@@ -3,7 +3,17 @@
 {% block extra_css %}
 <link rel="stylesheet" href="templates/css/telaInicial.css" />
 <link rel="stylesheet" href="templates/css/pesquisa.css" />
+<style>
+    /* Ajuste de espaçamento para não colar no cabeçalho */
+    .search-section {
+        margin-top: 40px;
+        margin-bottom: 30px;
+    }
+</style>
 {% endblock %}
+
+{# Remove a busca do cabeçalho apenas nesta página #}
+{% block header_search %}{% endblock %}
 
 {% block conteudo %}
 <!-- Barra de Busca e Filtro -->

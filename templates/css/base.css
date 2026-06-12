@@ -178,3 +178,61 @@ main {
     .header-center { display: none; } /* Esconde a busca no mobile para não amontoar */
     .header-left, .header-right { flex: auto; }
 }
+
+/* Estilos para o menu de usuário no cabeçalho */
+.menu-usuario {
+    display: flex;
+    align-items: center; /* Alinha a imagem de perfil e os links verticalmente */
+    gap: 15px; /* Espaço entre a imagem de perfil e a coluna de links */
+}
+
+.menu-usuario .links-acesso {
+    display: flex;
+    flex-direction: row; /* Alinha os links lado a lado */
+    align-items: center; /* Centraliza verticalmente com a foto */
+    gap: 15px; /* Espaço entre "Mensagens" e "Meu Perfil" */
+}
+
+/* Novo estilo para o botão de mensagens no cabeçalho */
+.btn-header-message {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    position: relative; /* Necessário para posicionar o balão de notificação */
+    padding: 8px 12px;
+    background-color: #5a85ff; /* Azul primário do MIST */
+    color: white !important;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 8px rgba(90, 133, 255, 0.2);
+    margin-top: 0;
+}
+
+/* Estilo da bolinha de notificação */
+.badge-notificacao {
+    position: absolute;
+    top: -8px;
+    left: -8px; /* Fica no canto superior esquerdo do botão */
+    background-color: #ff4d4d; /* Vermelho */
+    color: white;
+    font-size: 0.7rem;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Efeito hover para o botão de mensagens */
+.btn-header-message:hover {
+    background-color: #4a6fd8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(90, 133, 255, 0.3);
+}

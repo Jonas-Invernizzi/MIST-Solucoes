@@ -1,73 +1,208 @@
 <?php
 session_start();
-require_once('carregar_twig.php');
 require_once('carregar_pdo.php');
+require_once('carregar_twig.php');
 
-// Tenta pegar o ID da URL. Se não existir, tenta pegar o ID do usuário logado na sessão.
-$id = $_GET['id'] ?? $_SESSION['usuario_id'] ?? null;
-
-$usuario = null;
 $erro = '';
 $sucesso = '';
+$fotoPerfilPadrao = 'FotoPerfilPadrao.jpg';
+$uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'img' . DIRECTORY_SEPARATOR;
+
+// Identifica o ID do perfil a ser visualizado
+$id_perfil = !empty($_GET['id']) ? $_GET['id'] : ($_SESSION['usuario_id'] ?? null);
+
+if (!$id_perfil) {
+    header("Location: tela_login.php");
+    exit();
+}
+
+$usuario_id_logado = $_SESSION['usuario_id'] ?? null;
+$usuario_logado_id = $_SESSION['usuario_id'] ?? null;
+$eh_proprio_perfil = ($usuario_logado_id == $id_perfil);
+
+// Verificar se o usuário logado é admin para permitir edição de terceiros
+$is_admin = false;
+if ($usuario_logado_id) {
+    $stmtAdminCheck = $pdo->prepare("SELECT email FROM usuarios WHERE id = :id");
+    $stmtAdminCheck->execute(['id' => $usuario_logado_id]);
+    $currentUser = $stmtAdminCheck->fetch(PDO::FETCH_ASSOC);
+    if ($currentUser && $currentUser['email'] === 'admin@mist.com') {
+        $is_admin = true;
+    }
+}
+$pode_editar = ($eh_proprio_perfil || $is_admin);
 
 if (isset($_GET['sucesso']) && $_GET['sucesso'] == '1') {
     $sucesso = "✅ Portfólio atualizado com sucesso!";
 } elseif (isset($_GET['sucesso']) && $_GET['sucesso'] == 'deleted') {
     $sucesso = "🗑️ Foto removida do portfólio!";
+} elseif (isset($_GET['sucesso_avaliacao'])) {
+    $sucesso = "✅ Avaliação enviada com sucesso!";
 }
 
-// Carregar Assets do Sistema (Logo e Avatar Padrão)
-$stmtAssets = $pdo->prepare("SELECT nome, arquivo, mime_type FROM sistema_assets WHERE nome IN ('logo', 'default_avatar')");
-$stmtAssets->execute();
-$assets = $stmtAssets->fetchAll(PDO::FETCH_UNIQUE|PDO::FETCH_ASSOC);
+// Identifica se o perfil acessado existe e pega dados básicos
+$stmtUserBase = $pdo->prepare("SELECT u.email, u.tipo_base, u.status, u.data_criacao FROM usuarios u WHERE u.id = :id");
+$stmtUserBase->execute(['id' => $id_perfil]);
+$uBase = $stmtUserBase->fetch(PDO::FETCH_ASSOC);
 
-$logo_site = isset($assets['logo']) 
-    ? 'data:' . $assets['logo']['mime_type'] . ';base64,' . base64_encode($assets['logo']['arquivo']) 
-    : '';
+if (!$uBase) {
+    echo $twig->render('perfil.html', ['erro' => 'Usuário não encontrado.']);
+    exit();
+}
 
-$default_avatar = isset($assets['default_avatar'])
-    ? 'data:' . $assets['default_avatar']['mime_type'] . ';base64,' . base64_encode($assets['default_avatar']['arquivo'])
-    : 'img/FotoPerfilPadrao.jpg';
+// --- AÇÕES (POST) ---
+if ($_SERVER["REQUEST_METHOD"] === "POST" && $usuario_logado_id) {
+    
+    // Processamento de Avaliação (Inserir/Editar)
+    if (isset($_POST['avaliar']) || isset($_POST['editar_avaliacao'])) {
+        if ($eh_proprio_perfil) {
+            $erro = "Você não pode avaliar seu próprio perfil.";
+        } elseif ($uBase['tipo_base'] !== 'profissional') {
+            $erro = "Somente profissionais podem receber avaliações.";
+        } else {
+            // O banco de dados possui restrições que exigem os IDs das tabelas específicas
+            $stmtProf = $pdo->prepare("SELECT id FROM profissionais WHERE usuario_id = :uid");
+            $stmtProf->execute(['uid' => $id_perfil]);
+            $prof_id_real = $stmtProf->fetchColumn();
 
-// Verificar se o usuário logado é admin para permitir edição de terceiros
-$is_admin = false;
-if (isset($_SESSION['usuario_id'])) {
-    $stmtAdminCheck = $pdo->prepare("SELECT email FROM usuarios WHERE id = :id");
-    $stmtAdminCheck->execute(['id' => $_SESSION['usuario_id']]);
-    $currentUser = $stmtAdminCheck->fetch(PDO::FETCH_ASSOC);
-    // O admin é identificado pelo e-mail conforme padrão na tela_registro.php
-    if ($currentUser && $currentUser['email'] === 'admin@mist.com') {
-        $is_admin = true;
+            $stmtCli = $pdo->prepare("SELECT id FROM clientes WHERE usuario_id = :uid");
+            $stmtCli->execute(['uid' => $usuario_logado_id]);
+            $cli_id_real = $stmtCli->fetchColumn();
+
+            $nota = intval($_POST['nota'] ?? 0);
+            $comentario = trim($_POST['comentario'] ?? '');
+
+            if (!$cli_id_real) {
+                $erro = "Apenas perfis de clientes podem realizar avaliações devido a restrições do sistema.";
+            } elseif (!$prof_id_real) {
+                $erro = "Erro: Perfil do profissional não encontrado na base de dados.";
+            } elseif ($nota < 1 || $nota > 5) {
+                $erro = "A nota deve ser entre 1 e 5 estrelas.";
+            } elseif (empty($comentario)) {
+                $erro = "O comentário não pode ser vazio.";
+            } else {
+                try {
+                    // Verifica se o usuário já avaliou este perfil
+                    $stmtCheck = $pdo->prepare("SELECT id FROM avaliacoes WHERE profissional_id = :prof_id AND cliente_id = :cli_id");
+                    $stmtCheck->execute([
+                        'prof_id' => $prof_id_real,
+                        'cli_id' => $cli_id_real
+                    ]);
+                    $avaliacaoExistente = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+                    if ($avaliacaoExistente) {
+                        $stmtUpdate = $pdo->prepare("UPDATE avaliacoes SET nota = :nota, comentario = :comentario, data_criacao = CURRENT_TIMESTAMP WHERE id = :id");
+                        $stmtUpdate->execute([
+                            'nota' => $nota,
+                            'comentario' => $comentario,
+                            'id' => $avaliacaoExistente['id']
+                        ]);
+                        $sucesso = "Avaliação atualizada com sucesso!";
+                    } else {
+                        $stmtInsert = $pdo->prepare("INSERT INTO avaliacoes (profissional_id, cliente_id, nota, comentario) VALUES (:prof_id, :cli_id, :nota, :comentario)");
+                        $stmtInsert->execute([
+                            'prof_id' => $prof_id_real,
+                            'cli_id' => $cli_id_real,
+                            'nota' => $nota,
+                            'comentario' => $comentario
+                        ]);
+                        header("Location: perfil.php?id=$id_perfil&sucesso_avaliacao=1");
+                        exit();
+                    }
+                } catch (PDOException $e) {
+                    $erro = "Erro ao salvar avaliação: " . $e->getMessage();
+                }
+            }
+        }
+    }
+    // Processamento de Troca de Foto
+    if (isset($_FILES['foto_perfil']) && $eh_proprio_perfil) {
+        try {
+            $file = $_FILES['foto_perfil']; // Define a variável $file aqui
+            $fileTmpPath = $file['tmp_name'];
+            if ($file['error'] === UPLOAD_ERR_OK && is_uploaded_file($fileTmpPath)) {
+                if (!class_exists('finfo')) {
+                    $erro = "A extensão 'fileinfo' não está ativa no seu PHP. Habilite-a no php.ini.";
+                } else {
+                    $finfo = new finfo(FILEINFO_MIME_TYPE);
+                    $mimeType = $finfo->file($fileTmpPath);
+                    $allowedMimes = ['image/jpeg', 'image/png', 'image/gif'];
+
+                    if (!in_array($mimeType, $allowedMimes)) {
+                        throw new Exception("Formato inválido. Use JPG, PNG ou GIF.");
+                    }
+                    if ($file['size'] > 5 * 1024 * 1024) {
+                        throw new Exception("A imagem não pode ser maior que 5MB.");
+                    }
+
+                    // Busca dados atuais para saber qual tabela atualizar e deletar a foto antiga
+                    $stmtCheck = $pdo->prepare("SELECT u.tipo_base, COALESCE(c.foto_perfil, co.foto_perfil) as foto_atual 
+                                                FROM usuarios u 
+                                                LEFT JOIN clientes c ON u.id = c.usuario_id 
+                                                LEFT JOIN profissionais co ON u.id = co.usuario_id 
+                                                WHERE u.id = :id");
+                    $stmtCheck->execute(['id' => $id_perfil]);
+                    $dadosAtuais = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+                    if ($dadosAtuais) {
+                        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+                        $novoNome = uniqid('perfil_', true) . '.' . $ext;
+
+                        if (move_uploaded_file($fileTmpPath, $uploadDir . $novoNome)) {
+                            $tabela = ($dadosAtuais['tipo_base'] === 'profissional') ? 'profissionais' : 'clientes';
+                            
+                            // Atualiza banco de dados
+                            $stmtUpdate = $pdo->prepare("UPDATE $tabela SET foto_perfil = :foto WHERE usuario_id = :id");
+                            $stmtUpdate->execute(['foto' => $novoNome, 'id' => $id_perfil]);
+
+                            // Deleta foto antiga se não for a padrão
+                            if ($dadosAtuais['foto_atual'] && $dadosAtuais['foto_atual'] !== $fotoPerfilPadrao && file_exists($uploadDir . $dadosAtuais['foto_atual'])) {
+                                unlink($uploadDir . $dadosAtuais['foto_atual']);
+                            }
+
+                            // Atualiza a foto na sessão
+                            if ($eh_proprio_perfil) {
+                                $_SESSION['usuario_foto'] = $novoNome;
+                            }
+                            
+                            header("Location: perfil.php?id=$id_perfil&sucesso=1");
+                            exit();
+                        }
+                    }
+                }
+            }
+        } catch(Exception $e) {
+            $erro = "❌ Erro no upload: " . $e->getMessage();
+        }
     }
 }
 
-// O usuário pode editar se for o dono do perfil ou se for um administrador
-$pode_editar = (isset($_SESSION['usuario_id']) && $id && ($_SESSION['usuario_id'] == $id || $is_admin));
-
-if (!$id) {
-    $erro = "⚠️ Usuário não especificado.";
-} else {
-    // --- Lógica de Upload de Foto (Apenas se o dono do perfil estiver logado) ---
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['foto_perfil']) && $pode_editar) {
+    // --- Lógica de Upload de Foto de Trabalho (Portfólio / Carrossel) ---
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['nova_foto_trabalho']) && $pode_editar) {
         try {
-            $file = $_FILES['foto_perfil'];
+            $files = $_FILES['nova_foto_trabalho'];
             $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'img' . DIRECTORY_SEPARATOR;
-            
-            // Validações básicas
+
+            // Garante que é um profissional e busca o seu ID
+            $stmtProf = $pdo->prepare("SELECT id FROM profissionais WHERE usuario_id = :uid");
+            $stmtProf->execute(['uid' => $id_perfil]);
+            $profissional_id = $stmtProf->fetchColumn();
+
+            if (!$profissional_id) {
+                throw new Exception("Apenas profissionais podem adicionar fotos ao portfólio.");
+            }
+
             if (!class_exists('finfo')) {
                 throw new Exception("A extensão 'fileinfo' não está ativa no PHP.");
             }
 
             $finfo = new finfo(FILEINFO_MIME_TYPE);
-            $mimeType = $finfo->file($file['tmp_name']);
-            $allowedMimes = ['image/jpeg', 'image/png', 'image/gif'];
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
-            if (!in_array($mimeType, $allowedMimes)) {
-                throw new Exception("Formato inválido. Use JPG, PNG ou GIF.");
-            }
-            if ($file['size'] > 5 * 1024 * 1024) {
-                throw new Exception("A imagem não pode ser maior que 5MB.");
-            }
+            // Verifica se múltiplos arquivos foram enviados através de name="nova_foto_trabalho[]"
+            $isMultiple = is_array($files['name']);
+            $fileCount = $isMultiple ? count($files['name']) : 1;
+            $uploadedCount = 0;
 
             // Busca dados atuais para saber qual tabela atualizar e deletar a foto antiga
             $stmtCheck = $pdo->prepare("SELECT u.tipo_base, COALESCE(c.foto_perfil, p.foto_perfil) as foto_atual 
@@ -90,8 +225,13 @@ if (!$id) {
                 header("Location: perfil.php?id=$id&sucesso=1");
                 exit();
             }
+
+            if ($uploadedCount > 0) {
+                header("Location: perfil.php?id=$id_perfil&sucesso=1");
+                exit();
+            }
         } catch (Exception $e) {
-            $erro = "❌ Erro no upload: " . $e->getMessage();
+            $erro = "❌ Erro no upload do portfólio: " . $e->getMessage();
         }
     }
 
@@ -107,13 +247,13 @@ if (!$id) {
                 JOIN profissionais p ON pf.profissional_id = p.id
                 WHERE pf.id = :foto_id AND p.usuario_id = :user_id
             ");
-            $stmtFoto->execute(['foto_id' => $fotoId, 'user_id' => $id]);
+            $stmtFoto->execute(['foto_id' => $fotoId, 'user_id' => $id_perfil]);
             $fotoData = $stmtFoto->fetch(PDO::FETCH_ASSOC);
 
             if ($fotoData) {
                 $pdo->prepare("DELETE FROM profissional_fotos WHERE id = :id")->execute(['id' => $fotoId]);
                 
-                header("Location: perfil.php?id=$id&sucesso=deleted");
+                header("Location: perfil.php?id=$id_perfil&sucesso=deleted");
                 exit();
             }
         } catch (Exception $e) {
@@ -121,25 +261,27 @@ if (!$id) {
         }
     }
 
-    try {
-        // Busca unificada utilizando COALESCE para pegar dados de ambas as tabelas (clientes ou contratantes)
-        // Nota: 'trabalho' é específico de profissionais.
-        $stmt = $pdo->prepare("
-            SELECT u.id, u.email, u.tipo_base,
-                   COALESCE(c.nome, p.nome) as nome,
-                   COALESCE(c.endereco, p.endereco) as endereco,
-                   COALESCE(c.telefone, p.telefone) as telefone,
-                   COALESCE(c.descricao, p.descricao) as descricao,
-                   COALESCE(c.foto_perfil, p.foto_perfil) as foto_perfil,
-                   p.id as profissional_id,
-                   p.trabalho,
-                   COALESCE(c.data_nascimento, p.data_nascimento) as data_nascimento
+try {
+    $stmt = $pdo->prepare("
+            SELECT u.id as usuario_id, u.email, u.tipo_base,
+                   COALESCE(c.nome, co.nome) as nome,
+                   COALESCE(c.endereco, co.endereco) as endereco,
+                   COALESCE(c.telefone, co.telefone) as telefone,
+                   COALESCE(c.descricao, co.descricao) as descricao,
+                   COALESCE(c.foto_perfil, co.foto_perfil) as foto_perfil,
+                   co.trabalho,
+                   co.id as profissional_id,
+                   COALESCE(c.data_nascimento, co.data_nascimento) as data_nascimento,
+                   COALESCE(AVG(a.nota), 0) as nota_media,
+                   COUNT(a.id) as total_avaliacoes
             FROM usuarios u
             LEFT JOIN clientes c ON u.id = c.usuario_id
-            LEFT JOIN profissionais p ON u.id = p.usuario_id
+            LEFT JOIN profissionais co ON u.id = co.usuario_id
+            LEFT JOIN avaliacoes a ON co.id = a.profissional_id
             WHERE u.id = :id
+            GROUP BY u.id
         ");
-        $stmt->execute(['id' => $id]);
+        $stmt->execute(['id' => $id_perfil]);
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$usuario) {
@@ -159,7 +301,7 @@ if (!$id) {
 
             // Busca as fotos do portfólio caso seja um profissional
             if ($usuario['tipo_base'] === 'profissional' && $usuario['profissional_id']) {
-                $stmtFotos = $pdo->prepare("SELECT id, arquivo FROM profissional_fotos WHERE profissional_id = :pid");
+                $stmtFotos = $pdo->prepare("SELECT id, arquivo FROM profissional_fotos WHERE profissional_id = :pid ORDER BY id ASC");
                 $stmtFotos->execute(['pid' => $usuario['profissional_id']]);
                 $fotos = $stmtFotos->fetchAll(PDO::FETCH_ASSOC);
                 foreach ($fotos as &$f) {
@@ -167,21 +309,74 @@ if (!$id) {
                 }
                 $usuario['fotos_trabalho'] = $fotos;
             }
+    }
+} catch (Exception $e) {
+    $erro = "⚠️ Erro ao carregar perfil: " . $e->getMessage();
+}
+
+// --- BUSCA AVALIAÇÕES ---
+$avaliacoes = [];
+$minha_avaliacao = null;
+
+if ($uBase['tipo_base'] === 'profissional') {
+    try {
+        $sqlAvaliacoes = "
+            SELECT 
+                a.id, a.nota, a.comentario, a.data_criacao, cc.usuario_id as avaliador_id,
+                cc.nome as autor_nome,
+                cc.foto_perfil as autor_foto
+            FROM avaliacoes a
+            JOIN profissionais cp ON a.profissional_id = cp.id
+            JOIN clientes cc ON a.cliente_id = cc.id
+            WHERE cp.usuario_id = :prof_id
+            ORDER BY a.data_criacao DESC
+        ";
+        
+        $stmtAval = $pdo->prepare($sqlAvaliacoes);
+        $stmtAval->execute(['prof_id' => $id_perfil]);
+        $todasAvaliacoes = $stmtAval->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($todasAvaliacoes as &$aval) {
+            // Foto padrão para autores no loop de avaliações
+            if (empty($aval['autor_foto'])) {
+                $aval['autor_foto'] = $fotoPerfilPadrao;
+            }
+
+            if ($usuario_logado_id && $aval['avaliador_id'] == $usuario_logado_id) {
+                $minha_avaliacao = $aval;
+            } else {
+                $avaliacoes[] = $aval;
+            }
         }
-    } catch (Exception $e) {
-        $erro = "⚠️ Erro ao carregar perfil: " . $e->getMessage();
+        unset($aval);
+    } catch (PDOException $e) {
+        $erro = "Erro ao buscar avaliações.";
     }
 }
 
-// Verifica se é o próprio perfil do usuário logado
-$eh_proprio_perfil = isset($_SESSION['usuario_id']) && $id && $_SESSION['usuario_id'] == $id;
+// Regras de Visualização/Ação
+$pode_avaliar = false;
+
+$usuario_logado_eh_cliente = false;
+if ($usuario_logado_id) {
+    $stmtCliCheck = $pdo->prepare("SELECT id FROM clientes WHERE usuario_id = :uid");
+    $stmtCliCheck->execute(['uid' => $usuario_logado_id]);
+    if ($stmtCliCheck->fetchColumn()) $usuario_logado_eh_cliente = true;
+}
+
+if ($usuario_logado_id && $usuario_logado_eh_cliente && !$eh_proprio_perfil && !$minha_avaliacao && $uBase['tipo_base'] === 'profissional') {
+    $pode_avaliar = true;
+}
 
 echo $twig->render('perfil.html', [
-    'usuario' => $usuario,
     'erro' => $erro,
     'sucesso' => $sucesso,
     'pode_editar' => $pode_editar,
     'eh_proprio_perfil' => $eh_proprio_perfil,
-    'url_edicao' => ($is_admin && $id != $_SESSION['usuario_id']) ? "tela_registro.php?id=$id" : "tela_registro.php",
-    'logo_site' => $logo_site
+    'url_edicao' => ($is_admin && $id_perfil != $_SESSION['usuario_id']) ? "tela_registro.php?id=$id_perfil" : "tela_registro.php",
+    'usuario' => $usuario,
+    'avaliacoes' => $avaliacoes,
+    'minha_avaliacao' => $minha_avaliacao,
+    'pode_avaliar' => $pode_avaliar,
+    'foto_perfil_padrao' => $fotoPerfilPadrao
 ]);

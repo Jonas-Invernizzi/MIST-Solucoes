@@ -159,7 +159,9 @@
         />
       </div>
       <div class="form-group-caixa">
-        <textarea id="tags" name="tags" placeholder="Tags">{{ user.tags }}</textarea>
+        <label style="font-size: 0.8rem; color: #667;">Tags (interesses)</label>
+        <div class="tag-editor" data-name="tags" data-placeholder="Adicione tags..."></div>
+        <input type="hidden" name="tags" value="{{ user.tags }}" />
       </div>
 
       {% if is_edicao and user.tipo_base == 'profissional' %}

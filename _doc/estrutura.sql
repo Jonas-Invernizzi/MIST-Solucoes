@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS avaliacoes;
 DROP TABLE IF EXISTS clientes;
 DROP TABLE IF EXISTS profissionais;
+DROP TABLE IF EXISTS mensagens;
 DROP TABLE IF EXISTS usuarios;
 DROP TABLE IF EXISTS mensagens;
 
@@ -97,3 +98,15 @@ CREATE TABLE avaliacoes (
 
 -- Reativa a verificação de chaves estrangeiras
 SET FOREIGN_KEY_CHECKS = 1;
+
+CREATE TABLE mensagens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    remetente_id INT NOT NULL,
+    destinatario_id INT NOT NULL,
+    conteudo TEXT NOT NULL,
+    data_envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    lida TINYINT(1) DEFAULT 0,
+    FOREIGN KEY (remetente_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (destinatario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    INDEX (data_envio)
+);

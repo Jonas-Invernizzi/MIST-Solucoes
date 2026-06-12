@@ -7,6 +7,7 @@
 
     <link rel="stylesheet" href="templates/css/base.css" />
     {% block extra_css %}{% endblock %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script src="templates/script/mask.js" defer></script>
     <script src="templates/script/login.js" defer></script>
   </head>
@@ -40,33 +41,33 @@
         <div class="menu-usuario">
           <div class="links-acesso">
             {% if session.usuario_id %}
-            <a href="perfil.php?id={{ session.usuario_id }}">Meu Perfil</a>
+              <a href="mensagens.php" class="btn-header-message">
+                <i class="fas fa-envelope"></i> Mensagens
+                {% if mensagens_nao_lidas > 0 %}
+                  <span class="badge-notificacao">{{ mensagens_nao_lidas }}</span>
+                {% endif %}
+              </a>
+              <a href="perfil.php?id={{ session.usuario_id }}">Meu Perfil</a>
             {% else %}
-            <a href="tela_registro.php">Bem-vindo(a)</a>
+              <a href="tela_registro.php">Bem-vindo(a)</a>
             {% endif %}
           </div>
-          
-          {# Exibe a foto do usuário se logado, caso contrário exibe o SVG
-          original #} {% if session.usuario_id and session.usuario_foto %}
-          <img
-          src="img/{{ session.usuario_foto }}"
-            alt="Perfil"
-            class="profile-pic-header"
+
+          {% if session.usuario_id and session.usuario_foto %}
+            <img
+              src="img/{{ session.usuario_foto }}"
+              alt="Perfil"
+              class="profile-pic-header"
             />
-            {% else %}
+          {% else %}
             <svg
-            class="icone-pequeno"
-            viewBox="0 0 100 100"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
+              class="icone-pequeno"
+              viewBox="0 0 100 100"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
             >
-            <path
-            fill-rule="evenodd"
-            clip-rule="evenodd"
-            d="M50 100C77.6142 100 100 77.6142 100 50C100 22.3858 77.6142 0 50 0C22.3858 0 0 22.3858 0 50C0 77.6142 22.3858 100 50 100ZM50 24C41.1634 24 34 31.1634 34 40C34 48.8366 41.1634 56 50 56C58.8366 56 66 48.8366 66 40C66 31.1634 58.8366 24 50 24ZM26.6343 82.684C30.6552 73.1818 40.0988 66 50 66C59.9012 66 69.3448 73.1818 73.3657 82.684C67.1478 89.1558 58.9803 93 50 93C41.0197 93 32.8522 89.1558 26.6343 82.684Z"
-            fill="#1e1e1e"
-            />
-          </svg>
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M50 100C77.6142 100 100 77.6142 100 50C100 22.3858 77.6142 0 50 0C22.3858 0 0 22.3858 0 50C0 77.6142 22.3858 100 50 100ZM50 24C41.1634 24 34 31.1634 34 40C34 48.8366 41.1634 56 50 56C58.8366 56 66 48.8366 66 40C66 31.1634 58.8366 24 50 24ZM26.6343 82.684C30.6552 73.1818 40.0988 66 50 66C59.9012 66 69.3448 73.1818 73.3657 82.684C67.1478 89.1558 58.9803 93 50 93C41.0197 93 32.8522 89.1558 26.6343 82.684Z" fill="#1e1e1e"/>
+            </svg>
           {% endif %}
         </div>
       </div>

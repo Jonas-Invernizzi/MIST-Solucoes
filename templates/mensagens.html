@@ -1,0 +1,69 @@
+{% extends "_base.html" %}
+
+{% block conteudo %}
+<link rel="stylesheet" href="templates/css/mensagens.css">
+
+<div class="container-mensagens">
+    <!-- Barra Lateral: Lista de Conversas -->
+    <div class="lista-conversas">
+        <h3>Minhas Conversas</h3>
+        <div class="scroll-conversas">
+            {% if conversas is empty %}
+                <p class="p-3 text-muted">Nenhuma conversa encontrada.</p>
+            {% else %}
+                {% for conv in conversas %}
+                    <a href="mensagens.php?u={{ conv.id }}" class="item-conversa {% if conv.id == contato_id %}ativa{% endif %}">
+                        <div class="avatar-mini">
+                            <img src="img/{{ conv.foto|default('FotoPerfilPadrao.jpg') }}" alt="Foto">
+                            {% if conv.unread_count > 0 %}
+                                <span class="badge-contato">{{ conv.unread_count }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="info-conversa">
+                            <div class="topo-conversa">
+                                <span class="nome-contato">{{ conv.nome }}</span>
+                                <small class="data-ultima">{{ conv.ultima_data|date('H:i') }}</small>
+                            </div>
+                            <span class="profissao-contato">{{ conv.profissao|default('Cliente') }}</span>
+                        </div>
+                    </a>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Área do Chat -->
+    <div class="janela-chat">
+        {% if usuario_destino %}
+            <div class="chat-header">
+                Conversando com <strong>{{ usuario_destino.nome }}</strong>
+            </div>
+
+            <div class="historico-mensagens" id="chat-box">
+                {% for msg in mensagens %}
+                    <div class="balao {% if msg.remetente_id == meu_id %}enviada{% else %}recebida{% endif %}">
+                        <div class="conteudo">{{ msg.conteudo }}</div>
+                        <small class="hora">{{ msg.data_envio|date('H:i') }}</small>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <form action="mensagens.php" method="POST" class="chat-footer">
+                <input type="hidden" name="destinatario_id" value="{{ contato_id }}">
+                <input type="text" name="mensagem" placeholder="Digite sua mensagem..." required autocomplete="off">
+                <button type="submit" class="btn-enviar">➤</button>
+            </form>
+        {% else %}
+            <div class="chat-placeholder">
+                <p>Selecione uma conversa ou entre em contato com um profissional para começar.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Rola o chat para o final automaticamente
+    const chatBox = document.getElementById('chat-box');
+    if(chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+</script>
+{% endblock %}

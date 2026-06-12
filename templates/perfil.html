@@ -439,7 +439,7 @@
                                 {% if eh_proprio_perfil %}
                                     <a href="tela_registro.php" class="btn-editar-mist">Editar Perfil</a>
                                 {% else %}
-                                    <button class="btn-contato-verde px-4">Entrar em Contato</button>
+                                    <a href="mensagens.php?u={{ usuario.usuario_id }}" class="btn-contato-verde px-4 text-decoration-none">Entrar em Contato</a>
                                 {% endif %}
                             </div>
                         </div>
@@ -498,10 +498,10 @@
                                 <a href="tela_registro.php?id={{ usuario.usuario_id }}" class="btn-editar-mist">Editar Dados</a>
                             {% else %}
                                 {# Se for o perfil de outro, mostro apenas o contato #}
-                                <button class="btn-contato-verde px-4">Entrar em Contato</button>
+                                <a href="mensagens.php?u={{ usuario.usuario_id }}" class="btn-contato-verde px-4 text-decoration-none">Entrar em Contato</a>
                             {% endif %}
                         </div>
-                        {% endif %}
+                    </div>
                     </div>
                     {% endif %}
                 </div>

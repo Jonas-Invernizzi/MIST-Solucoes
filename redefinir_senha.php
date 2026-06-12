@@ -3,6 +3,11 @@ require_once('carregar_twig.php');
 require_once('carregar_pdo.php');
 require_once 'vendor/autoload.php'; // Para PHPMailer, se necessário para relatar erros, mas não para enviar aqui
 
+$stmtLogo = $pdo->prepare("SELECT arquivo, mime_type FROM sistema_assets WHERE nome = 'logo'");
+$stmtLogo->execute();
+$logoRow = $stmtLogo->fetch(PDO::FETCH_ASSOC);
+$logo_site = $logoRow ? 'data:' . $logoRow['mime_type'] . ';base64,' . base64_encode($logoRow['arquivo']) : '';
+
 $erro = '';
 $sucesso = '';
 $email = $_GET['email'] ?? '';
@@ -89,6 +94,7 @@ echo $twig->render('redefinir_senha.html', [
     'sucesso' => $sucesso,
     'email' => $email,
     'token' => $token,
-    'show_reset_form' => $show_reset_form
+    'show_reset_form' => $show_reset_form,
+    'logo_site' => $logo_site
 ]);
 ?>

@@ -3,6 +3,11 @@ session_start();
 require_once('carregar_twig.php');
 require_once('carregar_pdo.php');
 
+$stmtLogo = $pdo->prepare("SELECT arquivo, mime_type FROM sistema_assets WHERE nome = 'logo'");
+$stmtLogo->execute();
+$logoRow = $stmtLogo->fetch(PDO::FETCH_ASSOC);
+$logo_site = $logoRow ? 'data:' . $logoRow['mime_type'] . ';base64,' . base64_encode($logoRow['arquivo']) : '';
+
 $erro = '';
 $sucesso = '';
 $mostra_modal_redefinir_senha = false; // Nova flag para o modal de redefinição de senha
@@ -149,5 +154,6 @@ echo $twig->render('tela_login.html', [
     'erro' => $erro,
     'sucesso' => $sucesso,
     'mostra_modal_redefinir_senha' => $mostra_modal_redefinir_senha,
-    'email_redefinir_modal' => $email_redefinir_modal
+    'email_redefinir_modal' => $email_redefinir_modal,
+    'logo_site' => $logo_site
 ]);

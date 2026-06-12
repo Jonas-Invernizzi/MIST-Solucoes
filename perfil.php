@@ -204,36 +204,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $usuario_logado_id) {
             $fileCount = $isMultiple ? count($files['name']) : 1;
             $uploadedCount = 0;
 
-            for ($i = 0; $i < $fileCount; $i++) {
-                $tmpName = $isMultiple ? $files['tmp_name'][$i] : $files['tmp_name'];
-                $error = $isMultiple ? $files['error'][$i] : $files['error'];
-                $name = $isMultiple ? $files['name'][$i] : $files['name'];
-                $size = $isMultiple ? $files['size'][$i] : $files['size'];
+            // Busca dados atuais para saber qual tabela atualizar e deletar a foto antiga
+            $stmtCheck = $pdo->prepare("SELECT u.tipo_base, COALESCE(c.foto_perfil, p.foto_perfil) as foto_atual 
+                                        FROM usuarios u 
+                                        LEFT JOIN clientes c ON u.id = c.usuario_id 
+                                        LEFT JOIN profissionais p ON u.id = p.usuario_id 
+                                        WHERE u.id = :id");
+            $stmtCheck->execute(['id' => $id]);
+            $dadosAtuais = $stmtCheck->fetch(PDO::FETCH_ASSOC);
 
-                if ($error === UPLOAD_ERR_NO_FILE) {
-                    continue; // Ignora se o campo de upload veio vazio
-                }
+            if ($dadosAtuais) {
+                $conteudoFoto = file_get_contents($file['tmp_name']);
+                $tabela = ($dadosAtuais['tipo_base'] === 'profissional') ? 'profissionais' : 'clientes';
+                
+                $stmtUpdate = $pdo->prepare("UPDATE $tabela SET foto_perfil = :foto WHERE usuario_id = :id");
+                $stmtUpdate->execute(['foto' => $conteudoFoto, 'id' => $id]);
 
-                if ($error !== UPLOAD_ERR_OK) {
-                    throw new Exception("Erro no upload do arquivo $name (Código: $error)");
-                }
-
-                $mimeType = $finfo->file($tmpName);
-                if (!in_array($mimeType, $allowedMimes)) {
-                    throw new Exception("O arquivo $name tem formato inválido. Use JPG, PNG, WEBP ou GIF.");
-                }
-                if ($size > 5 * 1024 * 1024) {
-                    throw new Exception("O arquivo $name é maior que 5MB.");
-                }
-
-                $ext = pathinfo($name, PATHINFO_EXTENSION);
-                $novoNome = uniqid('port_', true) . '.' . $ext;
-
-                if (move_uploaded_file($tmpName, $uploadDir . $novoNome)) {
-                    $stmtInsert = $pdo->prepare("INSERT INTO profissional_fotos (profissional_id, arquivo) VALUES (:pid, :arquivo)");
-                    $stmtInsert->execute(['pid' => $profissional_id, 'arquivo' => $novoNome]);
-                    $uploadedCount++;
-                }
+                $_SESSION['usuario_foto'] = 'data:' . $mimeType . ';base64,' . base64_encode($conteudoFoto);
+                
+                header("Location: perfil.php?id=$id&sucesso=1");
+                exit();
             }
 
             if ($uploadedCount > 0) {
@@ -262,8 +252,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $usuario_logado_id) {
 
             if ($fotoData) {
                 $pdo->prepare("DELETE FROM profissional_fotos WHERE id = :id")->execute(['id' => $fotoId]);
-                $caminho = $uploadDir . $fotoData['arquivo'];
-                if (file_exists($caminho)) unlink($caminho);
                 
                 header("Location: perfil.php?id=$id_perfil&sucesso=deleted");
                 exit();
@@ -299,6 +287,13 @@ try {
         if (!$usuario) {
             $erro = "❌ Prestador não encontrado no sistema.";
         } else {
+            // Converte o BLOB para Data URI para exibição no HTML
+            if (!empty($usuario['foto_perfil'])) {
+                $usuario['foto_perfil'] = 'data:image/jpeg;base64,' . base64_encode($usuario['foto_perfil']);
+            } else {
+                $usuario['foto_perfil'] = $default_avatar;
+            }
+
             // Converte a string "tag1, tag2" em um array para o Twig
             $usuario['tags'] = !empty($usuario['trabalho']) 
                 ? array_filter(array_map('trim', explode(',', $usuario['trabalho']))) 
@@ -308,7 +303,11 @@ try {
             if ($usuario['tipo_base'] === 'profissional' && $usuario['profissional_id']) {
                 $stmtFotos = $pdo->prepare("SELECT id, arquivo FROM profissional_fotos WHERE profissional_id = :pid ORDER BY id ASC");
                 $stmtFotos->execute(['pid' => $usuario['profissional_id']]);
-                $usuario['fotos_trabalho'] = $stmtFotos->fetchAll(PDO::FETCH_ASSOC);
+                $fotos = $stmtFotos->fetchAll(PDO::FETCH_ASSOC);
+                foreach ($fotos as &$f) {
+                    $f['arquivo'] = 'data:image/jpeg;base64,' . base64_encode($f['arquivo']);
+                }
+                $usuario['fotos_trabalho'] = $fotos;
             }
     }
 } catch (Exception $e) {

@@ -12,6 +12,21 @@ $usuario_id_modal = '';
 $dados_usuario = [];
 $is_edicao = false;
 
+// Carregar Assets do Sistema (Logo e Imagem Padrão)
+$stmtAssets = $pdo->prepare("SELECT nome, arquivo, mime_type FROM sistema_assets WHERE nome IN ('logo', 'default_avatar')");
+$stmtAssets->execute();
+$assets = $stmtAssets->fetchAll(PDO::FETCH_UNIQUE|PDO::FETCH_ASSOC);
+
+$logo_site = isset($assets['logo']) 
+    ? 'data:' . $assets['logo']['mime_type'] . ';base64,' . base64_encode($assets['logo']['arquivo']) 
+    : '';
+
+$default_avatar_str = isset($assets['default_avatar']) 
+    ? 'data:' . $assets['default_avatar']['mime_type'] . ';base64,' . base64_encode($assets['default_avatar']['arquivo']) 
+    : 'img/FotoPerfilPadrao.jpg';
+
+$imagem_padrao_blob = $assets['default_avatar']['arquivo'] ?? null;
+
 // --- Lógica de Edição ---
 $id_alvo = null; // ID do usuário a ser editado
 $is_admin = false;
@@ -177,7 +192,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
 
     // --- Validação de Upload de Imagem (SEM SALVAR AINDA) ---
     // O valor padrão para foto de perfil é NULL, para que o template possa exibir um ícone.
-    $imagemPadrao = null;
+    $imagemPadrao = $imagem_padrao_blob;
     $caminhoFotoPerfil = null; // Começa nulo para identificar se houve novo upload
     $erroUpload = '';
     $imagemTemporaria = null;
@@ -205,7 +220,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                     } else {
                         // Validação passou, armazenar temporariamente
                         $imagemTemporaria = [
-                            'tmp' => $fileTmpPath,
+                            'data' => file_get_contents($fileTmpPath),
                             'ext' => strtolower(pathinfo($_FILES[$fileKey]['name'], PATHINFO_EXTENSION))
                         ];
                     }
@@ -269,15 +284,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
 
                 // Processar salvamento da imagem antes de interagir com o banco
                 if ($imagemTemporaria) {
-                    if (!is_dir($uploadDir)) {
-                        mkdir($uploadDir, 0755, true);
-                    }
-                    $newFileName = uniqid('perfil_', true) . '.' . $imagemTemporaria['ext'];
-                    if (move_uploaded_file($imagemTemporaria['tmp'], $uploadDir . $newFileName)) {
-                        $caminhoFotoPerfil = $newFileName;
-                    } else {
-                        $erro = "⚠️ Erro ao salvar a imagem de perfil no servidor.";
-                    }
+                    // Agora armazenamos o conteúdo binário diretamente
+                    $caminhoFotoPerfil = $imagemTemporaria['data'];
                 }
 
                 if ($erro === '') {
@@ -368,7 +376,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             $stmtC->bindValue(':telefone', $telefone);
                             $stmtC->bindValue(':nascimento', $nascimento);
                             $stmtC->bindValue(':descricao', $descricao);
-                            $stmtC->bindValue(':foto', $fotoParaSalvar);
+                            $stmtC->bindValue(':foto', $fotoParaSalvar, PDO::PARAM_LOB);
                             $stmtC->bindValue(':id', $usuarioId);
                             $stmtC->execute();
 
@@ -402,14 +410,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             }
 
                             $pdo->commit();
-                            // Delete old photo after successful update and commit
-                            if ($oldFotoPerfil && $oldFotoPerfil !== 'default_profile.png' && file_exists($uploadDir . $oldFotoPerfil)) {
-                                unlink($uploadDir . $oldFotoPerfil);
-                            }
                             // Atualiza os dados da sessão para refletir as mudanças no cabeçalho e boas-vindas imediatamente
                             if ($usuarioId == $_SESSION['usuario_id']) {
                                 $_SESSION['usuario_nome'] = $nome;
-                                $_SESSION['usuario_foto'] = $fotoParaSalvar;
+                                $_SESSION['usuario_foto'] = $fotoParaSalvar ? 'data:image/jpeg;base64,' . base64_encode($fotoParaSalvar) : null;
                             }
 
                             // --- Processar Upload de Fotos do Trabalho (Portfólio) ---
@@ -432,13 +436,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                                             if ($files['error'][$i] === UPLOAD_ERR_OK) {
                                                 $mimeType = $hasFinfo ? $finfo->file($files['tmp_name'][$i]) : $files['type'][$i];
                                                 if (in_array($mimeType, $allowedMimes) && $files['size'][$i] <= 5 * 1024 * 1024) {
-                                                    $ext = pathinfo($files['name'][$i], PATHINFO_EXTENSION);
-                                                    $novoNome = uniqid('trabalho_', true) . '.' . $ext;
-                                                    
-                                                    if (move_uploaded_file($files['tmp_name'][$i], $uploadDir . $novoNome)) {
-                                                        $stmtIns = $pdo->prepare("INSERT INTO profissional_fotos (profissional_id, arquivo) VALUES (:pid, :arquivo)");
-                                                        $stmtIns->execute(['pid' => $pid, 'arquivo' => $novoNome]);
-                                                    }
+                                                    $conteudoFoto = file_get_contents($files['tmp_name'][$i]);
+                                                    $stmtIns = $pdo->prepare("INSERT INTO profissional_fotos (profissional_id, arquivo) VALUES (:pid, :arquivo)");
+                                                    $stmtIns->bindValue(':pid', $pid);
+                                                    $stmtIns->bindValue(':arquivo', $conteudoFoto, PDO::PARAM_LOB);
+                                                    $stmtIns->execute();
                                                 }
                                             }
                                         }
@@ -550,9 +552,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             $email_modal = $email;
                         }
                     } catch (Exception $e) {
-                        if ($pdo->inTransaction()) $pdo->rollBack();
-                        // Agora, este bloco captura principalmente erros de banco de dados, exibindo uma mensagem mais útil.
-                        $erro = "⚠️ Erro ao processar registro: " . $e->getMessage();
+                        try {
+                            if ($pdo && $pdo->inTransaction()) {
+                                $pdo->rollBack();
+                            }
+                        } catch (PDOException $rollbackEx) {
+                            // Silencia erro de rollback caso a conexão tenha caído
+                        }
+
+                        if (strpos($e->getMessage(), 'server has gone away') !== false) {
+                            $erro = "⚠️ O arquivo é muito grande para o servidor. Aumente o 'max_allowed_packet' no MySQL.";
+                        } else {
+                            $erro = "⚠️ Erro ao processar registro: " . $e->getMessage();
+                        }
                     }
                 }
             }
@@ -566,5 +578,6 @@ echo $twig->render('tela_registro.html', [
     'email_modal' => $email_modal,
     'user' => $dados_usuario,
     'is_edicao' => $is_edicao,
-    'id_alvo' => $id_alvo // Passa o ID para o template (para o campo hidden)
+    'id_alvo' => $id_alvo, // Passa o ID para o template (para o campo hidden)
+    'logo_site' => $logo_site
 ]);

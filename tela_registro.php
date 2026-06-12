@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once('carregar_twig.php');
 require_once('carregar_pdo.php');
 // É provável que a falta desta linha esteja causando a falha no envio de e-mail.
@@ -409,6 +410,43 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             if ($usuarioId == $_SESSION['usuario_id']) {
                                 $_SESSION['usuario_nome'] = $nome;
                                 $_SESSION['usuario_foto'] = $fotoParaSalvar;
+                            }
+
+                            // --- Processar Upload de Fotos do Trabalho (Portfólio) ---
+                            if (isset($_FILES['fotos_trabalho']) && $dados_usuario['tipo_base'] === 'profissional') {
+                                try {
+                                    $files = $_FILES['fotos_trabalho'];
+                                    
+                                    // Busca o ID do profissional para vincular as fotos
+                                    $stmtProfId = $pdo->prepare("SELECT id FROM profissionais WHERE usuario_id = :id");
+                                    $stmtProfId->execute(['id' => $usuarioId]);
+                                    $profData = $stmtProfId->fetch(PDO::FETCH_ASSOC);
+
+                                    if ($profData) {
+                                        $pid = $profData['id'];
+                                        $allowedMimes = ['image/jpeg', 'image/png', 'image/gif'];
+                                        $hasFinfo = class_exists('finfo');
+                                        $finfo = $hasFinfo ? new finfo(FILEINFO_MIME_TYPE) : null;
+
+                                        for ($i = 0; $i < count($files['name']); $i++) {
+                                            if ($files['error'][$i] === UPLOAD_ERR_OK) {
+                                                $mimeType = $hasFinfo ? $finfo->file($files['tmp_name'][$i]) : $files['type'][$i];
+                                                if (in_array($mimeType, $allowedMimes) && $files['size'][$i] <= 5 * 1024 * 1024) {
+                                                    $ext = pathinfo($files['name'][$i], PATHINFO_EXTENSION);
+                                                    $novoNome = uniqid('trabalho_', true) . '.' . $ext;
+                                                    
+                                                    if (move_uploaded_file($files['tmp_name'][$i], $uploadDir . $novoNome)) {
+                                                        $stmtIns = $pdo->prepare("INSERT INTO profissional_fotos (profissional_id, arquivo) VALUES (:pid, :arquivo)");
+                                                        $stmtIns->execute(['pid' => $pid, 'arquivo' => $novoNome]);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                } catch (Exception $e) {
+                                    // Se falhar, não impede a edição do perfil
+                                    error_log("Erro ao fazer upload de fotos do trabalho: " . $e->getMessage());
+                                }
                             }
 
                             header("Location: tela_inicial.php?sucesso=perfil_atualizado");

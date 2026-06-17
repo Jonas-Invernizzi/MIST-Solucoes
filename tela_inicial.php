@@ -9,13 +9,14 @@ if (!isset($_SESSION['usuario_id'])) {
     exit();
 }
 
-$fotoPerfilPadrao = 'FotoPerfilPadrao.jpg';
+$fotoPerfilPadrao = 'fotoPadrao.png';
 
-// Lógica de "Auto-Cura": Se o nome do usuário sumiu da sessão (comum em trocas de PC ou sessões expiradas),
-// tenta recuperá-lo do banco de dados antes de renderizar a página.
-if (empty($_SESSION['usuario_nome'])) {
+// Lógica de "Auto-Cura": Se o nome ou a foto sumiram da sessão, recupera-os do banco.
+if (empty($_SESSION['usuario_nome']) || empty($_SESSION['usuario_foto'])) {
     $stmtHeal = $pdo->prepare("
-        SELECT COALESCE(c.nome, p.nome) as nome 
+        SELECT 
+            COALESCE(c.nome, p.nome) as nome,
+            COALESCE(c.foto_perfil, p.foto_perfil) as foto_perfil
         FROM usuarios u
         LEFT JOIN clientes c ON u.id = c.usuario_id
         LEFT JOIN profissionais p ON u.id = p.usuario_id
@@ -23,8 +24,22 @@ if (empty($_SESSION['usuario_nome'])) {
     ");
     $stmtHeal->execute([':id' => $_SESSION['usuario_id']]);
     $userData = $stmtHeal->fetch();
-    if ($userData && !empty($userData['nome'])) {
-        $_SESSION['usuario_nome'] = $userData['nome'];
+
+    if ($userData) {
+        if (!empty($userData['nome'])) {
+            $_SESSION['usuario_nome'] = $userData['nome'];
+        }
+        
+        if (!empty($userData['foto_perfil'])) {
+            // Verifica se é um nome de arquivo (legado) ou BLOB binário
+            if (strlen($userData['foto_perfil']) < 255 && preg_match('/\.(jpg|jpeg|png|gif|webp)$/i', $userData['foto_perfil'])) {
+                $_SESSION['usuario_foto'] = $userData['foto_perfil'];
+            } else {
+                $_SESSION['usuario_foto'] = 'data:image/jpeg;base64,' . base64_encode($userData['foto_perfil']);
+            }
+        } else {
+            $_SESSION['usuario_foto'] = $fotoPerfilPadrao;
+        }
     }
 }
 
@@ -41,7 +56,7 @@ $query = "
     INNER JOIN usuarios u ON p.usuario_id = u.id
     LEFT JOIN avaliacoes a ON p.id = a.profissional_id
     WHERE u.status = 'ativo'
-    GROUP BY u.id, p.id, p.nome, p.trabalho, p.foto_perfil
+    GROUP BY p.id
     ORDER BY p.id DESC
     LIMIT 4
 ";
@@ -51,7 +66,15 @@ $profissionais = $stmt->fetchAll();
 
 // Garante que todos os profissionais em destaque tenham uma foto de perfil (mesmo que seja a padrão)
 foreach ($profissionais as &$p) {
-    if (empty($p['foto_perfil'])) {
+    if (!empty($p['foto_perfil'])) {
+        // Verifica se é um nome de arquivo (legado) ou BLOB binário para evitar corrupção
+        if (strlen($p['foto_perfil']) < 255 && preg_match('/\.(jpg|jpeg|png|gif|webp)$/i', $p['foto_perfil'])) {
+            $p['foto_perfil'] = $p['foto_perfil'];
+        } else {
+            // Converte o BLOB do banco para Base64 para exibição correta
+            $p['foto_perfil'] = 'data:image/jpeg;base64,' . base64_encode($p['foto_perfil']);
+        }
+    } else {
         $p['foto_perfil'] = $fotoPerfilPadrao;
     }
 }

@@ -23,8 +23,7 @@ $logo_site = isset($assets['logo'])
 
 $default_avatar_str = isset($assets['default_avatar']) 
     ? 'data:' . $assets['default_avatar']['mime_type'] . ';base64,' . base64_encode($assets['default_avatar']['arquivo']) 
-    : 'img/FotoPerfilPadrao.jpg';
-
+    : '';
 $imagem_padrao_blob = $assets['default_avatar']['arquivo'] ?? null;
 
 // --- Lógica de Edição ---
@@ -154,7 +153,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
 
     $remover_foto = isset($_POST['remover_foto']) && $_POST['remover_foto'] === '1';
 
-    // Se for edição, e um campo do formulário vier vazio, mantém o valor que já estava no banco.
     // Isso permite que o usuário edite apenas um campo sem ter que preencher todos os outros novamente.
     if ($is_edicao) {
         $nome = $nome ?: ($dados_atuais['nome'] ?? '');
@@ -166,7 +164,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
         $tags = $tags ?: ($dados_atuais['tags'] ?? '');
     }
 
-    // Mantém o tipo_base original se estiver em modo edição (pois o campo não vai no POST)
+    // Mantém o tipo_base original se estiver em modo edição
     $tipo_base_post = $_POST['tipo_base'] ?? ($dados_atuais['tipo_base'] ?? 'cliente');
 
     // Na edição, a senha só é processada se preenchida.
@@ -175,8 +173,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
     }
 
     // Atualiza $dados_usuario com os dados mesclados para que o formulário seja
-    // repreenchido corretamente em caso de erro e para a lógica de salvamento.
-    // Removido o fallback ?: para permitir remoção de tags e limpeza de campos.
     $dados_usuario = array_merge($dados_atuais, [
         'nome' => $nome, 'data_nascimento' => $nascimento, 'telefone' => $telefone,
         'email' => $email, 'endereco' => $endereco, 'descricao' => $descricao,
@@ -189,7 +185,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
     if ($is_edicao && empty($senha)) {
         $senha = ''; // Na edição, a senha pode ser mantida se vazia
     }
-
     // --- Validação de Upload de Imagem (SEM SALVAR AINDA) ---
     // O valor padrão para foto de perfil é NULL, para que o template possa exibir um ícone.
     $imagemPadrao = $imagem_padrao_blob;
@@ -380,7 +375,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             $stmtC->bindValue(':id', $usuarioId);
                             $stmtC->execute();
 
-                            // Sincronização de Tags (Estilo YouTube)
+                            // Sincronização de Tags
                             if ($tipo_base_post === 'profissional') {
                                 $stmtGetProfissional = $pdo->prepare("SELECT id FROM profissionais WHERE usuario_id = :uid");
                                 $stmtGetProfissional->execute(['uid' => $usuarioId]);
@@ -493,8 +488,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             
                             if ($tipo_base_post === 'profissional') {
                                 $stmtInfo->bindValue(':trabalho', $tags);
-                                $stmtInfo->bindValue(':cpf', $cpf);
-                                $stmtInfo->bindValue(':endereco_trabalho', $endereco_trabalho);
                             }
                             $stmtInfo->execute();
                             

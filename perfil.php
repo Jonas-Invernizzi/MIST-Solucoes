@@ -5,7 +5,7 @@ require_once('carregar_twig.php');
 
 $erro = '';
 $sucesso = '';
-$fotoPerfilPadrao = 'FotoPerfilPadrao.jpg';
+$fotoPerfilPadrao = 'fotoPadrao.png';
 $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'img' . DIRECTORY_SEPARATOR;
 
 // Identifica o ID do perfil a ser visualizado
@@ -287,12 +287,12 @@ try {
             if (!empty($usuario['foto_perfil'])) {
                 // Identifica se a foto é um arquivo salvo no disco ou um BLOB no banco de dados
                 if (strlen($usuario['foto_perfil']) < 255 && preg_match('/\.(jpg|jpeg|png|gif|webp)$/i', $usuario['foto_perfil'])) {
-                    $usuario['foto_perfil'] = 'img/' . $usuario['foto_perfil'];
+                    $usuario['foto_perfil'] = $usuario['foto_perfil'];
                 } else {
                     $usuario['foto_perfil'] = 'data:image/jpeg;base64,' . base64_encode($usuario['foto_perfil']);
                 }
             } else {
-                $usuario['foto_perfil'] = 'img/' . $fotoPerfilPadrao;
+                $usuario['foto_perfil'] = $fotoPerfilPadrao;
             }
 
             // Converte a string "tag1, tag2" em um array para o Twig
@@ -340,10 +340,10 @@ if ($uBase['tipo_base'] === 'profissional') {
         foreach ($todasAvaliacoes as &$aval) {
             // Foto padrão para autores no loop de avaliações
             if (empty($aval['autor_foto'])) {
-                $aval['autor_foto'] = 'img/' . $fotoPerfilPadrao;
+                $aval['autor_foto'] = $fotoPerfilPadrao;
             } else {
                 if (strlen($aval['autor_foto']) < 255 && preg_match('/\.(jpg|jpeg|png|gif|webp)$/i', $aval['autor_foto'])) {
-                    $aval['autor_foto'] = 'img/' . $aval['autor_foto'];
+                    $aval['autor_foto'] = $aval['autor_foto'];
                 } else {
                     $aval['autor_foto'] = 'data:image/jpeg;base64,' . base64_encode($aval['autor_foto']);
                 }

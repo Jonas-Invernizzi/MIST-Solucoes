@@ -30,7 +30,7 @@
     {% for prof in profissionais %}
         <div class="card-profissional">
             <div class="avatar-circular">
-                <img src="img/{{ prof.foto_perfil|default(foto_perfil_padrao) }}" alt="{{ prof.nome }}">
+                <img src="{{ prof.foto_perfil }}" alt="{{ prof.nome }}">
             </div>
             <h3>{{ prof.nome }}</h3>
             <p>{{ prof.trabalho }}</p>

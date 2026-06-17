@@ -23,21 +23,23 @@ $logo_site = isset($assets['logo'])
 
 $default_avatar = isset($assets['default_avatar'])
     ? 'data:' . $assets['default_avatar']['mime_type'] . ';base64,' . base64_encode($assets['default_avatar']['arquivo'])
-    : 'img/FotoPerfilPadrao.jpg';
+    : 'img/fotoPadrao.png';
 
 try {
     $sql = "
         SELECT 
+            p.id,
             p.usuario_id,
             p.nome, 
             p.trabalho, 
             p.descricao,
             p.foto_perfil,
             p.endereco,
-            0 as nota_media,
-            0 as total_avaliacoes
+            COALESCE(AVG(a.nota), 0) as nota_media,
+            COUNT(a.id) as total_avaliacoes
         FROM profissionais p
         INNER JOIN usuarios u ON p.usuario_id = u.id
+        LEFT JOIN avaliacoes a ON p.id = a.profissional_id
         WHERE u.status = 'ativo'
     ";
 
@@ -57,6 +59,8 @@ try {
                     )
                 )";
     }
+
+    $sql .= " GROUP BY p.id ";
 
     // Mapeia as opções de ordenação para evitar injeção de SQL.
     $sort_map = [
@@ -83,29 +87,24 @@ try {
 
     $profissionais = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Converter fotos BLOB para Base64
+    // Processar resultados (Fotos e Tags)
     foreach ($profissionais as &$prof) {
+        // Converter fotos BLOB para Base64
         if ($prof['foto_perfil']) {
             $prof['foto_perfil'] = 'data:image/jpeg;base64,' . base64_encode($prof['foto_perfil']);
         } else {
             $prof['foto_perfil'] = $default_avatar;
         }
+
+        // Transforma a string de especialidades em array para exibição
+        $prof['tags'] = !empty($prof['trabalho']) 
+            ? array_filter(array_map('trim', explode(',', $prof['trabalho']))) 
+            : [];
     }
 } catch (PDOException $e) {
     // Em caso de erro no banco, a lista de profissionais ficará vazia.
-    // Para depuração, o erro pode ser logado: error_log($e->getMessage());
     $profissionais = [];
 }
-
-$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-$profissionais = [];
-foreach ($rows as $p) {
-    // Transforma a string de especialidades em array para exibição
-    $p['tags'] = !empty($p['trabalho']) 
-        ? array_filter(array_map('trim', explode(',', $p['trabalho']))) 
-        : [];
-    $profissionais[] = $p;
 
 echo $twig->render('pesquisa.html', [
     'profissionais' => $profissionais,

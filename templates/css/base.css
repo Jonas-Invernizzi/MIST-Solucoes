@@ -1,3 +1,15 @@
+:root {
+    --primary-blue: #4a6fd8;
+    --primary-hover: #3a5fb8;
+    --bg-gradient: linear-gradient(135deg, #f8faff 0%, #eef2f9 100%);
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --border-radius: 12px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -11,9 +23,9 @@ img {
 }
 
 body {
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(180deg, #f1f6fd 0%, #e8eff9 100%);
-    color: #1f3e65;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text-main);
     min-height: 100vh;
     display: flex !important;
     flex-direction: column;
@@ -61,36 +73,32 @@ main {
 
 .logo {
     max-width: 130px;
-    transition: transform 0.2s;
+    transition: var(--transition);
 }
+.logo:hover { transform: scale(1.03); }
 
 /* Barra de Pesquisa no Header */
 .search-container-header {
     max-width: 500px;
     width: 100%;
     display: flex;
-    background-color: #f1f6fd;
-    border: 1px solid #dbe3ed; /* Cor da borda mais suave */
-    border-radius: 20px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 50px;
     padding: 4px 4px 4px 15px; /* Ajusta o padding para o ícone */
-    transition: border-color 0.2s;
+    transition: var(--transition);
     align-items: center; /* Alinha itens verticalmente */
 }
 
 .search-container-header:focus-within {
-    border-color: #5a85ff; /* Borda azul ao focar */
-    box-shadow: 0 0 0 2px rgba(90, 133, 255, 0.2); /* Sombra suave ao focar */
+    border-color: var(--primary-blue);
+    background-color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(74, 111, 216, 0.1);
 }
 
 .search-container-header input {
-    width: 100%;
-    flex-grow: 1; /* Permite que o input ocupe o espaço disponível */
-    border: none;
-    background: transparent;
-    padding: 8px;
-    outline: none;
-    font-size: 0.85rem;
-    color: #1f3e65;
+    border: none; background: transparent; padding: 8px; outline: none;
+    font-size: 0.9rem; color: var(--text-main);
 }
 
 .search-icon-button {
@@ -101,11 +109,11 @@ main {
     display: flex; /* Para centralizar o SVG */
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s;
+    transition: var(--transition);
 }
 
 .search-icon-button:hover {
-    transform: scale(1.1);
+    transform: scale(1.15);
 }
 
 .search-icon {
@@ -131,12 +139,12 @@ main {
     flex-direction: column;
     text-align: right;
     font-size: 0.9rem;
+    gap: 4px;
 }
 
 .links-acesso a {
     text-decoration: none;
-    color: #1a1a1a;
-    font-weight: 600;
+    color: var(--text-main); font-weight: 600; transition: var(--transition);
 }
 
 /* Botões básicos (Estilo Global) */
@@ -152,20 +160,21 @@ main {
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    object-fit: cover;
-    background-color: #f0f4f8;
-    border: 1px solid #ddd;
+    object-fit: cover; background-color: #f0f4f8;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px #e2e8f0;
 }
 
 /* =========================================
    RODAPÉ (FOOTER)
    ========================================= */
 .rodape {
-    background: #26476f;
-    color: #d6e7ff;
+    background: #ffffff;
+    color: var(--text-muted);
     text-align: center;
-    padding: 15px;
+    padding: 30px;
     font-size: 0.9rem;
+    border-top: 1px solid #e2e8f0;
 }
 
 /* =========================================
@@ -195,20 +204,15 @@ main {
 
 /* Novo estilo para o botão de mensagens no cabeçalho */
 .btn-header-message {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    position: relative; /* Necessário para posicionar o balão de notificação */
-    padding: 8px 12px;
-    background-color: #5a85ff; /* Azul primário do MIST */
+    display: flex; align-items: center; gap: 5px;
+    position: relative; padding: 10px 16px;
+    background-color: var(--primary-blue);
     color: white !important;
-    border-radius: 20px;
+    border-radius: 50px;
     text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 600;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    box-shadow: 0 2px 8px rgba(90, 133, 255, 0.2);
-    margin-top: 0;
+    font-size: 0.85rem; font-weight: 600;
+    transition: var(--transition);
+    box-shadow: 0 4px 6px -1px rgba(74, 111, 216, 0.2);
 }
 
 /* Estilo da bolinha de notificação */

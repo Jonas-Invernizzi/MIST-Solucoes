@@ -6,7 +6,7 @@ require_once('carregar_pdo.php');
 $stmtLogo = $pdo->prepare("SELECT arquivo, mime_type FROM sistema_assets WHERE nome = 'logo'");
 $stmtLogo->execute();
 $logoRow = $stmtLogo->fetch(PDO::FETCH_ASSOC);
-$logo_site = $logoRow ? 'data:' . $logoRow['mime_type'] . ';base64,' . base64_encode($logoRow['arquivo']) : '';
+$logo_site = $logoRow ? 'imagem.php?tipo=asset&nome=logo' : '';
 
 $erro = '';
 $sucesso = '';
@@ -134,9 +134,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $_SESSION['usuario_nome'] = $usuario['nome'] ?: 'Usuário';
                     
                     $foto = $usuario['foto_perfil'];
-                    // Se a foto for nula, 'default_profile.png', ou o arquivo não existir, usa a foto de perfil padrão.
-                    if ($foto && $foto !== 'default_profile.png' && file_exists(__DIR__ . "/img/$foto")) {
-                        $_SESSION['usuario_foto'] = $foto;
+                    if ($foto && $foto !== 'default_profile.png') {
+                        // Cancela o img/ do header no HTML
+                        $_SESSION['usuario_foto'] = '../imagem.php?tipo=perfil&id=' . $usuario['id'];
                     } else {
                         $_SESSION['usuario_foto'] = $fotoPerfilPadrao;
                     }

@@ -31,7 +31,7 @@ CREATE TABLE clientes (
     telefone VARCHAR(20) NOT NULL,
     data_nascimento DATE NOT NULL,
     descricao TEXT NOT NULL,
-    foto_perfil LONGBLOB DEFAULT NULL,
+    foto_perfil MEDIUMBLOB DEFAULT NULL,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
@@ -46,14 +46,14 @@ CREATE TABLE profissionais (
     telefone VARCHAR(20) NOT NULL,
     descricao TEXT NOT NULL,
     trabalho TEXT NOT NULL, 
-    foto_perfil LONGBLOB DEFAULT NULL,
+    foto_perfil MEDIUMBLOB DEFAULT NULL,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
 CREATE TABLE profissional_fotos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     profissional_id INT NOT NULL,
-    arquivo LONGBLOB NOT NULL,
+    arquivo MEDIUMBLOB NOT NULL,
     data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_profissional_fotos FOREIGN KEY (profissional_id) 
         REFERENCES profissionais(id) ON DELETE CASCADE
@@ -86,7 +86,7 @@ CREATE TABLE avaliacoes (
 CREATE TABLE sistema_assets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(50) UNIQUE NOT NULL,
-    arquivo LONGBLOB NOT NULL,
+    arquivo MEDIUMBLOB NOT NULL,
     mime_type VARCHAR(50) NOT NULL
 );
 

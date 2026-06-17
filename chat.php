@@ -29,7 +29,7 @@ if (!$destinatario_id || $remetente_id == $destinatario_id) {
 
 // Busca informações do destinatário para exibir no topo do chat
 $stmt = $pdo->prepare("
-    SELECT u.id, COALESCE(c.nome, p.nome) as nome, COALESCE(c.foto_perfil, p.foto_perfil) as foto_perfil
+    SELECT u.id, u.id as usuario_id, COALESCE(c.nome, p.nome) as nome, COALESCE(c.foto_perfil, p.foto_perfil) as foto_perfil
     FROM usuarios u
     LEFT JOIN clientes c ON u.id = c.usuario_id
     LEFT JOIN profissionais p ON u.id = p.usuario_id
@@ -40,6 +40,13 @@ $destinatario = $stmt->fetch();
 
 if (!$destinatario) {
     die("Usuário não encontrado.");
+}
+
+if (!empty($destinatario['foto_perfil'])) {
+    // Se ficar quebrado no chat, remova o `img/` do HTML do chat e deixe essa linha sem o '../'
+    $destinatario['foto_perfil'] = '../imagem.php?tipo=perfil&id=' . $destinatario['usuario_id'];
+} else {
+    $destinatario['foto_perfil'] = 'FotoPerfilPadrao.jpg';
 }
 
 // Processar envio de nova mensagem

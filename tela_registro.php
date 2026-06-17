@@ -18,12 +18,8 @@ $stmtAssets->execute();
 $assets = $stmtAssets->fetchAll(PDO::FETCH_UNIQUE|PDO::FETCH_ASSOC);
 
 $logo_site = isset($assets['logo']) 
-    ? 'data:' . $assets['logo']['mime_type'] . ';base64,' . base64_encode($assets['logo']['arquivo']) 
+    ? 'imagem.php?tipo=asset&nome=logo'
     : '';
-
-$default_avatar_str = isset($assets['default_avatar']) 
-    ? 'data:' . $assets['default_avatar']['mime_type'] . ';base64,' . base64_encode($assets['default_avatar']['arquivo']) 
-    : 'img/FotoPerfilPadrao.jpg';
 
 $imagem_padrao_blob = $assets['default_avatar']['arquivo'] ?? null;
 
@@ -413,7 +409,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             // Atualiza os dados da sessão para refletir as mudanças no cabeçalho e boas-vindas imediatamente
                             if ($usuarioId == $_SESSION['usuario_id']) {
                                 $_SESSION['usuario_nome'] = $nome;
-                                $_SESSION['usuario_foto'] = $fotoParaSalvar ? 'data:image/jpeg;base64,' . base64_encode($fotoParaSalvar) : null;
+                                $_SESSION['usuario_foto'] = $fotoParaSalvar ? '../imagem.php?tipo=perfil&id=' . $usuarioId : null;
                             }
 
                             // --- Processar Upload de Fotos do Trabalho (Portfólio) ---
@@ -436,11 +432,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                                             if ($files['error'][$i] === UPLOAD_ERR_OK) {
                                                 $mimeType = $hasFinfo ? $finfo->file($files['tmp_name'][$i]) : $files['type'][$i];
                                                 if (in_array($mimeType, $allowedMimes) && $files['size'][$i] <= 5 * 1024 * 1024) {
-                                                    $conteudoFoto = file_get_contents($files['tmp_name'][$i]);
-                                                    $stmtIns = $pdo->prepare("INSERT INTO profissional_fotos (profissional_id, arquivo) VALUES (:pid, :arquivo)");
-                                                    $stmtIns->bindValue(':pid', $pid);
-                                                    $stmtIns->bindValue(':arquivo', $conteudoFoto, PDO::PARAM_LOB);
-                                                    $stmtIns->execute();
+                                                    try {
+                                                        $conteudoFoto = file_get_contents($files['tmp_name'][$i]);
+                                                        $stmtIns = $pdo->prepare("INSERT INTO profissional_fotos (profissional_id, arquivo) VALUES (:pid, :arquivo)");
+                                                        $stmtIns->bindValue(':pid', $pid, PDO::PARAM_INT);
+                                                        $stmtIns->bindValue(':arquivo', $conteudoFoto, PDO::PARAM_LOB);
+                                                        $stmtIns->execute();
+                                                    } catch (Exception $e) {
+                                                        error_log("Erro ao fazer upload de fotos do trabalho: " . $e->getMessage());
+                                                    }
                                                 }
                                             }
                                         }

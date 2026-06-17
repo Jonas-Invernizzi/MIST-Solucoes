@@ -18,12 +18,10 @@ $stmtAssets->execute();
 $assets = $stmtAssets->fetchAll(PDO::FETCH_UNIQUE|PDO::FETCH_ASSOC);
 
 $logo_site = isset($assets['logo']) 
-    ? 'data:' . $assets['logo']['mime_type'] . ';base64,' . base64_encode($assets['logo']['arquivo']) 
+    ? 'imagem.php?tipo=asset&nome=logo'
     : '';
 
-$default_avatar = isset($assets['default_avatar'])
-    ? 'data:' . $assets['default_avatar']['mime_type'] . ';base64,' . base64_encode($assets['default_avatar']['arquivo'])
-    : 'img/FotoPerfilPadrao.jpg';
+$default_avatar = 'img/FotoPerfilPadrao.jpg';
 
 try {
     $sql = "
@@ -86,7 +84,7 @@ try {
     // Converter fotos BLOB para Base64
     foreach ($profissionais as &$prof) {
         if ($prof['foto_perfil']) {
-            $prof['foto_perfil'] = 'data:image/jpeg;base64,' . base64_encode($prof['foto_perfil']);
+            $prof['foto_perfil'] = 'imagem.php?tipo=perfil&id=' . $prof['usuario_id'];
         } else {
             $prof['foto_perfil'] = $default_avatar;
         }
@@ -106,6 +104,7 @@ foreach ($rows as $p) {
         ? array_filter(array_map('trim', explode(',', $p['trabalho']))) 
         : [];
     $profissionais[] = $p;
+}
 
 echo $twig->render('pesquisa.html', [
     'profissionais' => $profissionais,

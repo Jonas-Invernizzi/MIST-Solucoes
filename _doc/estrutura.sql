@@ -79,8 +79,8 @@ CREATE TABLE avaliacoes (
     nota INT NOT NULL CHECK (nota >= 1 AND nota <= 5),
     comentario TEXT,
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (profissional_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-    FOREIGN KEY (cliente_id) REFERENCES usuarios(id) ON DELETE CASCADE
+    FOREIGN KEY (profissional_id) REFERENCES profissionais(id) ON DELETE CASCADE,
+    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
 );
 
 CREATE TABLE sistema_assets (
@@ -95,6 +95,8 @@ CREATE TABLE mensagens (
     remetente_id INT NOT NULL,
     destinatario_id INT NOT NULL,
     mensagem TEXT NOT NULL,
+    arquivo_blob MEDIUMBLOB DEFAULT NULL,
+    tipo_arquivo VARCHAR(100) DEFAULT NULL,
     data_envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     lida TINYINT(1) DEFAULT 0,
     FOREIGN KEY (remetente_id) REFERENCES usuarios(id) ON DELETE CASCADE,

@@ -135,8 +135,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     
                     $foto = $usuario['foto_perfil'];
                     if ($foto && $foto !== 'default_profile.png') {
-                        // Cancela o img/ do header no HTML
-                        $_SESSION['usuario_foto'] = '../imagem.php?tipo=perfil&id=' . $usuario['id'];
+                        $_SESSION['usuario_foto'] = 'imagem.php?tipo=perfil&id=' . $usuario['id'];
                     } else {
                         $_SESSION['usuario_foto'] = $fotoPerfilPadrao;
                     }

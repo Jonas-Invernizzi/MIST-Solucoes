@@ -49,13 +49,15 @@ $query = "
 $stmt = $pdo->query($query);
 $profissionais = $stmt->fetchAll();
 
-// Garante que todos os profissionais em destaque tenham uma foto de perfil (mesmo que seja a padrão)
+// Converte foto BLOB para URL dinâmica ou mantém a padrão
 foreach ($profissionais as &$p) {
-    if (empty($p['foto_perfil'])) {
+    if (!empty($p['foto_perfil'])) {
+        $p['foto_perfil'] = 'imagem.php?tipo=perfil&id=' . $p['usuario_id'];
+    } else {
         $p['foto_perfil'] = $fotoPerfilPadrao;
     }
 }
-unset($p); // Boa prática: remover a referência após o loop
+unset($p);
 
 // Adicionar o nome do usuário logado para a saudação
 $nome_usuario = $_SESSION['usuario_nome'] ?? 'Visitante';

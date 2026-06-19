@@ -81,29 +81,23 @@ try {
 
     $profissionais = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Converter fotos BLOB para Base64
+    // Converter fotos BLOB para URL dinâmica
     foreach ($profissionais as &$prof) {
         if ($prof['foto_perfil']) {
             $prof['foto_perfil'] = 'imagem.php?tipo=perfil&id=' . $prof['usuario_id'];
         } else {
             $prof['foto_perfil'] = $default_avatar;
         }
+        // Transforma a string de especialidades em array para exibição
+        $prof['tags'] = !empty($prof['trabalho']) 
+            ? array_filter(array_map('trim', explode(',', $prof['trabalho']))) 
+            : [];
     }
+    unset($prof);
 } catch (PDOException $e) {
     // Em caso de erro no banco, a lista de profissionais ficará vazia.
     // Para depuração, o erro pode ser logado: error_log($e->getMessage());
     $profissionais = [];
-}
-
-$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-$profissionais = [];
-foreach ($rows as $p) {
-    // Transforma a string de especialidades em array para exibição
-    $p['tags'] = !empty($p['trabalho']) 
-        ? array_filter(array_map('trim', explode(',', $p['trabalho']))) 
-        : [];
-    $profissionais[] = $p;
 }
 
 echo $twig->render('pesquisa.html', [

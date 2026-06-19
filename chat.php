@@ -43,10 +43,9 @@ if (!$destinatario) {
 }
 
 if (!empty($destinatario['foto_perfil'])) {
-    // Se ficar quebrado no chat, remova o `img/` do HTML do chat e deixe essa linha sem o '../'
-    $destinatario['foto_perfil'] = '../imagem.php?tipo=perfil&id=' . $destinatario['usuario_id'];
+    $destinatario['foto_perfil'] = 'imagem.php?tipo=perfil&id=' . $destinatario['usuario_id'];
 } else {
-    $destinatario['foto_perfil'] = 'FotoPerfilPadrao.jpg';
+    $destinatario['foto_perfil'] = 'img/FotoPerfilPadrao.jpg';
 }
 
 // Processar envio de nova mensagem
@@ -54,10 +53,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
               strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
 
-    if (isset($_POST['mensagem'])) {
-        $mensagem = trim($_POST['mensagem']);
+    if (isset($_POST['mensagem']) || isset($_FILES['midia'])) {
+        $mensagem = trim($_POST['mensagem'] ?? '');
+        $arquivo_blob = null;
+        $tipo_arquivo = null;
 
-        if (empty($mensagem)) {
+        if (isset($_FILES['midia']) && $_FILES['midia']['error'] === UPLOAD_ERR_OK) {
+            $arquivo_blob = file_get_contents($_FILES['midia']['tmp_name']);
+            $tipo_arquivo = $_FILES['midia']['type'];
+        }
+
+        if (empty($mensagem) && !$arquivo_blob) {
             if ($isAjax) {
                 header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'error' => 'A mensagem não pode estar vazia.']);
@@ -67,16 +73,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         try {
             // O PDO com prepared statements já protege contra SQL Injection
-            $stmt = $pdo->prepare("INSERT INTO mensagens (remetente_id, destinatario_id, mensagem) VALUES (:r, :d, :m)");
+            $stmt = $pdo->prepare("INSERT INTO mensagens (remetente_id, destinatario_id, mensagem, arquivo_blob, tipo_arquivo) VALUES (:r, :d, :m, :arq, :tipo)");
             $success = $stmt->execute([
                 'r' => $remetente_id, 
                 'd' => $destinatario_id, // ID pego via GET na URL do action do form
-                'm' => htmlspecialchars($mensagem) // Proteção adicional contra XSS
+                'm' => $mensagem, // Proteção via prepared statement e Twig auto-escape
+                'arq' => $arquivo_blob,
+                'tipo' => $tipo_arquivo
             ]);
+            
+            $msg_id = $pdo->lastInsertId();
             
             if ($isAjax) {
                 header('Content-Type: application/json');
-                echo json_encode(['success' => true, 'mensagem' => $mensagem, 'hora' => date('H:i')]);
+                echo json_encode(['success' => true, 'mensagem' => $mensagem, 'hora' => date('H:i'), 'msg_id' => $msg_id]);
                 exit();
             }
 

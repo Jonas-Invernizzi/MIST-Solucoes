@@ -21,12 +21,13 @@ $usuario_logado_id = $_SESSION['usuario_id'] ?? null;
 $eh_proprio_perfil = ($usuario_logado_id == $id_perfil);
 
 // Verificar se o usuário logado é admin para permitir edição de terceiros
+// Reconhece qualquer e-mail que contenha 'admin' e o domínio '@mist.com'
 $is_admin = false;
 if ($usuario_logado_id) {
     $stmtAdminCheck = $pdo->prepare("SELECT email FROM usuarios WHERE id = :id");
     $stmtAdminCheck->execute(['id' => $usuario_logado_id]);
     $currentUser = $stmtAdminCheck->fetch(PDO::FETCH_ASSOC);
-    if ($currentUser && $currentUser['email'] === 'admin@mist.com') {
+    if ($currentUser && str_contains($currentUser['email'], 'admin') && str_contains($currentUser['email'], '@mist.com')) {
         $is_admin = true;
     }
 }
@@ -163,7 +164,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $usuario_logado_id) {
 
                         // Atualiza a foto na sessão
                         if ($eh_proprio_perfil) {
-                            $_SESSION['usuario_foto'] = '../imagem.php?tipo=perfil&id=' . $id_perfil;
+                            $_SESSION['usuario_foto'] = 'imagem.php?tipo=perfil&id=' . $id_perfil;
                         }
                         
                         header("Location: perfil.php?id=$id_perfil&sucesso=1");
@@ -175,10 +176,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $usuario_logado_id) {
             $erro = "❌ Erro no upload: " . $e->getMessage();
         }
     }
-}
 
     // --- Lógica de Upload de Foto de Trabalho (Portfólio / Carrossel) ---
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['nova_foto_trabalho']) && $pode_editar) {
+    if (isset($_FILES['nova_foto_trabalho']) && $pode_editar) {
         try {
             $files = $_FILES['nova_foto_trabalho'];
             $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'img' . DIRECTORY_SEPARATOR;
@@ -261,7 +261,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $usuario_logado_id) {
         } catch (Exception $e) {
             $erro = "❌ Erro ao excluir foto: " . $e->getMessage();
         }
-    }
+    } // fim do if (excluir_foto_id)
+} // fim do if (POST)
 
 try {
     $stmt = $pdo->prepare("
@@ -309,8 +310,7 @@ try {
                 $hasFinfo = class_exists('finfo');
                 $finfoBuffer = $hasFinfo ? new finfo(FILEINFO_MIME_TYPE) : null;
                 foreach ($fotos as &$f) {
-                    // O '../' serve para cancelar o 'img/' que tem no seu HTML do portfólio
-                    $f['arquivo'] = '../imagem.php?tipo=portfolio&id=' . $f['id'];
+                    $f['arquivo'] = 'imagem.php?tipo=portfolio&id=' . $f['id'];
                 }
                 $usuario['fotos_trabalho'] = $fotos;
             }

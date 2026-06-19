@@ -14,7 +14,7 @@
                 {% for conv in conversas %}
                     <a href="mensagens.php?u={{ conv.id }}" class="item-conversa {% if conv.id == contato_id %}ativa{% endif %}">
                         <div class="avatar-mini">
-                            <img src="img/{{ conv.foto|default('FotoPerfilPadrao.jpg') }}" alt="Foto">
+                            <img src="{{ conv.foto|default('img/FotoPerfilPadrao.jpg') }}" alt="Foto">
                             {% if conv.unread_count > 0 %}
                                 <span class="badge-contato">{{ conv.unread_count }}</span>
                             {% endif %}

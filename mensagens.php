@@ -13,16 +13,25 @@ $contato_id = filter_input(INPUT_GET, 'u', FILTER_VALIDATE_INT);
 $erro = '';
 
 // --- Ação: Enviar Mensagem ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mensagem'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['mensagem']) || isset($_FILES['midia']))) {
     $destinatario = filter_input(INPUT_POST, 'destinatario_id', FILTER_VALIDATE_INT);
-    $conteudo = trim($_POST['mensagem']);
+    $conteudo = trim($_POST['mensagem'] ?? '');
+    $arquivo_blob = null;
+    $tipo_arquivo = null;
 
-    if ($destinatario && !empty($conteudo)) {
-        $stmt = $pdo->prepare("INSERT INTO mensagens (remetente_id, destinatario_id, mensagem) VALUES (:rem, :dest, :cont)");
+    if (isset($_FILES['midia']) && $_FILES['midia']['error'] === UPLOAD_ERR_OK) {
+        $arquivo_blob = file_get_contents($_FILES['midia']['tmp_name']);
+        $tipo_arquivo = $_FILES['midia']['type'];
+    }
+
+    if ($destinatario && (!empty($conteudo) || $arquivo_blob)) {
+        $stmt = $pdo->prepare("INSERT INTO mensagens (remetente_id, destinatario_id, mensagem, arquivo_blob, tipo_arquivo) VALUES (:rem, :dest, :cont, :arq, :tipo)");
         $stmt->execute([
             'rem'  => $meu_id,
             'dest' => $destinatario,
-            'cont' => $conteudo
+            'cont' => $conteudo,
+            'arq'  => $arquivo_blob,
+            'tipo' => $tipo_arquivo
         ]);
         // Redireciona para evitar reenvio ao atualizar (F5)
         header("Location: mensagens.php?u=" . $destinatario);
@@ -54,6 +63,16 @@ $sqlConversas = "
 $stmtConv = $pdo->prepare($sqlConversas);
 $stmtConv->execute(['me' => $meu_id]);
 $conversas = $stmtConv->fetchAll();
+
+// Converte foto BLOB para URL dinâmica nas conversas
+foreach ($conversas as &$conv) {
+    if (!empty($conv['foto'])) {
+        $conv['foto'] = 'imagem.php?tipo=perfil&id=' . $conv['id'];
+    } else {
+        $conv['foto'] = 'img/FotoPerfilPadrao.jpg';
+    }
+}
+unset($conv);
 
 // --- Busca Mensagens da Conversa Ativa ---
 $mensagens = [];

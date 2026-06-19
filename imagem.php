@@ -13,7 +13,15 @@ try {
     $arquivo = null;
     $mime = 'image/jpeg';
 
-    if ($tipo === 'portfolio' && $id) {
+    if ($tipo === 'chat_midia' && $id) {
+        $stmt = $pdo->prepare("SELECT arquivo_blob, tipo_arquivo FROM mensagens WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row && $row['arquivo_blob']) {
+            $arquivo = $row['arquivo_blob'];
+            $mime = $row['tipo_arquivo'];
+        }
+    } elseif ($tipo === 'portfolio' && $id) {
         $stmt = $pdo->prepare("SELECT arquivo FROM profissional_fotos WHERE id = :id");
         $stmt->execute(['id' => $id]);
         $arquivo = $stmt->fetchColumn();

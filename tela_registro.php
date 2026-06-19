@@ -28,17 +28,15 @@ $id_alvo = null; // ID do usuário a ser editado
 $is_admin = false;
 
 // 1. Verificar se o usuário logado é admin
+// Reconhece qualquer e-mail que contenha 'admin' e o domínio '@mist.com'
 if (isset($_SESSION['usuario_id'])) {
     $stmtAdminCheck = $pdo->prepare("SELECT email FROM usuarios WHERE id = :id");
     $stmtAdminCheck->execute(['id' => $_SESSION['usuario_id']]);
     $currentUser = $stmtAdminCheck->fetch(PDO::FETCH_ASSOC);
-    if ($currentUser && $currentUser['email'] === 'admin@mist.com') {
-    
-    // Agora reconhece qualquer e-mail que contenha 'admin' e o domínio '@mist.com'
     if ($currentUser && str_contains($currentUser['email'], 'admin') && str_contains($currentUser['email'], '@mist.com')) {
         $is_admin = true;
     }
-}}
+}
 
 // 2. Determinar se é edição e quem está sendo editado
 if (isset($_SESSION['usuario_id'])) { // Apenas usuários logados podem editar
@@ -147,6 +145,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
     $descricao = trim($_POST['descricao'] ?? '');
     $senha = $_POST['senha'] ?? '';
     $tags = trim($_POST['tags'] ?? '');
+    $cpf = trim($_POST['cpf'] ?? '');
+    $endereco_trabalho = trim($_POST['endereco_trabalho'] ?? '');
 
     $remover_foto = isset($_POST['remover_foto']) && $_POST['remover_foto'] === '1';
 
@@ -409,7 +409,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             // Atualiza os dados da sessão para refletir as mudanças no cabeçalho e boas-vindas imediatamente
                             if ($usuarioId == $_SESSION['usuario_id']) {
                                 $_SESSION['usuario_nome'] = $nome;
-                                $_SESSION['usuario_foto'] = $fotoParaSalvar ? '../imagem.php?tipo=perfil&id=' . $usuarioId : null;
+                                $_SESSION['usuario_foto'] = $fotoParaSalvar ? 'imagem.php?tipo=perfil&id=' . $usuarioId : null;
                             }
 
                             // --- Processar Upload de Fotos do Trabalho (Portfólio) ---

@@ -361,13 +361,13 @@
                 <form id="form-foto" method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <label for="foto_perfil" class="profile-img-container">
-                        <img src="img/{{ usuario.foto_perfil|default(foto_perfil_padrao) }}" 
+                        <img src="{{ usuario.foto_perfil|default('img/' ~ foto_perfil_padrao) }}" 
                              alt="Foto de {{ usuario.nome }}" class="rounded-circle profile-img mb-3">
                         <input type="file" id="foto_perfil" name="foto_perfil" hidden onchange="document.getElementById('form-foto').submit()">
                     </label>
                 </form>
                 {% else %}
-                    <img src="img/{{ usuario.foto_perfil|default(foto_perfil_padrao) }}" 
+                    <img src="{{ usuario.foto_perfil|default('img/' ~ foto_perfil_padrao) }}" 
                          alt="Foto de {{ usuario.nome }}" class="rounded-circle profile-img mb-3">
                 {% endif %}
                 
@@ -465,7 +465,7 @@
                                                 <button type="submit" class="btn-delete-photo" title="Remover Foto">&times;</button>
                                             </form>
                                         {% endif %}
-                                        <img src="img/{{ foto.arquivo }}" alt="Foto do Trabalho" class="portfolio-img" data-index="{{ loop.index0 }}">
+                                        <img src="{{ foto.arquivo }}" alt="Foto do Trabalho" class="portfolio-img" data-index="{{ loop.index0 }}">
                                     </div>
                                 {% endfor %}
                             </div>
@@ -544,7 +544,7 @@
                             <div id="seu-comentario-container">
                                 <div class="card-avaliacao seu-comentario">
                                     <div class="autor">
-                                        <img src="img/{{ minha_avaliacao.autor_foto|default(foto_perfil_padrao) }}" alt="Sua foto">
+                                        <img src="{{ minha_avaliacao.autor_foto|default('img/' ~ foto_perfil_padrao) }}" alt="Sua foto">
                                         <strong>Seu comentário</strong>
                                     </div>
                                     <div class="conteudo">
@@ -589,7 +589,7 @@
                                 {% for avaliacao in avaliacoes %}
                                     <div class="card-avaliacao {% if loop.index > 3 %}hidden{% endif %}">
                                         <div class="autor">
-                                            <img src="img/{{ avaliacao.autor_foto|default(foto_perfil_padrao) }}" alt="Foto de {{ avaliacao.autor_nome }}">
+                                            <img src="{{ avaliacao.autor_foto|default('img/' ~ foto_perfil_padrao) }}" alt="Foto de {{ avaliacao.autor_nome }}">
                                             <strong>{{ avaliacao.autor_nome }}</strong>
                                         </div>
                                         <div class="conteudo">

@@ -20,6 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['mensagem']) || isset
     $tipo_arquivo = null;
 
     if (isset($_FILES['midia']) && $_FILES['midia']['error'] === UPLOAD_ERR_OK) {
+        // Valida tamanho: máximo 10MB para evitar estourar max_allowed_packet
+        if ($_FILES['midia']['size'] > 10 * 1024 * 1024) {
+            die("Arquivo muito grande. Máximo permitido: 10MB.");
+        }
         $arquivo_blob = file_get_contents($_FILES['midia']['tmp_name']);
         $tipo_arquivo = $_FILES['midia']['type'];
     }
@@ -29,18 +33,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['mensagem']) || isset
         $stmt->execute([
             'rem'  => $meu_id,
             'dest' => $destinatario,
-            'cont' => $conteudo,
+            'cont' => $conteudo ?: null,
             'arq'  => $arquivo_blob,
             'tipo' => $tipo_arquivo
         ]);
-        // Redireciona para evitar reenvio ao atualizar (F5)
         header("Location: mensagens.php?u=" . $destinatario);
         exit();
     }
 }
 
 // --- Busca Lista de Conversas (Inbox) ---
-// Pega todos os usuários com quem troquei mensagens
 $sqlConversas = "
     SELECT u.id, 
            COALESCE(c.nome, p.nome) as nome, 

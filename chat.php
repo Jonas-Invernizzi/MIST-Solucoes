@@ -12,7 +12,6 @@ $remetente_id = $_SESSION['usuario_id'];
 $destinatario_id = $_GET['id'] ?? null;
 
 // Validação de Segurança: Verifica se o remetente (usuário logado) ainda existe no banco.
-// Isso evita erros de chave estrangeira caso o banco tenha sido resetado.
 $stmtCheckSender = $pdo->prepare("SELECT id FROM usuarios WHERE id = :id");
 $stmtCheckSender->execute(['id' => $remetente_id]);
 if (!$stmtCheckSender->fetch()) {
@@ -59,6 +58,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tipo_arquivo = null;
 
         if (isset($_FILES['midia']) && $_FILES['midia']['error'] === UPLOAD_ERR_OK) {
+            // Valida tamanho: máximo 10MB para evitar estourar max_allowed_packet
+            if ($_FILES['midia']['size'] > 10 * 1024 * 1024) {
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'error' => 'Arquivo muito grande. Máximo permitido: 10MB.']);
+                    exit;
+                }
+                die("Arquivo muito grande. Máximo permitido: 10MB.");
+            }
             $arquivo_blob = file_get_contents($_FILES['midia']['tmp_name']);
             $tipo_arquivo = $_FILES['midia']['type'];
         }
@@ -72,12 +80,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         try {
-            // O PDO com prepared statements já protege contra SQL Injection
             $stmt = $pdo->prepare("INSERT INTO mensagens (remetente_id, destinatario_id, mensagem, arquivo_blob, tipo_arquivo) VALUES (:r, :d, :m, :arq, :tipo)");
             $success = $stmt->execute([
                 'r' => $remetente_id, 
-                'd' => $destinatario_id, // ID pego via GET na URL do action do form
-                'm' => $mensagem, // Proteção via prepared statement e Twig auto-escape
+                'd' => $destinatario_id,
+                'm' => $mensagem ?: null,
                 'arq' => $arquivo_blob,
                 'tipo' => $tipo_arquivo
             ]);

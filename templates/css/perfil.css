@@ -42,6 +42,7 @@
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
 /* Pré-visualização de Upload */
 .preview-img-item {
     width: 80px;
@@ -50,4 +51,360 @@
     border-radius: 8px;
     border: 2px solid #dee2e6;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Profile Header - Cartoon Brutalist */
+.profile-header {
+    background: #1f3e65;
+    color: white;
+    padding: 80px 0 120px 0;
+    border-radius: 0;
+    position: relative;
+}
+
+.profile-img {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border: 5px solid white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    transition: filter 0.3s ease;
+    display: block;
+    margin: 0 auto;
+}
+
+.profile-img-container {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.profile-img-container:hover .profile-img {
+    filter: brightness(0.7);
+}
+
+.profile-img-container::after {
+    content: 'Trocar Foto';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.profile-img-container:hover::after {
+    opacity: 1;
+}
+
+.info-card {
+    margin-top: -70px;
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.badge-prof {
+    background-color: #5a85ff;
+    font-size: 1rem;
+    padding: 8px 15px;
+}
+
+/* Botões de ação */
+.btn-acao-mist {
+    background: #5a85ff;
+    color: white !important;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 4px 15px rgba(90, 133, 255, 0.2);
+}
+
+.btn-acao-mist:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(90, 133, 255, 0.4);
+}
+
+.btn-editar-mist {
+    background: transparent;
+    color: #5a85ff !important;
+    border: 2px solid #5a85ff;
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-editar-mist:hover {
+    background: rgba(90, 133, 255, 0.05);
+    transform: translateY(-2px);
+}
+
+.btn-contato-verde {
+    background: #28a745;
+    color: white !important;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+}
+
+.btn-contato-verde:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+/* Portfólio Grid */
+.portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.portfolio-item {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    cursor: pointer;
+    background: #f8f9fa;
+}
+
+.portfolio-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.portfolio-item:hover img {
+    transform: scale(1.05);
+}
+
+/* Lightbox */
+.lightbox-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-overlay.active {
+    display: flex;
+}
+
+.lightbox-img {
+    max-width: 90%;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    animation: zoomIn 0.3s ease;
+}
+
+@keyframes zoomIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 10000;
+    transition: color 0.3s;
+}
+
+.lightbox-close:hover { color: #ccc; }
+
+.lightbox-control {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    color: white;
+    cursor: pointer;
+    z-index: 10000;
+    transition: background 0.3s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-control:hover { background: rgba(255, 255, 255, 0.4); transform: translateY(-50%) scale(1.1); }
+.lightbox-control.prev { left: 20px; }
+.lightbox-control.next { right: 20px; }
+
+.lightbox-indicators {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 10000;
+}
+
+.lightbox-dot {
+    width: 12px;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.lightbox-dot.active {
+    background: #fff;
+    transform: scale(1.2);
+}
+
+.delete-photo-form {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+}
+
+.btn-delete-photo {
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: background 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 3px;
+    line-height: 1;
+}
+
+.btn-delete-photo:hover { background: #c82333; transform: scale(1.1); }
+
+/* Descrição truncada */
+.descricao-curta {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all 0.3s ease;
+}
+
+.descricao-expandida {
+    display: block;
+}
+
+/* Rating Summary */
+.rating-summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.rating-summary .nota-media {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.rating-summary .stars { color: #ffc107; font-size: 1.1rem; }
+.rating-summary .stars .text-muted { color: rgba(255,255,255,0.5); }
+.rating-summary .total-avaliacoes { font-size: 0.9rem; color: #eee; }
+
+/* Seção de Avaliações */
+.secao-avaliacoes { margin-top: 40px; }
+.card-avaliacao-form { background: #f9f9f9; padding: 25px; border-radius: 15px; margin-bottom: 30px; border: 1px solid #eee; }
+.card-avaliacao-form .form-group { margin-bottom: 15px; }
+.card-avaliacao-form label { display: block; margin-bottom: 5px; font-weight: 600; }
+.card-avaliacao-form textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-family: inherit; }
+
+.star-rating-input { 
+    display: inline-flex; 
+    flex-direction: row-reverse; 
+    justify-content: flex-end;
+}
+
+.star-rating-input label { color: #ddd; cursor: pointer; font-size: 2rem; padding: 0 0.1em; transition: color 0.2s; }
+.star-rating-input input { display: none; }
+.star-rating-input label:hover,
+.star-rating-input label:hover ~ label,
+.star-rating-input input:checked ~ label { color: #ffc107; }
+
+.card-avaliacao { display: flex; gap: 15px; background: #fff; padding: 20px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; }
+.card-avaliacao.hidden { display: none; }
+.card-avaliacao .autor { text-align: center; flex-shrink: 0; width: 80px; }
+.card-avaliacao .autor img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 5px; }
+.card-avaliacao .conteudo { flex-grow: 1; }
+.card-avaliacao .conteudo .stars { color: #ffc107; margin-bottom: 10px; }
+.card-avaliacao .conteudo .stars .text-muted { color: #e0e0e0; }
+
+.card-avaliacao.seu-comentario {
+    border-left: 4px solid #5a85ff;
+    background-color: #f8faff;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.btn-secondary:hover { background-color: #5a6268; }
+
+/* Alertas fixos */
+.alert-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    width: auto;
+    max-width: 400px;
+}
+
+.alert {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }

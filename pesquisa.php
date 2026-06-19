@@ -9,10 +9,9 @@ if (!isset($_SESSION['usuario_id'])) {
 }
 
 $query_term = trim($_GET['q'] ?? '');
-$sort_option = $_GET['sort'] ?? 'relevance'; // Padrão para relevância/nenhuma ordenação
+$sort_option = $_GET['sort'] ?? 'relevance'; 
 $profissionais = [];
 
-// Carregar Assets do Sistema (Logo e Avatar Padrão)
 $stmtAssets = $pdo->prepare("SELECT nome, arquivo, mime_type FROM sistema_assets WHERE nome IN ('logo', 'default_avatar')");
 $stmtAssets->execute();
 $assets = $stmtAssets->fetchAll(PDO::FETCH_UNIQUE|PDO::FETCH_ASSOC);
@@ -31,9 +30,7 @@ try {
             p.trabalho, 
             p.descricao,
             p.foto_perfil,
-            p.endereco,
-            0 as nota_media,
-            0 as total_avaliacoes
+            p.endereco
         FROM profissionais p
         INNER JOIN usuarios u ON p.usuario_id = u.id
         WHERE u.status = 'ativo'
@@ -56,47 +53,42 @@ try {
                 )";
     }
 
-    // Mapeia as opções de ordenação para evitar injeção de SQL.
+    $sql .= " GROUP BY p.usuario_id, p.nome, p.trabalho, p.descricao, p.foto_perfil, p.endereco ";
+
     $sort_map = [
-        'relevance' => 'nota_media DESC, total_avaliacoes DESC, p.nome ASC', // Padrão: maior nota e mais avaliações primeiro
+        'relevance' => 'p.nome ASC',
         'alpha-asc' => 'p.nome ASC',
         'alpha-desc' => 'p.nome DESC',
-        'date-desc' => 'p.id DESC',        // Mais recentes (usando ID como fallback)
-        'date-asc' => 'p.id ASC'           // Mais antigos
+        'date-desc' => 'p.usuario_id DESC',        
+        'date-asc' => 'p.usuario_id ASC'          
     ];
-
-    // Define ordenação (sempre tem uma, começando com 'relevance')
+    
     $order_by = $sort_map[$sort_option] ?? $sort_map['relevance'];
     $sql .= " ORDER BY " . $order_by;
 
-    // Prepara e executa a consulta
     $stmt = $pdo->prepare($sql);
 
     if (!empty($query_term)) {
         $stmt->execute(['search' => "%$query_term%"]);
     } else {
-        // Se não houver termo de busca, apenas executa a consulta.
         $stmt->execute();
     }
 
     $profissionais = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Converter fotos BLOB para URL dinâmica
     foreach ($profissionais as &$prof) {
         if ($prof['foto_perfil']) {
             $prof['foto_perfil'] = 'imagem.php?tipo=perfil&id=' . $prof['usuario_id'];
         } else {
             $prof['foto_perfil'] = $default_avatar;
         }
-        // Transforma a string de especialidades em array para exibição
+
         $prof['tags'] = !empty($prof['trabalho']) 
             ? array_filter(array_map('trim', explode(',', $prof['trabalho']))) 
             : [];
     }
     unset($prof);
 } catch (PDOException $e) {
-    // Em caso de erro no banco, a lista de profissionais ficará vazia.
-    // Para depuração, o erro pode ser logado: error_log($e->getMessage());
     $profissionais = [];
 }
 

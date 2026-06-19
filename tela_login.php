@@ -133,11 +133,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     // Garante que o nome na sessão nunca seja nulo para não quebrar o "Bem-vindo"
                     $_SESSION['usuario_nome'] = $usuario['nome'] ?: 'Usuário';
                     
-                    $foto = $usuario['foto_perfil'];
-                    if ($foto && $foto !== 'default_profile.png') {
+                    if (!empty($usuario['foto_perfil'])) {
                         $_SESSION['usuario_foto'] = 'imagem.php?tipo=perfil&id=' . $usuario['id'];
                     } else {
-                        $_SESSION['usuario_foto'] = $fotoPerfilPadrao;
+                        $_SESSION['usuario_foto'] = null;
                     }
                     header("Location: tela_inicial.php");
                     exit();

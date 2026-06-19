@@ -14,7 +14,7 @@
                 {% for conv in conversas %}
                     <a href="mensagens.php?u={{ conv.id }}" class="item-conversa {% if conv.id == contato_id %}ativa{% endif %}">
                         <div class="avatar-mini">
-                            <img src="{{ conv.foto|default('img/FotoPerfilPadrao.jpg') }}" alt="Foto">
+                            <img src="{{ conv.foto }}" alt="Foto">
                             {% if conv.unread_count > 0 %}
                                 <span class="badge-contato">{{ conv.unread_count }}</span>
                             {% endif %}
@@ -42,17 +42,63 @@
             <div class="historico-mensagens" id="chat-box">
                 {% for msg in mensagens %}
                     <div class="balao {% if msg.remetente_id == meu_id %}enviada{% else %}recebida{% endif %}">
-                        <div class="conteudo">{{ msg.mensagem }}</div>
+                        <div class="conteudo">
+                            {% if msg.arquivo_blob and msg.tipo_arquivo %}
+                                {% if msg.tipo_arquivo starts with 'image/' %}
+                                    <a href="imagem.php?tipo=chat_midia&id={{ msg.id }}" target="_blank">
+                                        <img src="imagem.php?tipo=chat_midia&id={{ msg.id }}" alt="Foto" class="chat-media-img">
+                                    </a>
+                                {% elseif msg.tipo_arquivo starts with 'video/' %}
+                                    <video controls class="chat-media-video" preload="metadata">
+                                        <source src="imagem.php?tipo=chat_midia&id={{ msg.id }}" type="{{ msg.tipo_arquivo }}">
+                                    </video>
+                                {% elseif msg.tipo_arquivo starts with 'audio/' %}
+                                    <audio controls class="chat-media-audio" preload="metadata">
+                                        <source src="imagem.php?tipo=chat_midia&id={{ msg.id }}" type="{{ msg.tipo_arquivo }}">
+                                    </audio>
+                                {% else %}
+                                    <a href="imagem.php?tipo=chat_midia&id={{ msg.id }}" target="_blank">
+                                        <i class="fas fa-file"></i> Arquivo
+                                    </a>
+                                {% endif %}
+                            {% endif %}
+                            {% if msg.mensagem %}
+                                <p class="{% if msg.arquivo_blob %}mt-1{% endif %}">{{ msg.mensagem }}</p>
+                            {% endif %}
+                        </div>
                         <small class="hora">{{ msg.data_envio|date('H:i') }}</small>
                     </div>
                 {% endfor %}
             </div>
 
-            <form action="mensagens.php" method="POST" class="chat-footer">
+            <form action="mensagens.php" method="POST" class="chat-footer" enctype="multipart/form-data" id="msgForm">
                 <input type="hidden" name="destinatario_id" value="{{ contato_id }}">
-                <input type="text" name="mensagem" placeholder="Digite sua mensagem..." required autocomplete="off">
-                <button type="submit" class="btn-enviar">➤</button>
+                <label class="btn-midia-label-msg" title="Enviar foto, vídeo ou áudio">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                    <input type="file" name="midia" id="msgMidiaInput" accept="image/*,video/*,audio/*" style="display:none">
+                </label>
+                <input type="text" name="mensagem" id="msgTexto" placeholder="Digite sua mensagem..." autocomplete="off">
+                <button type="button" class="btn-enviar" id="msgBtnSend">➤</button>
             </form>
+
+            <!-- Modal de Confirmação de Mídia -->
+            <div id="msgMidiaModal" class="modal-overlay" style="display:none">
+                <div class="modal-card">
+                    <div class="modal-header">
+                        <h5>Prévia da mídia</h5>
+                        <button type="button" class="modal-close" id="msgModalClose">&times;</button>
+                    </div>
+                    <div class="modal-body" id="msgModalPreview"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="modal-btn modal-btn-cancel" id="msgModalCancel">Cancelar</button>
+                        <button type="button" class="modal-btn modal-btn-confirm" id="msgModalConfirm">Enviar</button>
+                    </div>
+                </div>
+            </div>
         {% else %}
             <div class="chat-placeholder">
                 <p>Selecione uma conversa ou entre em contato com um profissional para começar.</p>
@@ -62,8 +108,102 @@
 </div>
 
 <script>
-    // Rola o chat para o final automaticamente
     const chatBox = document.getElementById('chat-box');
     if(chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+
+    // --- Modal de confirmação de mídia (mensagens.php) ---
+    const msgForm = document.getElementById('msgForm');
+    const msgMidiaInput = document.getElementById('msgMidiaInput');
+    const msgTexto = document.getElementById('msgTexto');
+    const msgBtnSend = document.getElementById('msgBtnSend');
+    const msgModal = document.getElementById('msgMidiaModal');
+    const msgModalPreview = document.getElementById('msgModalPreview');
+    const msgModalClose = document.getElementById('msgModalClose');
+    const msgModalCancel = document.getElementById('msgModalCancel');
+    const msgModalConfirm = document.getElementById('msgModalConfirm');
+    let msgPendingMidia = null;
+
+    function showMsgPreview(file) {
+        msgModalPreview.innerHTML = '';
+        if (file.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.className = 'modal-preview-media';
+            img.src = URL.createObjectURL(file);
+            msgModalPreview.appendChild(img);
+        } else if (file.type.startsWith('video/')) {
+            const video = document.createElement('video');
+            video.className = 'modal-preview-media';
+            video.controls = true;
+            video.preload = 'metadata';
+            video.src = URL.createObjectURL(file);
+            msgModalPreview.appendChild(video);
+        } else if (file.type.startsWith('audio/')) {
+            const audio = document.createElement('audio');
+            audio.controls = true;
+            audio.preload = 'metadata';
+            audio.src = URL.createObjectURL(file);
+            msgModalPreview.appendChild(audio);
+            const name = document.createElement('p');
+            name.className = 'modal-preview-filename';
+            name.textContent = file.name;
+            msgModalPreview.appendChild(name);
+        } else {
+            const icon = document.createElement('div');
+            icon.className = 'modal-preview-file';
+            icon.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+            msgModalPreview.appendChild(icon);
+            const name = document.createElement('p');
+            name.className = 'modal-preview-filename';
+            name.textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+            msgModalPreview.appendChild(name);
+        }
+        msgPendingMidia = file;
+        msgModal.style.display = 'flex';
+    }
+
+    function closeMsgModal() {
+        msgModal.style.display = 'none';
+        msgModalPreview.innerHTML = '';
+        msgPendingMidia = null;
+    }
+
+    msgMidiaInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+        showMsgPreview(file);
+    });
+
+    msgModalClose.addEventListener('click', closeMsgModal);
+    msgModalCancel.addEventListener('click', closeMsgModal);
+    msgModal.addEventListener('click', function(e) {
+        if (e.target === msgModal) closeMsgModal();
+    });
+
+    msgModalConfirm.addEventListener('click', function() {
+        if (!msgPendingMidia) return;
+        msgModal.style.display = 'none';
+        msgForm.submit();
+    });
+
+    msgBtnSend.addEventListener('click', function() {
+        const texto = msgTexto.value.trim();
+        const hasMidia = msgMidiaInput.files.length > 0;
+        if (hasMidia) {
+            if (!msgPendingMidia) {
+                showMsgPreview(msgMidiaInput.files[0]);
+            }
+            return;
+        }
+        if (texto) {
+            msgForm.submit();
+        }
+    });
+
+    msgTexto.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            msgBtnSend.click();
+        }
+    });
 </script>
 {% endblock %}

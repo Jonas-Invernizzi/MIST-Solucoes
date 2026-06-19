@@ -58,14 +58,12 @@
     {% for prof in profissionais %}
         <div class="card-profissional">
             <div class="avatar-circular">
-                <img src="{{ prof.foto_perfil|raw }}" alt="Foto de {{ prof.nome }}">
+                <img src="{{ prof.foto_perfil }}" alt="Foto de {{ prof.nome }}">
             </div>
             <h3>{{ prof.nome }}</h3>
             <p>{{ prof.trabalho }}</p>
             <div class="stars">
-                {% set nota = prof.nota_media|round(0, 'floor') %}
-                {% for i in 1..5 %}{{ i <= nota ? '★' : '☆' }}{% endfor %}
-                <span>({{ prof.total_avaliacoes }})</span>
+                {% for i in 1..5 %}☆{% endfor %}
             </div>
             <a href="perfil.php?id={{ prof.usuario_id }}" class="btn-salvar">Ver Perfil</a>
         </div>

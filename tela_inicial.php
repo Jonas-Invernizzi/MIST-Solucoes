@@ -9,7 +9,7 @@ if (!isset($_SESSION['usuario_id'])) {
     exit();
 }
 
-$fotoPerfilPadrao = 'FotoPerfilPadrao.jpg';
+$fotoPerfilPadrao = 'fotoPadrao.png';
 
 // Lógica de "Auto-Cura": Se o nome do usuário sumiu da sessão (comum em trocas de PC ou sessões expiradas),
 // tenta recuperá-lo do banco de dados antes de renderizar a página.
@@ -54,7 +54,7 @@ foreach ($profissionais as &$p) {
     if (!empty($p['foto_perfil'])) {
         $p['foto_perfil'] = 'imagem.php?tipo=perfil&id=' . $p['usuario_id'];
     } else {
-        $p['foto_perfil'] = $fotoPerfilPadrao;
+        $p['foto_perfil'] = 'img/' . $fotoPerfilPadrao;
     }
 }
 unset($p);

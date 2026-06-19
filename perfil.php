@@ -5,7 +5,7 @@ require_once('carregar_twig.php');
 
 $erro = '';
 $sucesso = '';
-$fotoPerfilPadrao = 'FotoPerfilPadrao.jpg';
+$fotoPerfilPadrao = 'fotoPadrao.png';
 $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'img' . DIRECTORY_SEPARATOR;
 
 // Identifica o ID do perfil a ser visualizado
@@ -16,7 +16,6 @@ if (!$id_perfil) {
     exit();
 }
 
-$usuario_id_logado = $_SESSION['usuario_id'] ?? null;
 $usuario_logado_id = $_SESSION['usuario_id'] ?? null;
 $eh_proprio_perfil = ($usuario_logado_id == $id_perfil);
 

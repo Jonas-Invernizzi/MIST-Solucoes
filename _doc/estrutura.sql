@@ -8,6 +8,7 @@ DROP TABLE IF EXISTS avaliacoes;
 DROP TABLE IF EXISTS clientes;
 DROP TABLE IF EXISTS profissionais;
 DROP TABLE IF EXISTS mensagens;
+DROP TABLE IF EXISTS sistema_assets;
 DROP TABLE IF EXISTS usuarios;
 
 -- A tabela de usuários deve vir primeiro para que as outras possam referenciá-la
@@ -94,7 +95,7 @@ CREATE TABLE mensagens (
     id INT AUTO_INCREMENT PRIMARY KEY,
     remetente_id INT NOT NULL,
     destinatario_id INT NOT NULL,
-    mensagem TEXT NOT NULL,
+    mensagem TEXT DEFAULT NULL,
     arquivo_blob MEDIUMBLOB DEFAULT NULL,
     tipo_arquivo VARCHAR(100) DEFAULT NULL,
     data_envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -105,5 +106,6 @@ CREATE TABLE mensagens (
     INDEX (destinatario_id),
     INDEX (data_envio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Reativa a verificação de chaves estrangeiras
 SET FOREIGN_KEY_CHECKS = 1;

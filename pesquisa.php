@@ -113,7 +113,7 @@ foreach ($rows as $p) {
         ? array_filter(array_map('trim', explode(',', $p['trabalho']))) 
         : [];
     $profissionais[] = $p;
-
+}
 echo $twig->render('pesquisa.html', [
     'profissionais' => $profissionais,
     'termo_buscado' => $query_term,

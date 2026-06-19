@@ -77,6 +77,6 @@ INSERT INTO profissional_tags (profissional_id, tag_id) VALUES
 
 -- 6. Adicionar Avaliações (Clientes avaliando Profissionais)
 INSERT INTO avaliacoes (profissional_id, cliente_id, nota, comentario) VALUES
-((SELECT id FROM usuarios WHERE email = 'joao.eletricista@email.com'), (SELECT id FROM usuarios WHERE email = 'cliente1@email.com'), 5, 'Excelente profissional! Resolveu o curto-circuito super rápido.'),
-((SELECT id FROM usuarios WHERE email = 'maria.encanadora@email.com'), (SELECT id FROM usuarios WHERE email = 'cliente2@email.com'), 4, 'Muito boa, mas atrasou 10 minutinhos. Tirando isso, serviço impecável.'),
-((SELECT id FROM usuarios WHERE email = 'lucas.marceneiro@email.com'), (SELECT id FROM usuarios WHERE email = 'cliente1@email.com'), 5, 'Móveis de primeira qualidade e ótimo atendimento.');
+((SELECT id FROM profissionais WHERE usuario_id = (SELECT id FROM usuarios WHERE email = 'joao.eletricista@email.com')), (SELECT id FROM clientes WHERE usuario_id = (SELECT id FROM usuarios WHERE email = 'cliente1@email.com')), 5, 'Excelente profissional! Resolveu o curto-circuito super rápido.'),
+((SELECT id FROM profissionais WHERE usuario_id = (SELECT id FROM usuarios WHERE email = 'maria.encanadora@email.com')), (SELECT id FROM clientes WHERE usuario_id = (SELECT id FROM usuarios WHERE email = 'cliente2@email.com')), 4, 'Muito boa, mas atrasou 10 minutinhos. Tirando isso, serviço impecável.'),
+((SELECT id FROM profissionais WHERE usuario_id = (SELECT id FROM usuarios WHERE email = 'lucas.marceneiro@email.com')), (SELECT id FROM clientes WHERE usuario_id = (SELECT id FROM usuarios WHERE email = 'cliente1@email.com')), 5, 'Móveis de primeira qualidade e ótimo atendimento.');

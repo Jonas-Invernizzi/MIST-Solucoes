@@ -59,5 +59,5 @@ try {
 } catch (Exception $e) {}
 
 // Se a foto não for encontrada, retorna a padrão
-header("Location: img/FotoPerfilPadrao.jpg");
+header("Location: img/fotoPadrao.png");
 exit();

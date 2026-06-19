@@ -150,6 +150,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
     $descricao = trim($_POST['descricao'] ?? '');
     $senha = $_POST['senha'] ?? '';
     $tags = trim($_POST['tags'] ?? '');
+    $cpf = trim($_POST['cpf'] ?? '');
+    $endereco_trabalho = trim($_POST['endereco_trabalho'] ?? '');
 
     $remover_foto = isset($_POST['remover_foto']) && $_POST['remover_foto'] === '1';
 
@@ -492,6 +494,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             
                             if ($tipo_base_post === 'profissional') {
                                 $stmtInfo->bindValue(':trabalho', $tags);
+                                $stmtInfo->bindValue(':cpf', $cpf);
+                                $stmtInfo->bindValue(':endereco_trabalho', $endereco_trabalho ?: $endereco);
                             }
                             $stmtInfo->execute();
                             

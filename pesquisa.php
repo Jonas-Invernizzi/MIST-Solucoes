@@ -99,21 +99,12 @@ try {
             ? array_filter(array_map('trim', explode(',', $prof['trabalho']))) 
             : [];
     }
+    unset($prof);
 } catch (PDOException $e) {
     // Em caso de erro no banco, a lista de profissionais ficará vazia.
     $profissionais = [];
 }
 
-$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-$profissionais = [];
-foreach ($rows as $p) {
-    // Transforma a string de especialidades em array para exibição
-    $p['tags'] = !empty($p['trabalho']) 
-        ? array_filter(array_map('trim', explode(',', $p['trabalho']))) 
-        : [];
-    $profissionais[] = $p;
-}
 echo $twig->render('pesquisa.html', [
     'profissionais' => $profissionais,
     'termo_buscado' => $query_term,

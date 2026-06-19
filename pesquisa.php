@@ -18,12 +18,10 @@ $stmtAssets->execute();
 $assets = $stmtAssets->fetchAll(PDO::FETCH_UNIQUE|PDO::FETCH_ASSOC);
 
 $logo_site = isset($assets['logo']) 
-    ? 'data:' . $assets['logo']['mime_type'] . ';base64,' . base64_encode($assets['logo']['arquivo']) 
+    ? 'imagem.php?tipo=asset&nome=logo'
     : '';
 
-$default_avatar = isset($assets['default_avatar'])
-    ? 'data:' . $assets['default_avatar']['mime_type'] . ';base64,' . base64_encode($assets['default_avatar']['arquivo'])
-    : 'img/fotoPadrao.png';
+$default_avatar = 'img/fotoPadrao.png';
 
 try {
     $sql = "
@@ -91,7 +89,7 @@ try {
     foreach ($profissionais as &$prof) {
         // Converter fotos BLOB para Base64
         if ($prof['foto_perfil']) {
-            $prof['foto_perfil'] = 'data:image/jpeg;base64,' . base64_encode($prof['foto_perfil']);
+            $prof['foto_perfil'] = 'imagem.php?tipo=perfil&id=' . $prof['usuario_id'];
         } else {
             $prof['foto_perfil'] = $default_avatar;
         }
@@ -105,6 +103,16 @@ try {
     // Em caso de erro no banco, a lista de profissionais ficará vazia.
     $profissionais = [];
 }
+
+$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$profissionais = [];
+foreach ($rows as $p) {
+    // Transforma a string de especialidades em array para exibição
+    $p['tags'] = !empty($p['trabalho']) 
+        ? array_filter(array_map('trim', explode(',', $p['trabalho']))) 
+        : [];
+    $profissionais[] = $p;
 
 echo $twig->render('pesquisa.html', [
     'profissionais' => $profissionais,

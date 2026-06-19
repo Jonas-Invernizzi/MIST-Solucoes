@@ -34,6 +34,8 @@ $pode_editar = ($eh_proprio_perfil || $is_admin);
 
 if (isset($_GET['sucesso']) && $_GET['sucesso'] == '1') {
     $sucesso = "✅ Portfólio atualizado com sucesso!";
+} elseif (isset($_GET['sucesso']) && $_GET['sucesso'] == 'parcial') {
+    $sucesso = "✅ Algumas fotos foram enviadas, mas outras falharam (tamanho maior que 5MB ou erro de formato).";
 } elseif (isset($_GET['sucesso']) && $_GET['sucesso'] == 'deleted') {
     $sucesso = "🗑️ Foto removida do portfólio!";
 } elseif (isset($_GET['sucesso_avaliacao'])) {
@@ -145,29 +147,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $usuario_logado_id) {
                     $dadosAtuais = $stmtCheck->fetch(PDO::FETCH_ASSOC);
 
                     if ($dadosAtuais) {
-                        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-                        $novoNome = uniqid('perfil_', true) . '.' . $ext;
+                        $conteudoFoto = file_get_contents($fileTmpPath);
+                        $tabela = ($dadosAtuais['tipo_base'] === 'profissional') ? 'profissionais' : 'clientes';
+                        
+                        // Atualiza banco de dados
+                        $stmtUpdate = $pdo->prepare("UPDATE $tabela SET foto_perfil = :foto WHERE usuario_id = :id");
+                        $stmtUpdate->bindValue(':foto', $conteudoFoto, PDO::PARAM_LOB);
+                        $stmtUpdate->bindValue(':id', $id_perfil, PDO::PARAM_INT);
+                        $stmtUpdate->execute();
 
-                        if (move_uploaded_file($fileTmpPath, $uploadDir . $novoNome)) {
-                            $tabela = ($dadosAtuais['tipo_base'] === 'profissional') ? 'profissionais' : 'clientes';
-                            
-                            // Atualiza banco de dados
-                            $stmtUpdate = $pdo->prepare("UPDATE $tabela SET foto_perfil = :foto WHERE usuario_id = :id");
-                            $stmtUpdate->execute(['foto' => $novoNome, 'id' => $id_perfil]);
-
-                            // Deleta foto antiga se não for a padrão
-                            if ($dadosAtuais['foto_atual'] && $dadosAtuais['foto_atual'] !== $fotoPerfilPadrao && file_exists($uploadDir . $dadosAtuais['foto_atual'])) {
-                                unlink($uploadDir . $dadosAtuais['foto_atual']);
-                            }
-
-                            // Atualiza a foto na sessão
-                            if ($eh_proprio_perfil) {
-                                $_SESSION['usuario_foto'] = $novoNome;
-                            }
-                            
-                            header("Location: perfil.php?id=$id_perfil&sucesso=1");
-                            exit();
+                        // Deleta foto antiga se for um arquivo local (legado) e não a padrão
+                        if (!empty($dadosAtuais['foto_atual']) && strlen($dadosAtuais['foto_atual']) < 255 && $dadosAtuais['foto_atual'] !== $fotoPerfilPadrao && file_exists($uploadDir . $dadosAtuais['foto_atual'])) {
+                            unlink($uploadDir . $dadosAtuais['foto_atual']);
                         }
+
+                        // Atualiza a foto na sessão
+                        if ($eh_proprio_perfil) {
+                            $_SESSION['usuario_foto'] = '../imagem.php?tipo=perfil&id=' . $id_perfil;
+                        }
+                        
+                        header("Location: perfil.php?id=$id_perfil&sucesso=1");
+                        exit();
                     }
                 }
             }
@@ -214,10 +214,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $usuario_logado_id) {
 
                     $mimeType = $finfo->file($tmpName);
                     if (in_array($mimeType, $allowedMimes)) {
-                        $conteudoFoto = file_get_contents($tmpName);
-                        $stmtIns = $pdo->prepare("INSERT INTO profissional_fotos (profissional_id, arquivo) VALUES (:pid, :arquivo)");
-                        $stmtIns->execute(['pid' => $profissional_id, 'arquivo' => $conteudoFoto]);
-                        $uploadedCount++;
+                        try {
+                            $conteudoFoto = file_get_contents($tmpName);
+                            $stmtIns = $pdo->prepare("INSERT INTO profissional_fotos (profissional_id, arquivo) VALUES (:pid, :arquivo)");
+                            $stmtIns->bindValue(':pid', $profissional_id, PDO::PARAM_INT);
+                            $stmtIns->bindValue(':arquivo', $conteudoFoto, PDO::PARAM_LOB);
+                            $stmtIns->execute();
+                            $uploadedCount++;
+                        } catch (Exception $e) {
+                            error_log("Erro ao salvar foto do portfólio: " . $e->getMessage());
+                        }
                     }
                 }
             }
@@ -305,8 +311,11 @@ try {
                 $stmtFotos = $pdo->prepare("SELECT id, arquivo FROM profissional_fotos WHERE profissional_id = :pid ORDER BY id ASC");
                 $stmtFotos->execute(['pid' => $usuario['profissional_id']]);
                 $fotos = $stmtFotos->fetchAll(PDO::FETCH_ASSOC);
+                $hasFinfo = class_exists('finfo');
+                $finfoBuffer = $hasFinfo ? new finfo(FILEINFO_MIME_TYPE) : null;
                 foreach ($fotos as &$f) {
-                    $f['arquivo'] = 'data:image/jpeg;base64,' . base64_encode($f['arquivo']);
+                    // O '../' serve para cancelar o 'img/' que tem no seu HTML do portfólio
+                    $f['arquivo'] = '../imagem.php?tipo=portfolio&id=' . $f['id'];
                 }
                 $usuario['fotos_trabalho'] = $fotos;
             }

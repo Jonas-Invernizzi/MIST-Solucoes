@@ -14,7 +14,7 @@ $stmtAssets->execute();
 $assets = $stmtAssets->fetchAll(PDO::FETCH_UNIQUE|PDO::FETCH_ASSOC);
 
 $logo_site = isset($assets['logo']) 
-    ? 'data:' . $assets['logo']['mime_type'] . ';base64,' . base64_encode($assets['logo']['arquivo']) 
+    ? 'imagem.php?tipo=asset&nome=logo'
     : '';
 
 $imagem_padrao_blob = $assets['default_avatar']['arquivo'] ?? null;
@@ -140,9 +140,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             if ($files['error'][$i] === UPLOAD_ERR_OK) {
                                 $mimeType = $finfo ? $finfo->file($files['tmp_name'][$i]) : $files['type'][$i];
                                 if (in_array($mimeType, $allowedMimes) && $files['size'][$i] <= 5 * 1024 * 1024) {
-                                    $conteudoFoto = file_get_contents($files['tmp_name'][$i]);
-                                    $stmtIns = $pdo->prepare("INSERT INTO profissional_fotos (profissional_id, arquivo) VALUES (:pid, :arquivo)");
-                                    $stmtIns->execute(['pid' => $pid, 'arquivo' => $conteudoFoto]);
+                                    try {
+                                        $conteudoFoto = file_get_contents($files['tmp_name'][$i]);
+                                        $stmtIns = $pdo->prepare("INSERT INTO profissional_fotos (profissional_id, arquivo) VALUES (:pid, :arquivo)");
+                                        $stmtIns->bindValue(':pid', $pid, PDO::PARAM_INT);
+                                        $stmtIns->bindValue(':arquivo', $conteudoFoto, PDO::PARAM_LOB);
+                                        $stmtIns->execute();
+                                    } catch (Exception $e) {
+                                        error_log("Erro ao salvar foto no portfólio (cadastro): " . $e->getMessage());
+                                    }
                                 }
                             }
                         }

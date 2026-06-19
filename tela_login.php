@@ -6,7 +6,7 @@ require_once('carregar_pdo.php');
 $stmtLogo = $pdo->prepare("SELECT arquivo, mime_type FROM sistema_assets WHERE nome = 'logo'");
 $stmtLogo->execute();
 $logoRow = $stmtLogo->fetch(PDO::FETCH_ASSOC);
-$logo_site = $logoRow ? 'data:' . $logoRow['mime_type'] . ';base64,' . base64_encode($logoRow['arquivo']) : '';
+$logo_site = $logoRow ? 'imagem.php?tipo=asset&nome=logo' : '';
 
 $erro = '';
 $sucesso = '';

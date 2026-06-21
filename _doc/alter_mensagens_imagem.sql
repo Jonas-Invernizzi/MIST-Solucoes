@@ -1,0 +1,3 @@
+ALTER TABLE mensagens
+    MODIFY mensagem TEXT NULL,
+    ADD COLUMN imagem MEDIUMBLOB DEFAULT NULL AFTER mensagem;

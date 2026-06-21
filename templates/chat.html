@@ -12,7 +12,7 @@
                 <!-- Cabeçalho do Chat -->
                 <div class="card-header chat-header">
                     <a href="perfil.php?id={{ destinatario.id }}" class="chat-header-link">
-                        <img src="img/{{ destinatario.foto_perfil|default('default_profile.png') }}" alt="{{ destinatario.nome }}" class="rounded-circle chat-profile-pic">
+                        <img src="{{ destinatario.foto_perfil|default('img/fotoPadrao.png') }}" alt="{{ destinatario.nome }}" class="rounded-circle chat-profile-pic">
                         <div class="chat-header-info">
                             <h5 class="chat-destinatario-nome">{{ destinatario.nome }}</h5>
                             <div class="status-indicator">
@@ -29,7 +29,14 @@
                     {% for msg in mensagens %}
                         <div class="message-row {{ msg.remetente_id == session.usuario_id ? 'me' : 'them' }}">
                             <div class="message-bubble shadow-sm">
-                                <p class="mb-0">{{ msg.mensagem }}</p>
+                                {% if msg.imagem %}
+                                    <a href="imagem.php?tipo=mensagem&id={{ msg.id }}" target="_blank" rel="noopener">
+                                        <img src="imagem.php?tipo=mensagem&id={{ msg.id }}" alt="Imagem enviada" class="message-image">
+                                    </a>
+                                {% endif %}
+                                {% if msg.mensagem %}
+                                    <p class="mb-0">{{ msg.mensagem|e }}</p>
+                                {% endif %}
                                 <small class="message-time">{{ msg.data_envio|date('H:i') }}</small>
                             </div>
                         </div>
@@ -42,9 +49,13 @@
 
                 <!-- Rodapé com Input -->
                 <div class="card-footer chat-footer">
-                    <form id="chatForm" action="chat.php?id={{ destinatario.id }}" method="POST">
+                    <form id="chatForm" action="chat.php?id={{ destinatario.id }}" method="POST" enctype="multipart/form-data">
                         <div class="chat-input-wrapper">
-                            <input type="text" name="mensagem" class="chat-input-field" placeholder="Digite uma mensagem..." autocomplete="off" required autofocus>
+                            <label for="imagem_mensagem" class="btn-attach-image" title="Anexar imagem">
+                                <span>+</span>
+                            </label>
+                            <input type="file" id="imagem_mensagem" name="imagem_mensagem" accept="image/jpeg,image/png,image/gif,image/webp" hidden>
+                            <input type="text" name="mensagem" class="chat-input-field" placeholder="Digite uma mensagem..." autocomplete="off" autofocus>
                             <button type="submit" class="btn-send-minimal">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -63,6 +74,7 @@
     const chatContainer = document.getElementById('chatContainer');
     const chatForm = document.getElementById('chatForm');
     const inputField = document.querySelector('.chat-input-field');
+    const imageInput = document.getElementById('imagem_mensagem');
 
     const scrollToBottom = () => {
         chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -74,7 +86,8 @@
         e.preventDefault();
 
         const mensagemTexto = inputField.value.trim();
-        if (!mensagemTexto) return;
+        const temImagem = imageInput.files.length > 0;
+        if (!mensagemTexto && !temImagem) return;
 
         const formData = new FormData(chatForm);
         
@@ -99,8 +112,9 @@
             }
 
             if (data.success) {
-                renderizarMensagem(data.mensagem, data.hora);
+                renderizarMensagem(data.mensagem, data.hora, data.imagem_url);
                 inputField.value = '';
+                imageInput.value = '';
                 inputField.focus();
                 scrollToBottom();
             } else {
@@ -112,11 +126,22 @@
         }
     });
 
-    function renderizarMensagem(texto, hora) {
+    function escaparHtml(texto) {
+        const div = document.createElement('div');
+        div.textContent = texto;
+        return div.innerHTML;
+    }
+
+    function renderizarMensagem(texto, hora, imagemUrl) {
+        const imagemHtml = imagemUrl
+            ? `<a href="${imagemUrl}" target="_blank" rel="noopener"><img src="${imagemUrl}" alt="Imagem enviada" class="message-image"></a>`
+            : '';
+        const textoHtml = texto ? `<p class="mb-0">${escaparHtml(texto)}</p>` : '';
         const novaMsgHtml = `
             <div class="message-row me">
                 <div class="message-bubble">
-                    <p class="mb-0">${texto}</p>
+                    ${imagemHtml}
+                    ${textoHtml}
                     <small class="message-time">${hora}</small>
                 </div>
             </div>

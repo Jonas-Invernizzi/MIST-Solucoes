@@ -9,7 +9,7 @@ if (!isset($_SESSION['usuario_id'])) {
     exit();
 }
 
-$fotoPerfilPadrao = 'fotoPadrao.png';
+$fotoPerfilPadrao = 'img/fotoPadrao.png';
 
 // Lógica de "Auto-Cura": Se o nome ou a foto sumiram da sessão, recupera-os do banco.
 if (empty($_SESSION['usuario_nome']) || empty($_SESSION['usuario_foto'])) {
@@ -41,6 +41,12 @@ if (empty($_SESSION['usuario_nome']) || empty($_SESSION['usuario_foto'])) {
             $_SESSION['usuario_foto'] = $fotoPerfilPadrao;
         }
     }
+}
+
+if (isset($userData) && $userData) {
+    $_SESSION['usuario_foto'] = !empty($userData['foto_perfil'])
+        ? 'imagem.php?tipo=perfil&id=' . $_SESSION['usuario_id']
+        : $fotoPerfilPadrao;
 }
 
 // Busca os 4 profissionais mais recentes para a vitrine
@@ -77,6 +83,9 @@ foreach ($profissionais as &$p) {
     } else {
         $p['foto_perfil'] = $fotoPerfilPadrao;
     }
+    $p['foto_perfil'] = !empty($p['foto_perfil']) && $p['foto_perfil'] !== $fotoPerfilPadrao
+        ? 'imagem.php?tipo=perfil&id=' . $p['usuario_id']
+        : $fotoPerfilPadrao;
 }
 unset($p); // Boa prática: remover a referência após o loop
 

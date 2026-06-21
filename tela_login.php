@@ -13,7 +13,7 @@ $sucesso = '';
 $mostra_modal_redefinir_senha = false; // Nova flag para o modal de redefinição de senha
 $email_redefinir_modal = ''; // E-mail para exibir no modal de redefinição
 
-$fotoPerfilPadrao = 'fotoPadrao.png';
+$fotoPerfilPadrao = 'img/fotoPadrao.png';
 
 // Verificar se vem de verificação bem-sucedida
 if (isset($_GET['verificado']) && $_GET['verificado'] === '1') {
@@ -136,7 +136,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $foto = $usuario['foto_perfil'];
                     if ($foto) {
                         // Armazena a foto já convertida para Base64 para o cabeçalho
-                        $_SESSION['usuario_foto'] = 'data:image/jpeg;base64,' . base64_encode($foto);
+                        $_SESSION['usuario_foto'] = 'imagem.php?tipo=perfil&id=' . $usuario['id'];
                     } else {
                         $_SESSION['usuario_foto'] = $fotoPerfilPadrao;
                     }

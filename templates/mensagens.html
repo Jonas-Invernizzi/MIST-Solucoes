@@ -14,7 +14,7 @@
                 {% for conv in conversas %}
                     <a href="mensagens.php?u={{ conv.id }}" class="item-conversa {% if conv.id == contato_id %}ativa{% endif %}">
                         <div class="avatar-mini">
-                            <img src="img/{{ conv.foto|default('FotoPerfilPadrao.jpg') }}" alt="Foto">
+                            <img src="{{ conv.foto|default('img/fotoPadrao.png') }}" alt="Foto">
                             {% if conv.unread_count > 0 %}
                                 <span class="badge-contato">{{ conv.unread_count }}</span>
                             {% endif %}
@@ -42,15 +42,24 @@
             <div class="historico-mensagens" id="chat-box">
                 {% for msg in mensagens %}
                     <div class="balao {% if msg.remetente_id == meu_id %}enviada{% else %}recebida{% endif %}">
-                        <div class="conteudo">{{ msg.mensagem }}</div>
+                        {% if msg.imagem %}
+                            <a href="imagem.php?tipo=mensagem&id={{ msg.id }}" target="_blank" rel="noopener">
+                                <img src="imagem.php?tipo=mensagem&id={{ msg.id }}" alt="Imagem enviada" class="imagem-mensagem">
+                            </a>
+                        {% endif %}
+                        {% if msg.mensagem %}
+                            <div class="conteudo">{{ msg.mensagem|e }}</div>
+                        {% endif %}
                         <small class="hora">{{ msg.data_envio|date('H:i') }}</small>
                     </div>
                 {% endfor %}
             </div>
 
-            <form action="mensagens.php" method="POST" class="chat-footer">
+            <form action="mensagens.php" method="POST" class="chat-footer" enctype="multipart/form-data">
                 <input type="hidden" name="destinatario_id" value="{{ contato_id }}">
-                <input type="text" name="mensagem" placeholder="Digite sua mensagem..." required autocomplete="off">
+                <label for="imagem_mensagem" class="btn-anexar" title="Anexar imagem">+</label>
+                <input type="file" id="imagem_mensagem" name="imagem_mensagem" accept="image/jpeg,image/png,image/gif,image/webp" hidden>
+                <input type="text" name="mensagem" placeholder="Digite sua mensagem..." autocomplete="off">
                 <button type="submit" class="btn-enviar">➤</button>
             </form>
         {% else %}
@@ -65,5 +74,17 @@
     // Rola o chat para o final automaticamente
     const chatBox = document.getElementById('chat-box');
     if(chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+
+    const formMensagem = document.querySelector('.chat-footer');
+    if (formMensagem) {
+        formMensagem.addEventListener('submit', (event) => {
+            const texto = formMensagem.querySelector('input[name="mensagem"]').value.trim();
+            const imagem = formMensagem.querySelector('input[name="imagem_mensagem"]').files.length > 0;
+
+            if (!texto && !imagem) {
+                event.preventDefault();
+            }
+        });
+    }
 </script>
 {% endblock %}

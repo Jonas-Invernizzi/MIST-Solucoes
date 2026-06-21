@@ -5,7 +5,7 @@ require_once('carregar_twig.php');
 
 $erro = '';
 $sucesso = '';
-$fotoPerfilPadrao = 'fotoPadrao.png';
+$fotoPerfilPadrao = 'img/fotoPadrao.png';
 $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'img' . DIRECTORY_SEPARATOR;
 
 // Identifica o ID do perfil a ser visualizado
@@ -163,7 +163,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $usuario_logado_id) {
 
                         // Atualiza a foto na sessão
                         if ($eh_proprio_perfil) {
-                            $_SESSION['usuario_foto'] = '../imagem.php?tipo=perfil&id=' . $id_perfil;
+                            $_SESSION['usuario_foto'] = 'imagem.php?tipo=perfil&id=' . $id_perfil;
                         }
                         
                         header("Location: perfil.php?id=$id_perfil&sucesso=1");
@@ -301,6 +301,10 @@ try {
                 $usuario['foto_perfil'] = $fotoPerfilPadrao;
             }
 
+            $usuario['foto_perfil'] = !empty($usuario['foto_perfil']) && $usuario['foto_perfil'] !== $fotoPerfilPadrao
+                ? 'imagem.php?tipo=perfil&id=' . $usuario['usuario_id']
+                : $fotoPerfilPadrao;
+
             // Converte a string "tag1, tag2" em um array para o Twig
             $usuario['tags'] = !empty($usuario['trabalho']) 
                 ? array_filter(array_map('trim', explode(',', $usuario['trabalho']))) 
@@ -315,7 +319,7 @@ try {
                 $finfoBuffer = $hasFinfo ? new finfo(FILEINFO_MIME_TYPE) : null;
                 foreach ($fotos as &$f) {
                     // O '../' serve para cancelar o 'img/' que tem no seu HTML do portfólio
-                    $f['arquivo'] = '../imagem.php?tipo=portfolio&id=' . $f['id'];
+                    $f['arquivo'] = 'imagem.php?tipo=portfolio&id=' . $f['id'];
                 }
                 $usuario['fotos_trabalho'] = $fotos;
             }
@@ -357,6 +361,10 @@ if ($uBase['tipo_base'] === 'profissional') {
                     $aval['autor_foto'] = 'data:image/jpeg;base64,' . base64_encode($aval['autor_foto']);
                 }
             }
+
+            $aval['autor_foto'] = !empty($aval['autor_foto']) && $aval['autor_foto'] !== $fotoPerfilPadrao
+                ? 'imagem.php?tipo=perfil&id=' . $aval['avaliador_id']
+                : $fotoPerfilPadrao;
 
             if ($usuario_logado_id && $aval['avaliador_id'] == $usuario_logado_id) {
                 $minha_avaliacao = $aval;

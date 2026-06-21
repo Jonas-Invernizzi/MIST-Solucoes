@@ -1,4 +1,8 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once('carregar_pdo.php');
 
 $tipo = $_GET['tipo'] ?? '';
@@ -26,6 +30,19 @@ try {
             WHERE u.id = :id
         ");
         $stmt->execute(['id' => $id]);
+        $arquivo = $stmt->fetchColumn();
+    } elseif ($tipo === 'mensagem' && $id && isset($_SESSION['usuario_id'])) {
+        $stmt = $pdo->prepare("
+            SELECT imagem
+            FROM mensagens
+            WHERE id = :id
+              AND imagem IS NOT NULL
+              AND (remetente_id = :usuario_id OR destinatario_id = :usuario_id)
+        ");
+        $stmt->execute([
+            'id' => $id,
+            'usuario_id' => $_SESSION['usuario_id']
+        ]);
         $arquivo = $stmt->fetchColumn();
     } elseif ($tipo === 'asset') {
         $stmt = $pdo->prepare("SELECT arquivo, mime_type FROM sistema_assets WHERE nome = :nome");
@@ -59,5 +76,5 @@ try {
 } catch (Exception $e) {}
 
 // Se a foto não for encontrada, retorna a padrão
-header("Location: img/FotoPerfilPadrao.jpg");
+header("Location: img/fotoPadrao.png");
 exit();

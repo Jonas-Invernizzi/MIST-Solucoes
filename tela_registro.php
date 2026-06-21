@@ -408,7 +408,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST['verificar_codigo']))
                             // Atualiza os dados da sessão para refletir as mudanças no cabeçalho e boas-vindas imediatamente
                             if ($usuarioId == $_SESSION['usuario_id']) {
                                 $_SESSION['usuario_nome'] = $nome;
-                                $_SESSION['usuario_foto'] = $fotoParaSalvar ? '../imagem.php?tipo=perfil&id=' . $usuarioId : null;
+                                $_SESSION['usuario_foto'] = $fotoParaSalvar ? 'imagem.php?tipo=perfil&id=' . $usuarioId : 'img/fotoPadrao.png';
                             }
 
                             // --- Processar Upload de Fotos do Trabalho (Portfólio) ---

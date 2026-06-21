@@ -56,11 +56,14 @@
 .balao.enviada { align-self: flex-end; background: #5a85ff; color: white; border-bottom-right-radius: 2px; }
 .balao.recebida { align-self: flex-start; background: #e4e6eb; color: #050505; border-bottom-left-radius: 2px; }
 .hora { font-size: 0.7rem; opacity: 0.7; margin-top: 4px; display: block; text-align: right; }
+.imagem-mensagem { display: block; width: min(260px, 100%); max-height: 260px; object-fit: cover; border-radius: 8px; margin-bottom: 6px; }
 
 /* Rodapé de Envio */
 .chat-footer { padding: 15px; background: #fff; border-top: 1px solid #eee; display: flex; gap: 10px; align-items: center; }
 .chat-footer input { flex: 1; padding: 12px 18px; border: 1px solid #ddd; border-radius: 25px; outline: none; transition: 0.2s; }
 .chat-footer input:focus { border-color: #5a85ff; }
+.btn-anexar { width: 42px; height: 42px; border-radius: 50%; color: #5a85ff; background: #eef2ff; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+.btn-anexar:hover { background: #dfe7ff; }
 .btn-enviar { background: #5a85ff; color: white; border: none; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
 .btn-enviar:hover { transform: scale(1.05); background: #4a6fd8; }
 

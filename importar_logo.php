@@ -4,7 +4,7 @@ require_once('carregar_pdo.php');
 // Mapeamento de arquivos para assets do banco
 $assetsParaImportar = [
     'logo' => 'img/logo.jpg',
-    'default_avatar' => 'img/FotoPerfilPadrao.jpg' // Certifique-se que este arquivo existe
+    'default_avatar' => 'img/fotoPadrao.png' // Certifique-se que este arquivo existe
 ];
 
 echo "<h1>🔄 Importador de Ativos do Sistema</h1>";

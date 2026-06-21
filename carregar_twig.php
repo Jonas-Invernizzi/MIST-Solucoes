@@ -11,6 +11,14 @@ require_once(__DIR__ . '/carregar_pdo.php');
 $loader = new \Twig\Loader\FilesystemLoader(__DIR__ . '/templates');
 $twig = new \Twig\Environment($loader);
 
+if (isset($_SESSION['usuario_id'])) {
+    if (empty($_SESSION['usuario_foto']) || in_array($_SESSION['usuario_foto'], ['fotoPadrao.png', 'FotoPerfilPadrao.jpg', '../img/fotoPadrao.png'], true)) {
+        $_SESSION['usuario_foto'] = 'img/fotoPadrao.png';
+    } elseif (strpos($_SESSION['usuario_foto'], '../imagem.php') === 0) {
+        $_SESSION['usuario_foto'] = substr($_SESSION['usuario_foto'], 3);
+    }
+}
+
 $twig->addGlobal('session', $_SESSION);
 // Tenta carregar o logo do banco e registrá-lo como global do Twig
 try {
